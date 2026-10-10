@@ -12,7 +12,7 @@ function toVoicevoxVoiceOption(voice: VoicevoxVoice): VoiceOption {
   return {
     provider: "voicevox",
     voiceName: String(voice.speaker),
-    voiceVersion: voice.version,
+    // version はエンジンのバージョンで話者の識別子ではないため voiceVersion に入れない
     displayName: `${voice.speaker_name} / ${voice.style_name}`,
   };
 }
