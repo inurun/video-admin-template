@@ -13,6 +13,7 @@ import {
 } from "@/server/_shared/storage";
 import { parseRenderProgress, stripAnsi } from "./parse-render-progress";
 import { thumbnailTimeToFrame } from "./render-thumbnail";
+import { commitRenderData } from "./commit-render-data";
 import { HF_BIN, frameToSnapshotSeconds, hfEnv, hfRenderArgs, hfSnapshotArgs } from "./hf-cli";
 import {
   ensureHfBundle,
@@ -242,6 +243,7 @@ export async function startRender(projectPath: string) {
         };
       }
 
+      await commitRenderData(projectPath);
       resetRenderState();
       cancelRequested = false;
       state.status = "running";

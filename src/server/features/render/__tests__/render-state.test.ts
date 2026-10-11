@@ -46,6 +46,10 @@ vi.mock("node:fs/promises", () => ({
   },
 }));
 
+vi.mock("../commit-render-data", () => ({
+  commitRenderData: async () => {},
+}));
+
 vi.mock("../hf-project", () => ({
   ensureHfBundle: async () => "/bundle",
   prepareHfRenderProject: (input: { dir: string }) => prepareMock(input),
