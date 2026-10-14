@@ -11,10 +11,19 @@ run = "pnpm dev"
 [tasks."dev:haqumei-api"]
 dir = "../haqumei-api"
 run = """
-if curl -fsS --max-time 1 "${HAQUMEI_API_URL}/health/live" > /dev/null 2>&1; then
-  echo "haqumei-api is already running at ${HAQUMEI_API_URL}, skipping start"
+url="${HAQUMEI_API_URL:-http://127.0.0.1:8080}"
+if curl -fsS --max-time 2 "${url}/health/live" > /dev/null 2>&1; then
+  echo "haqumei-api is already running at ${url}, skipping start"
 else
-  mise exec -- cargo run -p haqumei-api
+  case "${url}" in
+    http://127.0.0.1* | http://localhost*)
+      mise exec -- cargo run -p haqumei-api
+      ;;
+    *)
+      # Remote host (e.g. the mini PC): a local server would not be used.
+      echo "haqumei-api is not reachable at ${url}; start it on that host" >&2
+      ;;
+  esac
 fi
 """
 
