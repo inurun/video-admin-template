@@ -12,6 +12,8 @@ describe("hfRenderArgs", () => {
       "standard",
       "--video-bitrate",
       "12M",
+      "--workers",
+      "1",
     ]);
   });
 });

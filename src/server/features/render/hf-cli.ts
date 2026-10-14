@@ -16,6 +16,8 @@ export function hfEnv(): NodeJS.ProcessEnv {
 /**
  * Matches the former Remotion output: x264 preset medium at 12 Mbps (`standard` + bitrate).
  * HF already encodes yuv420p with bt709 tags and AAC 192k.
+ * One worker: auto-worker calibration misreads the near-blank first frame and lands on 1 anyway
+ * (~3 s wasted), and parallel capture turns off drawElement, so more workers are not faster.
  */
 export function hfRenderArgs(projectDir: string, outputPath: string) {
   return [
@@ -27,6 +29,8 @@ export function hfRenderArgs(projectDir: string, outputPath: string) {
     "standard",
     "--video-bitrate",
     "12M",
+    "--workers",
+    "1",
   ];
 }
 
