@@ -1,98 +1,49 @@
-export const OPENROUTER_G2P_SYSTEM_PROMPT = `あなたは日本語音声合成の読みとアクセントを付ける担当です。入力の各 text を、東京方言（共通語）の自然な話し言葉として読み上げるための「拡張かな」に変換します。
+export const OPENROUTER_G2P_SYSTEM_PROMPT = `Convert Japanese utterances into extended kana for TTS, read as natural Tokyo-dialect speech.
 
-# 入力
+# Input
+pages lists each page's utterances in playback order. Convert only target=true utterances; use target=false ones as context only.
 
-- pages はページごとの発話を再生順に並べたもの。target=true の発話だけを変換する。target=false の発話は文脈として読むだけで、出力しない。
-- 同じページの前後の発話を手がかりに、読みとアクセントを決める。
+# Format
+Example: 猫が窓から外を見ている！ → 猫:ネ'コ|が:ガ/窓:マ'ド|から:カラ/外:ソ'ト|を:ヲ/見:ミ'|て:テ|いる:イル！
+- Word = surface:reading. Words in one accent phrase are joined by |.
+- A phrase ends with / (no pause), 、 (pause), ？ or ！. Put 、？！ exactly where the text has punctuation (、。… → 、, ?？ → ？, !！ → ！), same count; never add 、 anywhere else. A sentence-final 。 may be dropped.
+- ' marks the accent nucleus: exactly one per phrase, right after the nucleus mora. Flat phrase: ' after its last mora.
 
-# 拡張かなの記法
+# Surface
+- Copy the text verbatim (kanji, kana, latin, width, case). Surfaces concatenated must equal the text minus punctuation, brackets and spaces. Never put : | / ' 、 ？ ！ or spaces in a surface.
+- Skip brackets and symbols, except dictionary words containing them (e.g. （笑）): use that whole word as one surface.
+- Word granularity is free.
+- Numbers: copy the digits (3.14:サンテンイチヨン, 6:ロッ|本:ポン). To split a number into several phrases, rewrite it as kanji numerals and keep counters as separate words (1985年 → 千:セ'ン/九百:キューヒャク/八十五:ハチジューゴ|年:ネ'ン; 十:ジュー|月:ガツ, never 十月).
 
-例: 猫が窓から外を見ている！ → 猫:ネ'コ|が:ガ/窓:マ'ド|から:カラ/外:ソ'ト|を:ヲ/見:ミ'|て:テ|いる:イル！
+# Reading
+- Katakana as pronounced: particle は→ワ, へ→エ, を→ヲ. Long vowels as ー (先生:センセー, でしょう:デショー), but keep verb/adjective endings (思う:オモウ, 美味しい:オイシイ).
+- Choose homograph readings from context. Latin words as commonly said in Japanese (SQL:エスキューエル). Numbers as spoken (2日:フツカ, 6本:ロッポン).
 
-- 語は \`表記:読み\`。すべての語に表記と読みが必要。
-- \`|\` は同じアクセント句の中の語の区切り。
-- アクセント句の終わりには次のどれかを置く。
-  - \`/\` ポーズなしの句境界
-  - \`、\` ポーズ。原文の 、 。 … などの位置
-  - \`？\` 疑問。原文の ？ ? の位置
-  - \`！\` 感嘆。原文の ！ ! の位置
-  - 発話の最後の句は記号なしで終えてよい。原文の文末が ？ ！ ならそれを付ける。
-- \`、\` \`？\` \`！\` は原文の句読点と同じ位置に同じ数だけ置く。原文に句読点がない場所に \`、\` を足さない。それ以外の句境界はすべて \`/\`。
-- \`'\` はアクセント核。各アクセント句にちょうど1つ、核のモーラの直後に置く。
+# Accent (Tokyo)
+- Nucleus on mora 1: H L L…; on mora n>1: L H…H(n) L…; flat: L H H…. Morae 1 and 2 always differ; no rise after a fall.
+- About one phrase per bunsetsu. Particles, auxiliaries and helpers (ない, たい, ている, ておく, ちゃう, そう, ます) stay in the preceding word's phrase (行きたくない:イキタク'ナイ). Split a phrase that would need two falls.
+- Odaka and flat differ before a particle: 犬が:イヌ'|ガ, 水が:ミズ|ガ'.
+- Conjugation moves verb nuclei: 起きる:オキ'ル, 起きた:オ'キタ, 起きない:オキ'ナイ; flat verbs stay flat (遊んで:アソンデ'). ます/ました: nucleus on マ. です keeps an accented word's nucleus (猫です:ネ'コ|デス), otherwise デ'ス (学生です:ガクセー|デ'ス).
+- Numeral + counter has its own accent: 1:イ'ッ|本:ポン, 3:サン|人:ニ'ン.
+- A compound takes one new nucleus (天気予報:テンキヨ'ホー). Do not move nuclei for ？.
 
-## 表記
+# Dictionary
+- fixed: always use its reading, even if unusual; accent = nucleus mora (0 = flat).
+- contextual: pick the candidate whose examples fit the context.
 
-- 表記は原文の文字列をそのまま写す。漢字・かな・英字・全角半角・大文字小文字を変えない。
-- すべての表記を順に連結すると、原文から記号（句読点、括弧、スペースなど）を除いた文字列と完全に一致すること。文字を足したり、消したり、言い換えたりしない。
-- 表記に \`:\` \`|\` \`/\` \`'\` \`、\` \`？\` \`！\` とスペースを入れない。
-- 原文の「」『』（）などの括弧と記号は表記に入れず、読み飛ばす。ただし dictionary に括弧や記号を含む語（例: （笑））があるときは、その語を括弧ごと1つの表記にして辞書の読みで読む。
-- 語の粒度は自由。複数語を1つの表記にまとめてもよい。
-- 数字の表記は次のどちらか。
-  - 原文の数字をそのまま写す（例: 3.14:サンテンイチヨン、6本 → 6:ロッ|本:ポン）。
-  - 複数のアクセント句に分けたいときだけ、数字を漢数字に置き換えて分ける（例: 1985年 → 千:セ'ン/九百:キューヒャク/八十五:ハチジューゴ|年:ネ'ン）。漢数字の表記には漢数字だけを入れ、年・月・日・度などの助数詞は別の語にする（十月 ではなく 十:ジュー|月:ガツ）。
+# Check each target before output
+1. Exactly one ' in every phrase.
+2. Surfaces concatenate to the text minus symbols; no character dropped.
+3. 、？！ count and positions match the text.
+4. fixed dictionary readings are used.
 
-## 読み
+Return { "id", "kana" } (whole utterance) for every target. JSON only.`;
 
-- カタカナで、実際の発音どおりに書く。助詞の「は」はワ、「へ」はエ、「を」はヲ。
-- 長音は ー で書く（東京:トーキョー、先生:センセー、勉強:ベンキョー、そう:ソー、でしょう:デショー、行こう:イコー）。動詞・形容詞の語尾の「う」「い」はそのまま（思う:オモウ、言う:イウ、美味しい:オイシイ）。
-- 原文の文脈から正しい読みを決める。同じ表記で読みが複数ある語は、文の意味で選ぶ。
-- 英字やローマ字は、日本語の会話で一般的な読み方にする（Docker:ドッカー、SQL:エスキューエル、Discord:ディスコード）。
-- 数字は読み上げる形にする（2日:フツカ、6本:ロッポン、4時:ヨジ）。
-
-# アクセント（東京方言）
-
-アクセント句の各モーラは高(H)か低(L)。核の位置で H/L が決まる。
-
-- 核が1モーラ目（頭高）: H L L L … 例: ネ'コ（猫）、ア'キ（秋）
-- 核が2モーラ目以降: L H … H(核) L … 例: オキ'ル（起きる）、イヌ'|ガ（犬が）
-- 下がり目がない（平板）: L H H H … 句の最後のモーラの直後に \`'\` を置く。例: ガッコー|ト'（学校と）、ミズ|ヲ'（水を）
-
-1モーラ目と2モーラ目は必ず高さが異なる。句の途中で一度下がったら、その句の中で再び上がらない。
-
-## 句のまとめ方
-
-- 助詞・助動詞・終助詞は、前の自立語と同じ句に入れる（猫:ネ'コ|です:デス|ね:ネ）。
-- 「ない」「たい」「たくない」「ている」「ておく」「てくる」「ちゃう」「そう」「ます」などの補助的な語は、前の動詞・形容詞と同じ句に入れ、句を分けない（行きたくない:イキタク'ナイ のように1句）。
-- 基本は文節ごとに1句。短い連体修飾と名詞、「〜て|いる」「〜て|しまう」などは1句にまとめてよい。
-- 1句の中で自然に下がり目が2つ生じる場合は、句を分ける。
-
-## 注意する規則
-
-- 尾高型と平板型は単独では同じ記法になるが、助詞が付くと違う。犬が:イヌ'|ガ（尾高）、水が:ミズ|ガ'（平板）。
-- 動詞・形容詞の核は活用で動く。起きる:オキ'ル、起きた:オ'キタ、起きて:オ'キテ、起きない:オキ'ナイ。平板の動詞は活用しても平板が基本（遊ぶ:アソブ'、遊んで:アソンデ'）。
-- 「〜ます」「〜ました」は マ に核（起きます:オキマ'ス、読みました:ヨミマ'シタ）。
-- 「です」: 起伏型の語に付くと語の核のまま（猫です:ネ'コ|デス）。平板型の語に付くと デ に核（学生です:ガクセー|デ'ス）。
-- 複合語は1語として新しい核を持つ（天気予報:テンキヨ'ホー など）。構成要素の核をそのまま並べない。
-- 疑問の上昇はエンジンが付ける。？ のために核を動かさない。
-
-# 辞書
-
-target の発話に dictionary があるときは従う。
-
-- kind=fixed: その表記は必ずこの読みで読む。一般的な読み方と違っても、辞書を優先する。accent は辞書の核位置（0 は平板、n は n モーラ目に核）。
-- kind=contextual: candidates の中から文脈に合う読みを選ぶ。examples はその読みで使われる例文。
-
-# 出力前の確認
-
-各 target について、出力する前に次を確かめる。
-
-1. \`/\` \`、\` \`？\` \`！\` で区切った各句に \`'\` がちょうど1つある（0個も2個も不可）。
-2. すべての表記を連結すると、原文から記号を除いた文字列と一致する。助詞を含め、どの文字も落としていない。
-3. 句読点の数と位置が原文と一致している。
-4. dictionary の fixed の語を、辞書どおりの読みにしている。
-
-# 出力
-
-- target の各発話について \`{ "id", "kana" }\` を返す。kana は発話全体。
-- JSON スキーマの出力だけを返す。`;
-
-export const OPENROUTER_G2P_REPAIR_PROMPT = `# 修正依頼
-
-入力は pages ではなく items。各 item の previousKana は検証に失敗した。errors はその理由。
-
-- errors が指摘する箇所だけを直し、読みとアクセントの判断は保つ。
-- surface_mismatch は表記が原文と一致していない。表記を原文の文字どおりに写し直す。
-- 修正後の kana を、発話全体で返す。`;
+export const OPENROUTER_G2P_REPAIR_PROMPT = `# Repair
+The input is items, not pages. Each item's previousKana failed validation; errors give the reasons.
+- Fix only what errors point out; keep the readings and accents.
+- surface_mismatch: a surface differs from the text. Copy it from the text verbatim.
+- Return the whole corrected kana.`;
 
 export function getOpenRouterG2pSystemPrompt(input: { repair: boolean }) {
   return input.repair

@@ -1,5 +1,5 @@
 export const LLM_G2P_PROFILE = {
-  id: "gemini-4-argon-oneshot-v1",
+  id: "gemini-4-argon-oneshot-v2",
   model: "google/gemini-4-argon",
   reasoningEffort: "medium",
   timeoutMs: 180_000,
