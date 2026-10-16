@@ -35,6 +35,12 @@ const coeiroinkTtsIdentity = {
 };
 
 export const savedTtsAudioSchema = z.discriminatedUnion("status", [
+  // 再生されない tts（comments の triple で左右に置かれたグループ）。G2P も合成もしない。
+  z
+    .object({
+      status: z.literal("idle"),
+    })
+    .strict(),
   z
     .object({
       status: z.literal("analyzing"),

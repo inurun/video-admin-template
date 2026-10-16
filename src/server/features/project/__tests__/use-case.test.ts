@@ -1841,6 +1841,7 @@ describe("project use-case", () => {
           meta: { tags: [], niconico: null },
           comments: [],
           commentGroups: [],
+          commentScenes: [],
           padBeforeSec: 0,
           padAfterSec: 0,
           richText: null,
@@ -2083,6 +2084,82 @@ describe("project use-case", () => {
       status: "ready",
       durationSec: 1.3,
     });
+  });
+
+  it("skips G2P and synthesis for side groups of a triple comments page", async () => {
+    const commentsPage = (presentation: "single" | "triple") => ({
+      id: "comments-1",
+      title: "Comments",
+      type: "comments",
+      meta: {
+        tags: [],
+        niconico: { videoId: "sm1", fetchedAt: now },
+        presentation,
+      },
+      comments: [1, 2, 3].map((no) => ({
+        id: `sm1:thread:main:${no}`,
+        threadId: "thread",
+        fork: "main",
+        no,
+        body: `c${no}`,
+        vposMs: 0,
+        postedAt: now,
+      })),
+      commentGroups: [1, 2, 3].map((no) => ({
+        id: `g${no}`,
+        commentIds: [`sm1:thread:main:${no}`],
+        displayText: null,
+        ttsIds: [`r${no}`],
+      })),
+      commentScenes: [{ id: "s1", groupIds: ["g1", "g2", "g3"] }],
+      padBeforeSec: 0,
+      padAfterSec: 0,
+      richText: null,
+      tts: [1, 2, 3].map((no) => ({
+        id: `r${no}`,
+        provider: "voisona",
+        text: `c${no}`,
+        voiceName: "zunda",
+        padBeforeSec: 0,
+        padAfterSec: 0,
+        volume: 1,
+        speech: {},
+      })),
+    });
+    readSavedProjectMock.mockResolvedValueOnce({ pages: [] });
+    generateG2pMock.mockReturnValue(new Promise(() => {}));
+
+    const saved = await saveProject({ OPENROUTER_API_KEY: "secret" }, "project", {
+      meta: defaultMeta,
+      pages: [commentsPage("triple")],
+    });
+
+    expect(contentPage(saved.project.pages).tts.map((item) => item.audio.status)).toEqual([
+      "idle",
+      "analyzing",
+      "idle",
+    ]);
+    expect(generateG2pMock).toHaveBeenCalledTimes(1);
+    const request = generateG2pMock.mock.calls[0]?.[1] as {
+      pages: Array<{ utterances: Array<{ id: string; target: boolean }> }>;
+    };
+    expect(
+      request.pages
+        .flatMap((page) => page.utterances)
+        .filter((utterance) => utterance.target)
+        .map((utterance) => utterance.id),
+    ).toEqual(["r2"]);
+
+    const switched = await saveProject({ OPENROUTER_API_KEY: "secret" }, "project", {
+      meta: defaultMeta,
+      pages: [commentsPage("single")],
+    });
+
+    expect(contentPage(switched.project.pages).tts.map((item) => item.audio.status)).toEqual([
+      "analyzing",
+      "analyzing",
+      "analyzing",
+    ]);
   });
 
   it("rejects comments pages with broken tts references", async () => {

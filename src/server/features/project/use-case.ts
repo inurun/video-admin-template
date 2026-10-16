@@ -62,6 +62,7 @@ import {
   startAnalysisBatch,
   type AnalysisJobTarget,
 } from "@/server/features/project/tts-analysis-jobs";
+import { listCommentGroupPlaybackTts } from "@/server/features/project/comments-presentation";
 import { createTtsAnalysisKey } from "@/server/features/tts/analysis-key";
 import { hasOpenRouterApiKey } from "@/server/features/tts/llm-g2p-profile";
 
@@ -237,7 +238,7 @@ async function classifyTtsReuse(
     return "pending";
   }
 
-  if (previous.audio.status === "analyzing") {
+  if (previous.audio.status === "analyzing" || previous.audio.status === "idle") {
     return "none";
   }
 
@@ -257,14 +258,16 @@ type PlannedTts = {
   previous?: SavedTts;
   nextInput: TtsComparisonInput<SaveTtsItem["provider"]>;
   reuse: TtsReuseKind;
+  spoken: boolean;
   needsG2pAnalyze: boolean;
 };
 
 function computeNeedsG2pAnalyze(
   reuse: TtsReuseKind,
+  spoken: boolean,
   nextInput: TtsComparisonInput<SaveTtsItem["provider"]>,
 ) {
-  if (reuse !== "none") {
+  if (reuse !== "none" || !spoken) {
     return false;
   }
 
@@ -383,6 +386,16 @@ function createAnalyzingSavedTts(
   };
 }
 
+function createIdleSavedTts(
+  item: SaveTtsItem,
+  nextInput: TtsComparisonInput<SaveTtsItem["provider"]>,
+) {
+  return {
+    ...createTtsFields(item, nextInput),
+    audio: { status: "idle" as const },
+  };
+}
+
 function createAnalyzingReuseTts(
   item: SaveTtsItem,
   nextInput: TtsComparisonInput<SaveTtsItem["provider"]>,
@@ -404,6 +417,7 @@ async function planSavedTts(
   previous: SavedTts | undefined,
   nextPresets: Record<string, VoicePreset>,
   previousPresets: Record<string, VoicePreset>,
+  spoken: boolean,
   forceResynthesis = false,
 ): Promise<PlannedTts> {
   validateTts(item);
@@ -421,7 +435,8 @@ async function planSavedTts(
     previous,
     nextInput,
     reuse,
-    needsG2pAnalyze: computeNeedsG2pAnalyze(reuse, nextInput),
+    spoken,
+    needsG2pAnalyze: computeNeedsG2pAnalyze(reuse, spoken, nextInput),
   };
 }
 
@@ -479,6 +494,10 @@ async function buildSavedTts(
     return { tts: createReusedSavedTts(plan.item, plan.previous) as SavedTts };
   }
 
+  if (!plan.spoken) {
+    return { tts: createIdleSavedTts(plan.item, plan.nextInput) as SavedTts };
+  }
+
   if (plan.needsG2pAnalyze && hasOpenRouterApiKey(serverEnv)) {
     const analysisKey = createTtsAnalysisKey({
       projectPath,
@@ -526,6 +545,18 @@ async function buildSavedTts(
   };
 }
 
+function listSavePageTtsInPlaybackOrder(page: SavePageItem) {
+  if (page.type !== "comments") {
+    return page.tts;
+  }
+  return listCommentGroupPlaybackTts(
+    page.commentGroups,
+    page.commentScenes,
+    page.tts,
+    page.meta.presentation,
+  );
+}
+
 async function planSavedPage(
   projectPath: string,
   page: SavePageItem,
@@ -535,6 +566,7 @@ async function planSavedPage(
   forceResynthesis = false,
 ) {
   validatePage(page);
+  const spokenTtsIds = new Set(listSavePageTtsInPlaybackOrder(page).map((item) => item.id));
   const tts = await Promise.all(
     page.tts.map((item) =>
       planSavedTts(
@@ -543,6 +575,7 @@ async function planSavedPage(
         previousTtsById.get(item.id),
         nextPresets,
         previousPresets,
+        spokenTtsIds.has(item.id),
         forceResynthesis,
       ),
     ),
