@@ -2,6 +2,7 @@ import type { DictionaryEntryInput, G2pItem, VoicevoxSynthesisSettings } from "@
 import { DEFAULT_VOICE_PRESETS } from "@/_schemas";
 import type { ServerEnv } from "@/server/core/env";
 import { getHaqumeiApiClient, unwrapHaqumeiData } from "@/server/features/haqumei-api/client";
+import { analyzeText } from "@/server/features/haqumei-api/analyze";
 import { HaqumeiApiError } from "@/server/features/haqumei-api/error";
 import { buildVoicevoxSynthesisRequest } from "@/server/features/haqumei-api/synthesis-settings";
 
@@ -43,6 +44,11 @@ export async function deleteDictionaryEntry(serverEnv: ServerEnv, id: number) {
     params: { path: { id } },
   });
   if (!result.response.ok) throw HaqumeiApiError.fromUnknown(result.error, result.response.status);
+}
+
+/** 辞書の確認用。haqumei が辞書をどう読むかを見るので、LLM は通さない。 */
+export async function analyzeDictionaryText(serverEnv: ServerEnv, text: string) {
+  return { g2p: await analyzeText(serverEnv, text) };
 }
 
 export async function previewDictionaryEntry(serverEnv: ServerEnv, g2p: G2pItem) {

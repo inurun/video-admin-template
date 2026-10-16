@@ -1,88 +1,101 @@
-const OPENROUTER_G2P_DICTIONARY_PROMPT = [
-  "dictionaryWords, when present, lists pronunciation words in the baseline kana that came from the user's dictionary.",
-  "word_index is the 0-based index of pronunciation words in the baseline kana DSL, counting across phrases. Do not count accent marks or punctuation as words.",
-  "kind=fixed is a user-specified reading. Keep that reading.",
-  "kind=contextual is the selected candidate from the user's contextual dictionary. Do not replace it with a generic reading as if it were an unknown proper noun.",
-  "Evaluate fixed and contextual separately. Do not treat contextual as an absolute lock.",
-].join(" ");
+export const OPENROUTER_G2P_SYSTEM_PROMPT = `あなたは日本語音声合成の読みとアクセントを付ける担当です。入力の各 text を、東京方言（共通語）の自然な話し言葉として読み上げるための「拡張かな」に変換します。
 
-const OPENROUTER_G2P_DSL_PROMPT = [
-  "Return kana as editor DSL. Example: ニンキ|ノ'/ナ'イ.",
-  "Do not add, delete, or paraphrase the source text.",
-  "Each accent phrase has exactly one ' nucleus. Separate words with |.",
-  "Use / to end an accent phrase without punctuation. Copy 、, ？, and ！ from the baseline kana; never add, remove, move, or replace them.",
-  "Source … and …… are already 、 in the baseline. Keep those 、. Never drop them and never emit ….",
-  "The last phrase must keep the baseline's final 、, ？, or ！ when present. The last phrase must never end with /.",
-  "If changed is false, return kana as an empty string and the baseline kana will be used.",
-  "If changed is true, kana must cover the entire utterance. Never return only the corrected fragment.",
-  "reason must be brief Japanese.",
-  "Return only the JSON schema output.",
-].join(" ");
+# 入力
 
-export const OPENROUTER_G2P_MANUAL_SYSTEM_PROMPT = [
-  "You proofread Japanese TTS readings.",
-  "Use every item on the page as context.",
-  "previous and next are neighboring utterances on the page. Use them as context only. Return corrections only for the input items, never for previous or next.",
-  OPENROUTER_G2P_DSL_PROMPT,
-  OPENROUTER_G2P_DICTIONARY_PROMPT,
-  "Output may contain the same or fewer word slots than the baseline.",
-  "You may change readings and merge adjacent baseline word slots.",
-  "Never add a word boundary that splits one baseline word slot into multiple output slots.",
-  "You may move the nucleus inside the resulting accent phrase.",
-  "The user invoked this correction because at least one contextual reading is likely wrong.",
-  "Actively inspect homographs, unknown words, romanized words, colloquial expressions, and repeated words with different meanings.",
-  "Prefer a justified contextual correction over preserving an obviously suspicious baseline reading.",
-  "Do not use changed=false as a shortcut; use it only after checking every potentially ambiguous reading in the item.",
-  "Valid phrase merge: カラ'/イ'シ becomes カラ'イ|シ.",
-  "Valid word merge: ウワテ'/ナゲ' becomes ウワテナゲ'.",
-  "Valid example: ニンキ|ノ'/ナ'イ/ニンキ|スポ'ット -> ヒトケ|ノ'/ナ'イ/ニンキ|スポ'ット.",
-].join(" ");
+- pages はページごとの発話を再生順に並べたもの。target=true の発話だけを変換する。target=false の発話は文脈として読むだけで、出力しない。
+- 同じページの前後の発話を手がかりに、読みとアクセントを決める。
 
-const OPENROUTER_G2P_AUTOMATIC_OUTPUT_PROMPT = [
-  "Copy baselineKana and change only misread mora strings.",
-  "If changed is false, return kana as an empty string and the baseline will be used.",
-  "If changed is true, kana must be the full-utterance DSL. Never return only the corrected fragment.",
-  "reason must be brief Japanese.",
-  "Return only the JSON schema output.",
-].join(" ");
+# 拡張かなの記法
 
-export const OPENROUTER_G2P_AUTOMATIC_SYSTEM_PROMPT = [
-  "You proofread Japanese TTS readings.",
-  "The pages JSON lists utterances in page order. Use non-target utterances as context only.",
-  "Return corrections only for utterances with target=true. Never return ids for target=false.",
-  "Each target includes baselineKana. Copy that DSL and change readings only.",
-  OPENROUTER_G2P_DICTIONARY_PROMPT,
-  "Keep the same phrase count, | word slots, ' nucleus slot, and every / 、 ？ ！ boundary.",
-  "Do not merge, split, drop, or reorder words. Do not move the nucleus to another word slot.",
-  "The baseline reading is usually correct. Do not assume there is an error.",
-  "Correct only almost-certain misreadings given the page context.",
-  "If multiple readings are natural, a proper-noun reading is unknown, or you are not confident, return changed=false.",
-  "Do not paraphrase, change particles, fix grammar, or add or delete content.",
-  "Do not change accent to improve intonation.",
-  "changed=false is the normal default result.",
-  "If changed=true, reason must briefly name only the written form and reading you changed, in Japanese.",
-  "Example: あそこを出ようね with baselineKana アソコ|ヲ'/ダ|ヨ'ー|ネ. A valid changed=true result is アソコ|ヲ'/デ|ヨ'ー|ネ.",
-  OPENROUTER_G2P_AUTOMATIC_OUTPUT_PROMPT,
-].join(" ");
+例: 猫が窓から外を見ている！ → 猫:ネ'コ|が:ガ/窓:マ'ド|から:カラ/外:ソ'ト|を:ヲ/見:ミ'|て:テ|いる:イル！
 
-export const OPENROUTER_G2P_REPAIR_PROMPT = [
-  "The previous correction failed syntax, topology, or Validate.",
-  "Keep the intended reading correction. Fix only the cited syntax, topology, or Validate errors.",
-  "Do not change items that were not listed.",
-  "If it cannot be repaired safely, return changed=false.",
-  "dictionaryWords indexes refer to baselineKana, never previousKana. If a previous attempt merged words, keep using the baseline indexes.",
-].join(" ");
+- 語は \`表記:読み\`。すべての語に表記と読みが必要。
+- \`|\` は同じアクセント句の中の語の区切り。
+- アクセント句の終わりには次のどれかを置く。
+  - \`/\` ポーズなしの句境界
+  - \`、\` ポーズ。原文の 、 。 … などの位置
+  - \`？\` 疑問。原文の ？ ? の位置
+  - \`！\` 感嘆。原文の ！ ! の位置
+  - 発話の最後の句は記号なしで終えてよい。原文の文末が ？ ！ ならそれを付ける。
+- \`、\` \`？\` \`！\` は原文の句読点と同じ位置に同じ数だけ置く。原文に句読点がない場所に \`、\` を足さない。それ以外の句境界はすべて \`/\`。
+- \`'\` はアクセント核。各アクセント句にちょうど1つ、核のモーラの直後に置く。
 
-export function getOpenRouterG2pSystemPrompt(input: {
-  mode: "automatic" | "manual";
-  repair?: boolean;
-}) {
-  const prompt =
-    input.mode === "automatic"
-      ? OPENROUTER_G2P_AUTOMATIC_SYSTEM_PROMPT
-      : OPENROUTER_G2P_MANUAL_SYSTEM_PROMPT;
-  if (input.repair) {
-    return `${prompt} ${OPENROUTER_G2P_REPAIR_PROMPT}`;
-  }
-  return prompt;
+## 表記
+
+- 表記は原文の文字列をそのまま写す。漢字・かな・英字・全角半角・大文字小文字を変えない。
+- すべての表記を順に連結すると、原文から記号（句読点、括弧、スペースなど）を除いた文字列と完全に一致すること。文字を足したり、消したり、言い換えたりしない。
+- 表記に \`:\` \`|\` \`/\` \`'\` \`、\` \`？\` \`！\` とスペースを入れない。
+- 原文の「」『』（）などの括弧と記号は表記に入れず、読み飛ばす。ただし dictionary に括弧や記号を含む語（例: （笑））があるときは、その語を括弧ごと1つの表記にして辞書の読みで読む。
+- 語の粒度は自由。複数語を1つの表記にまとめてもよい。
+- 数字の表記は次のどちらか。
+  - 原文の数字をそのまま写す（例: 3.14:サンテンイチヨン、6本 → 6:ロッ|本:ポン）。
+  - 複数のアクセント句に分けたいときだけ、数字を漢数字に置き換えて分ける（例: 1985年 → 千:セ'ン/九百:キューヒャク/八十五:ハチジューゴ|年:ネ'ン）。漢数字の表記には漢数字だけを入れ、年・月・日・度などの助数詞は別の語にする（十月 ではなく 十:ジュー|月:ガツ）。
+
+## 読み
+
+- カタカナで、実際の発音どおりに書く。助詞の「は」はワ、「へ」はエ、「を」はヲ。
+- 長音は ー で書く（東京:トーキョー、先生:センセー、勉強:ベンキョー、そう:ソー、でしょう:デショー、行こう:イコー）。動詞・形容詞の語尾の「う」「い」はそのまま（思う:オモウ、言う:イウ、美味しい:オイシイ）。
+- 原文の文脈から正しい読みを決める。同じ表記で読みが複数ある語は、文の意味で選ぶ。
+- 英字やローマ字は、日本語の会話で一般的な読み方にする（Docker:ドッカー、SQL:エスキューエル、Discord:ディスコード）。
+- 数字は読み上げる形にする（2日:フツカ、6本:ロッポン、4時:ヨジ）。
+
+# アクセント（東京方言）
+
+アクセント句の各モーラは高(H)か低(L)。核の位置で H/L が決まる。
+
+- 核が1モーラ目（頭高）: H L L L … 例: ネ'コ（猫）、ア'キ（秋）
+- 核が2モーラ目以降: L H … H(核) L … 例: オキ'ル（起きる）、イヌ'|ガ（犬が）
+- 下がり目がない（平板）: L H H H … 句の最後のモーラの直後に \`'\` を置く。例: ガッコー|ト'（学校と）、ミズ|ヲ'（水を）
+
+1モーラ目と2モーラ目は必ず高さが異なる。句の途中で一度下がったら、その句の中で再び上がらない。
+
+## 句のまとめ方
+
+- 助詞・助動詞・終助詞は、前の自立語と同じ句に入れる（猫:ネ'コ|です:デス|ね:ネ）。
+- 「ない」「たい」「たくない」「ている」「ておく」「てくる」「ちゃう」「そう」「ます」などの補助的な語は、前の動詞・形容詞と同じ句に入れ、句を分けない（行きたくない:イキタク'ナイ のように1句）。
+- 基本は文節ごとに1句。短い連体修飾と名詞、「〜て|いる」「〜て|しまう」などは1句にまとめてよい。
+- 1句の中で自然に下がり目が2つ生じる場合は、句を分ける。
+
+## 注意する規則
+
+- 尾高型と平板型は単独では同じ記法になるが、助詞が付くと違う。犬が:イヌ'|ガ（尾高）、水が:ミズ|ガ'（平板）。
+- 動詞・形容詞の核は活用で動く。起きる:オキ'ル、起きた:オ'キタ、起きて:オ'キテ、起きない:オキ'ナイ。平板の動詞は活用しても平板が基本（遊ぶ:アソブ'、遊んで:アソンデ'）。
+- 「〜ます」「〜ました」は マ に核（起きます:オキマ'ス、読みました:ヨミマ'シタ）。
+- 「です」: 起伏型の語に付くと語の核のまま（猫です:ネ'コ|デス）。平板型の語に付くと デ に核（学生です:ガクセー|デ'ス）。
+- 複合語は1語として新しい核を持つ（天気予報:テンキヨ'ホー など）。構成要素の核をそのまま並べない。
+- 疑問の上昇はエンジンが付ける。？ のために核を動かさない。
+
+# 辞書
+
+target の発話に dictionary があるときは従う。
+
+- kind=fixed: その表記は必ずこの読みで読む。一般的な読み方と違っても、辞書を優先する。accent は辞書の核位置（0 は平板、n は n モーラ目に核）。
+- kind=contextual: candidates の中から文脈に合う読みを選ぶ。examples はその読みで使われる例文。
+
+# 出力前の確認
+
+各 target について、出力する前に次を確かめる。
+
+1. \`/\` \`、\` \`？\` \`！\` で区切った各句に \`'\` がちょうど1つある（0個も2個も不可）。
+2. すべての表記を連結すると、原文から記号を除いた文字列と一致する。助詞を含め、どの文字も落としていない。
+3. 句読点の数と位置が原文と一致している。
+4. dictionary の fixed の語を、辞書どおりの読みにしている。
+
+# 出力
+
+- target の各発話について \`{ "id", "kana" }\` を返す。kana は発話全体。
+- JSON スキーマの出力だけを返す。`;
+
+export const OPENROUTER_G2P_REPAIR_PROMPT = `# 修正依頼
+
+入力は pages ではなく items。各 item の previousKana は検証に失敗した。errors はその理由。
+
+- errors が指摘する箇所だけを直し、読みとアクセントの判断は保つ。
+- surface_mismatch は表記が原文と一致していない。表記を原文の文字どおりに写し直す。
+- 修正後の kana を、発話全体で返す。`;
+
+export function getOpenRouterG2pSystemPrompt(input: { repair: boolean }) {
+  return input.repair
+    ? `${OPENROUTER_G2P_SYSTEM_PROMPT}\n\n${OPENROUTER_G2P_REPAIR_PROMPT}`
+    : OPENROUTER_G2P_SYSTEM_PROMPT;
 }

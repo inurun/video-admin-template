@@ -12,7 +12,6 @@ import {
   hasVoiceIdentity,
   toVoiceIdentity,
 } from "@/_schemas";
-import { withoutStaleDictionaryWords } from "@/server/features/tts/g2p-item";
 import { nowIso } from "@/_shared/lib/date/date";
 import { getEffectiveTtsSynthesisSettings } from "@/server/features/tts/synthesis-settings";
 import { normalizeProjectMeta } from "@/server/features/project/normalize-project-meta";
@@ -64,11 +63,7 @@ import {
   type AnalysisJobTarget,
 } from "@/server/features/project/tts-analysis-jobs";
 import { createTtsAnalysisKey } from "@/server/features/tts/analysis-key";
-import { needsAutomaticLlmAnalyze } from "@/server/features/tts/automatic-llm-eligibility";
-import {
-  hasOpenRouterApiKey,
-  warnMissingOpenRouterApiKeyOnce,
-} from "@/server/features/tts/llm-g2p-profile";
+import { hasOpenRouterApiKey } from "@/server/features/tts/llm-g2p-profile";
 
 const DEFAULT_TTS_PLAYBACK_SETTINGS = {
   padBeforeSec: 0,
@@ -193,15 +188,6 @@ function comparisonInputMatches(
 
 type TtsReuseKind = "ready" | "pending" | "analyzing" | "none";
 
-function requestG2pDiffersFromBaseline(item: SaveTtsItem, previous: SavedTts, readText: string) {
-  const requestG2p = getUsableG2p(item.speech?.g2p, readText);
-  const baseline = previous.speech.g2p;
-  if (!requestG2p || !baseline) {
-    return false;
-  }
-  return requestG2p.text !== baseline.text || requestG2p.kana !== baseline.kana;
-}
-
 function canKeepAnalyzing(item: SaveTtsItem, previous: SavedTts) {
   if (previous.audio.status !== "analyzing") {
     return false;
@@ -219,7 +205,8 @@ function canKeepAnalyzing(item: SaveTtsItem, previous: SavedTts) {
     return false;
   }
 
-  return !requestG2pDiffersFromBaseline(item, previous, nextReadText);
+  // 生成中に手で書いた g2p が届いたら、生成を待たずにそれで合成する。
+  return !getUsableG2p(item.speech?.g2p, nextReadText);
 }
 
 async function classifyTtsReuse(
@@ -288,9 +275,10 @@ function computeNeedsG2pAnalyze(
   return !getUsableG2p(nextInput.g2p, nextInput.readText);
 }
 
+/** LLM が使えないときだけ、保存時に analyze で g2p を埋める。使えるときは analyzing にして後で生成する。 */
 async function assignBatchG2p(serverEnv: ServerEnv, plans: PlannedTts[]) {
   const targets = plans.filter((plan) => plan.needsG2pAnalyze);
-  if (targets.length === 0) {
+  if (targets.length === 0 || hasOpenRouterApiKey(serverEnv)) {
     return;
   }
 
@@ -419,11 +407,7 @@ async function planSavedTts(
   forceResynthesis = false,
 ): Promise<PlannedTts> {
   validateTts(item);
-  const previousG2p = previous?.speech.g2p;
-  const drafted = createTtsComparisonInput(withEffectiveSynthesisSettings(item, nextPresets));
-  const nextInput = drafted.g2p
-    ? { ...drafted, g2p: withoutStaleDictionaryWords(drafted.g2p, previousG2p) }
-    : drafted;
+  const nextInput = createTtsComparisonInput(withEffectiveSynthesisSettings(item, nextPresets));
   const reuse = await classifyTtsReuse(
     item,
     projectPath,
@@ -495,15 +479,7 @@ async function buildSavedTts(
     return { tts: createReusedSavedTts(plan.item, plan.previous) as SavedTts };
   }
 
-  if (
-    plan.needsG2pAnalyze &&
-    hasOpenRouterApiKey(serverEnv) &&
-    needsAutomaticLlmAnalyze(plan.nextInput.readText)
-  ) {
-    const baseline = plan.nextInput.g2p;
-    if (!baseline) {
-      throw new Error(`haqumei-api analyze returned no item for tts ${plan.item.id}`);
-    }
+  if (plan.needsG2pAnalyze && hasOpenRouterApiKey(serverEnv)) {
     const analysisKey = createTtsAnalysisKey({
       projectPath,
       pageId,
@@ -511,10 +487,13 @@ async function buildSavedTts(
       provider: plan.nextInput.provider,
       text: plan.item.text,
       effectiveReadText: plan.nextInput.readText,
-      baselineKana: baseline.kana,
     });
     return {
-      tts: createAnalyzingSavedTts(plan.item, plan.nextInput, analysisKey) as SavedTts,
+      tts: createAnalyzingSavedTts(
+        plan.item,
+        { ...plan.nextInput, g2p: undefined },
+        analysisKey,
+      ) as SavedTts,
       analysis: {
         pageId,
         ttsId: plan.item.id,
@@ -840,13 +819,6 @@ async function saveProjectChangesLocked(
     serverEnv,
     plannedPages.flatMap((planned) => planned.tts),
   );
-
-  const needsAutomaticAnalyze = plannedPages.some((planned) =>
-    planned.tts.some((plan) => plan.needsG2pAnalyze),
-  );
-  if (needsAutomaticAnalyze && !hasOpenRouterApiKey(serverEnv)) {
-    warnMissingOpenRouterApiKeyOnce();
-  }
 
   const jobs: SynthesisJob[] = [];
   const analysisJobs: AnalysisJobTarget[] = [];

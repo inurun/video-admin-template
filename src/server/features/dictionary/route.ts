@@ -3,6 +3,7 @@ import { jsonError } from "@/server/_shared/http";
 import { getServerEnv } from "@/server/core/env";
 import { dictionaryContract } from "./contract";
 import {
+  analyzeDictionaryText,
   createDictionaryEntry,
   deleteDictionaryEntry,
   getDictionaryEntry,
@@ -67,6 +68,18 @@ export const dictionaryApp = new Hono()
       return c.body(null, 204);
     } catch (error) {
       return jsonError(c, 500, error, "Failed to delete dictionary entry");
+    }
+  })
+  .post("/dictionary/analyze", async (c) => {
+    try {
+      const { text } = dictionaryContract.analyze.json.parse(await c.req.json());
+      return c.json(
+        dictionaryContract.analyze.response.parse(
+          await analyzeDictionaryText(getServerEnv(c), text),
+        ),
+      );
+    } catch (error) {
+      return jsonError(c, 500, error, "Dictionary analyze failed");
     }
   })
   .post("/dictionary/preview", async (c) => {

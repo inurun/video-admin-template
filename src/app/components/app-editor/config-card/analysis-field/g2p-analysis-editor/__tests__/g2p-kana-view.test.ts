@@ -47,4 +47,24 @@ describe("g2p-kana-view", () => {
     const withPause = parseKanaView("ア'、イ'");
     expect(togglePhraseChain(withPause!, 1, 0)).toBeNull();
   });
+
+  it("keeps v3 surfaces through accent and chain edits", () => {
+    const kana = "今日:キョ'ー|は:ワ/いい:イ'イ/天気:テ'ンキ|です:デス|ね:ネ！";
+    const phrases = parseKanaView(kana);
+    expect(phrases?.[0]?.words).toEqual([
+      { surface: "今日", moras: ["キョ", "ー"] },
+      { surface: "は", moras: ["ワ"] },
+    ]);
+    expect(serializeKanaView(phrases!)).toBe(kana);
+    expect(setPhraseAccent(phrases!, 1, 0)).toBe(
+      "今日:キョ'ー|は:ワ/いい:イイ'/天気:テ'ンキ|です:デス|ね:ネ！",
+    );
+    expect(togglePhraseChain(phrases!, 2, 1)).toBe(
+      "今日:キョ'ー|は:ワ/いい:イ'イ/天気:テ'ンキ/です:デス|ね:ネ'！",
+    );
+  });
+
+  it("rejects an empty surface", () => {
+    expect(parseKanaView(":ア'")).toBeNull();
+  });
 });

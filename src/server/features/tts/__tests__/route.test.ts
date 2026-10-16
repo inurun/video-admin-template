@@ -1,18 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
 import { ttsApp } from "../route";
-import { createAnalyzeItem, createG2pItem } from "@/_schemas/__tests__/g2p-fixture";
+import { createG2pItem } from "@/_schemas/__tests__/g2p-fixture";
 import { HaqumeiApiError } from "@/server/features/haqumei-api/error";
 
 const {
-  analyzeTtsMock,
-  analyzeTtsPageWithLlmMock,
+  generateTtsG2pMock,
   clearTtsCacheMock,
   listTtsVoicesMock,
   synthesizeTtsMock,
   validateTtsG2pMock,
 } = vi.hoisted(() => ({
-  analyzeTtsMock: vi.fn(),
-  analyzeTtsPageWithLlmMock: vi.fn(),
+  generateTtsG2pMock: vi.fn(),
   clearTtsCacheMock: vi.fn(),
   listTtsVoicesMock: vi.fn(),
   synthesizeTtsMock: vi.fn(),
@@ -20,8 +18,7 @@ const {
 }));
 
 vi.mock("../use-case", () => ({
-  analyzeTts: analyzeTtsMock,
-  analyzeTtsPageWithLlm: analyzeTtsPageWithLlmMock,
+  generateTtsG2p: generateTtsG2pMock,
   clearTtsCache: clearTtsCacheMock,
   listTtsVoices: listTtsVoicesMock,
   synthesizeTts: synthesizeTtsMock,
@@ -51,61 +48,20 @@ describe("tts routes", () => {
     });
   });
 
-  it("analyzes text through haqumei-api", async () => {
-    const g2p = createAnalyzeItem("hello");
-    analyzeTtsMock.mockResolvedValueOnce({ g2p });
+  it("generates G2P for one sentence", async () => {
+    const g2p = createG2pItem("今日", "今日:キョ'ー");
+    generateTtsG2pMock.mockResolvedValueOnce({ g2p, source: "llm" });
+    const body = { pageId: "page-1", item: { id: "tts-1", text: "今日" } };
 
-    const response = await ttsApp.request("/tts/analyze", {
+    const response = await ttsApp.request("/tts/g2p/generate", {
       method: "POST",
-      body: JSON.stringify({ text: "hello" }),
+      body: JSON.stringify(body),
       headers: { "Content-Type": "application/json" },
     });
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ g2p });
-  });
-
-  it("analyzes a page through OpenRouter", async () => {
-    analyzeTtsPageWithLlmMock.mockResolvedValueOnce({
-      runId: "run-1",
-      logFile: ".logs/llm-g2p/run-1.json",
-      requestId: "request-1",
-      model: "openai/gpt-5.6-luna",
-      provider: "openai",
-      timings: {
-        haqumeiBaselineMs: 1,
-        openRouterMs: 2,
-        haqumeiValidationMs: 3,
-        totalMs: 6,
-      },
-      usage: {
-        promptTokens: 10,
-        completionTokens: 5,
-        reasoningTokens: 2,
-        cachedTokens: 0,
-        totalTokens: 15,
-        costUsd: 0.001,
-      },
-      costPerTtsUsd: 0.001,
-      monthlyUsdAt3000Tts: 3,
-      items: [{ id: "tts-1", status: "unchanged", g2p: createG2pItem("hello") }],
-    });
-
-    const response = await ttsApp.request("/tts/analyze/llm", {
-      method: "POST",
-      body: JSON.stringify({
-        pageId: "page-1",
-        items: [{ id: "tts-1", provider: "voisona", text: "hello" }],
-      }),
-      headers: { "Content-Type": "application/json" },
-    });
-
-    expect(response.status).toBe(200);
-    expect((await response.json()).runId).toBe("run-1");
-    expect(analyzeTtsPageWithLlmMock).toHaveBeenCalledWith(
-      expect.any(Object),
-      expect.objectContaining({ pageId: "page-1" }),
-    );
+    expect(await response.json()).toEqual({ g2p, source: "llm" });
+    expect(generateTtsG2pMock).toHaveBeenCalledWith(expect.anything(), body);
   });
 
   it("synthesizes through the selected provider", async () => {
@@ -164,9 +120,9 @@ describe("tts routes", () => {
     expect(clearTtsCacheMock).toHaveBeenCalledWith({ projectPath: "nested/example" });
   });
 
-  it("keeps analysis_failed detail on analyze", async () => {
+  it("keeps analysis_failed detail on generate", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    analyzeTtsMock.mockRejectedValueOnce(
+    generateTtsG2pMock.mockRejectedValueOnce(
       new HaqumeiApiError({
         type: "about:blank",
         title: "Analysis failed",
@@ -177,9 +133,9 @@ describe("tts routes", () => {
       }),
     );
 
-    const response = await ttsApp.request("/tts/analyze", {
+    const response = await ttsApp.request("/tts/g2p/generate", {
       method: "POST",
-      body: JSON.stringify({ text: "hello" }),
+      body: JSON.stringify({ pageId: "page-1", item: { id: "tts-1", text: "hello" } }),
       headers: { "Content-Type": "application/json" },
     });
 

@@ -1,10 +1,4 @@
-import {
-  savedProjectSchema,
-  type SavedProject,
-  type SavedTts,
-  type StoredG2pItem,
-} from "@/_schemas";
-import { dictionaryWordsForLlm } from "@/server/features/tts/g2p-item";
+import { savedProjectSchema, type SavedProject, type SavedTts, type G2pItem } from "@/_schemas";
 import {
   readSavedProject,
   readSavedProjectDocument,
@@ -14,14 +8,8 @@ import type { ServerEnv } from "@/server/core/env";
 import { AUDIO_PADDING_SECONDS } from "@/constants";
 import { enqueueProjectMutation } from "./project-mutation-queue";
 import { startSynthesisBatch, type SynthesisJob } from "./tts-synthesis-jobs";
-import {
-  buildAutomaticG2pContext,
-  type AutomaticG2pTarget,
-} from "@/server/features/tts/automatic-g2p-context";
-import {
-  runAutomaticG2pBatch,
-  type AutomaticAnalyzeTarget,
-} from "@/server/features/tts/automatic-llm-analysis";
+import { buildG2pContext, type G2pTarget } from "@/server/features/tts/g2p-context";
+import { generateG2p } from "@/server/features/tts/llm-g2p";
 import { resolveTtsSynthesisSettings } from "@/server/features/tts/synthesis-settings";
 import {
   createPreviousTtsComparisonInput,
@@ -50,7 +38,7 @@ function planTtsWav(
   serverEnv: ServerEnv,
   projectPath: string,
   item: SavedTts,
-  g2p: StoredG2pItem,
+  g2p: G2pItem,
   presets: SavedProject["voicePresets"],
 ) {
   const provider = getTtsProvider(item.provider);
@@ -62,27 +50,7 @@ function planTtsWav(
   } as never);
 }
 
-function toAnalyzeTarget(
-  pageId: string,
-  item: SavedTts,
-  analysisKey: string,
-): AutomaticAnalyzeTarget | null {
-  const baseline = item.speech.g2p;
-  if (!baseline) {
-    return null;
-  }
-
-  return {
-    pageId,
-    ttsId: item.id,
-    analysisKey,
-    text: item.text,
-    readText: item.readText || item.text,
-    baseline,
-  };
-}
-
-function collectAnalyzeTargets(project: SavedProject, requested: AnalysisJobTarget[]) {
+function collectAnalyzeTargets(project: SavedProject, requested: AnalysisJobTarget[]): G2pTarget[] {
   const pagesById = new Map(
     project.pages.filter((page) => page.type !== "transition").map((page) => [page.id, page]),
   );
@@ -97,8 +65,7 @@ function collectAnalyzeTargets(project: SavedProject, requested: AnalysisJobTarg
     ) {
       return [];
     }
-    const target = toAnalyzeTarget(request.pageId, item, request.analysisKey);
-    return target ? [target] : [];
+    return [{ pageId: request.pageId, ttsId: item.id }];
   });
 }
 
@@ -106,7 +73,7 @@ async function applyAnalysisResults(
   serverEnv: ServerEnv,
   projectPath: string,
   requested: AnalysisJobTarget[],
-  g2pByTtsId: Map<string, StoredG2pItem>,
+  g2pByTtsId: Map<string, G2pItem>,
 ) {
   const project = await readSavedProject(projectPath);
   const requestedByTtsId = new Map(requested.map((target) => [target.ttsId, target]));
@@ -197,22 +164,14 @@ async function runAnalysisBatch(
     return;
   }
 
-  const contextTargets: AutomaticG2pTarget[] = targets.map((target) => {
-    const dictionaryWords = dictionaryWordsForLlm(target.baseline.dictionary_words);
-    return {
-      pageId: target.pageId,
-      ttsId: target.ttsId,
-      baselineKana: target.baseline.kana,
-      ...(dictionaryWords ? { dictionaryWords } : {}),
-    };
+  const generated = await generateG2p(serverEnv, {
+    mode: "page",
+    pages: buildG2pContext(project.pages, targets),
   });
-  const result = await runAutomaticG2pBatch(serverEnv, {
-    pages: buildAutomaticG2pContext(project.pages, contextTargets),
-    targets,
-  });
+  const g2pByTtsId = new Map([...generated].map(([ttsId, result]) => [ttsId, result.g2p]));
 
   await enqueueProjectMutation(projectPath, () =>
-    applyAnalysisResults(serverEnv, projectPath, requested, result.g2pByTtsId),
+    applyAnalysisResults(serverEnv, projectPath, requested, g2pByTtsId),
   );
 }
 

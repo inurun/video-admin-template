@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { savedProjectSchema } from "@/_schemas";
-import { storedG2pItemSchema } from "@/_schemas/g2p";
+import { g2pItemSchema } from "@/_schemas/g2p";
 import { savedTimelineSchema } from "@/_schemas/timeline";
 import {
   commentGroupSchema,
@@ -27,7 +27,7 @@ import {
 } from "@/_schemas/project/primitives";
 
 const saveTtsSpeechSchema = z.object({
-  g2p: storedG2pItemSchema.optional(),
+  g2p: g2pItemSchema.optional(),
 });
 
 const saveTtsBaseFields = {

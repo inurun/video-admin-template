@@ -1,7 +1,7 @@
 export const HAQUMEI_MAX_BATCH_SIZE = 256;
 export const HAQUMEI_MAX_TEXT_CHARS = 500;
 export const HAQUMEI_MAX_TOTAL_CHARS = 32_000;
-export const HAQUMEI_SCHEMA_VERSION = "2";
+export const HAQUMEI_SCHEMA_VERSION = "3";
 
 export function unicodeScalarCount(text: string) {
   return [...text].length;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createAnalyzeItem, createG2pItem } from "@/_schemas/__tests__/g2p-fixture";
+import { createG2pItem } from "@/_schemas/__tests__/g2p-fixture";
 import {
   buildVoicevoxSynthesisRequest,
   buildVoisonaSynthesisRequest,
@@ -20,7 +20,7 @@ describe("synthesis request builders", () => {
     });
 
     expect(request).toEqual({
-      schema_version: "2",
+      schema_version: "3",
       item,
       speaker: 3,
       synthesis_settings: {
@@ -42,7 +42,7 @@ describe("synthesis request builders", () => {
         voiceName: "futaba-minato_ja_JP",
       }),
     ).toEqual({
-      schema_version: "2",
+      schema_version: "3",
       item,
       voice_name: "futaba-minato_ja_JP",
     });
@@ -61,7 +61,7 @@ describe("synthesis request builders", () => {
     });
 
     expect(request).toEqual({
-      schema_version: "2",
+      schema_version: "3",
       item,
       voice_name: "futaba-minato_ja_JP",
       voice_version: "2.0.2",
@@ -75,7 +75,10 @@ describe("synthesis request builders", () => {
   });
 
   it("omits dictionary_words from synthesis items", () => {
-    const item = createAnalyzeItem("雨衣", "アメコロ'", [{ word_index: 0, kind: "fixed" }]);
+    const item = {
+      ...createG2pItem("雨衣", "アメコロ'"),
+      dictionary_words: [{ word_index: 0, kind: "fixed" }],
+    };
     expect(buildVoicevoxSynthesisRequest({ item, speaker: 3 }).item).toEqual({
       text: "雨衣",
       kana: "アメコロ'",
@@ -100,7 +103,7 @@ describe("synthesis request builders", () => {
     });
 
     expect(request).toEqual({
-      schema_version: "2",
+      schema_version: "3",
       item,
       speaker_uuid: "speaker-1",
       style_id: 0,
@@ -121,7 +124,7 @@ describe("synthesis request builders", () => {
         styleId: 1,
       }),
     ).toEqual({
-      schema_version: "2",
+      schema_version: "3",
       item,
       speaker_uuid: "speaker-1",
       style_id: 1,

@@ -1,4 +1,4 @@
-import type { SavedTts, StoredG2pItem } from "@/_schemas";
+import type { SavedTts, G2pItem } from "@/_schemas";
 import type { SaveTtsItem } from "@/server/features/project/contract";
 import type { ServerEnv } from "@/server/core/env";
 import type { SynthesizeResponse } from "@/server/features/tts/contract";
@@ -18,7 +18,7 @@ type ComparisonBase<TProvider extends TtsProvider> = {
   provider: TProvider;
   text: string;
   readText: string;
-  g2p?: StoredG2pItem;
+  g2p?: G2pItem;
   synthesisSettings?: NonNullable<TtsInputForProvider<TProvider>["synthesisSettings"]>;
 };
 

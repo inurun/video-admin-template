@@ -13,7 +13,7 @@ export const VOICEVOX_SYNTHESIS_DEFAULTS = {
   pauseLengthScale: 0.5,
 } as const;
 
-const SYNTHESIS_SCHEMA_VERSION = "2";
+const SYNTHESIS_SCHEMA_VERSION = "3";
 
 function omitUndefinedSettings<T extends Record<string, unknown>>(value: T) {
   return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as T;

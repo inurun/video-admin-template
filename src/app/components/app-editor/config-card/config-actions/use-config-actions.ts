@@ -18,7 +18,7 @@ function isVoiceActionDisabled({
 }
 
 export function useConfigTtsActions() {
-  const { analyze, analyzeWithLlm, canRunTts, isAnalyzing, isLlmAnalyzing, preview } = useTts();
+  const { analyze, canRunTts, isAnalyzing, preview } = useTts();
   const { ttsId } = useSelectedTts();
   const ttsIndex = useTtsFormIndex(ttsId);
   const { control } = useFormContext<PageFormValues>();
@@ -38,21 +38,14 @@ export function useConfigTtsActions() {
     void analyze(ttsId);
   }, [analyze, ttsId]);
 
-  const llmAnalyzeSelected = useCallback(() => {
-    void analyzeWithLlm(ttsId);
-  }, [analyzeWithLlm, ttsId]);
-
   const previewSelected = useCallback(() => {
     void preview(ttsId);
   }, [preview, ttsId]);
 
   return {
     analyzeSelected,
-    analyzeDisabled: actionDisabled || isAnalyzing || isLlmAnalyzing,
+    analyzeDisabled: actionDisabled || isAnalyzing || ttsItem?.provider === "voicepeak",
     isAnalyzing,
-    llmAnalyzeSelected,
-    llmAnalyzeDisabled: actionDisabled || isLlmAnalyzing || ttsItem?.provider === "voicepeak",
-    isLlmAnalyzing,
     previewDisabled: actionDisabled,
     previewSelected,
   };

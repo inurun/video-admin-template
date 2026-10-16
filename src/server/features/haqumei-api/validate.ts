@@ -14,7 +14,10 @@ export async function validateG2pItems(
   assertHaqumeiValidateBatch(items.map((item) => item.text));
 
   const response = await getHaqumeiApiClient(serverEnv).POST("/v1/g2p/validate", {
-    body: { items: items.map((item) => ({ text: item.text, kana: item.kana })) },
+    body: {
+      schema_version: HAQUMEI_SCHEMA_VERSION,
+      items: items.map((item) => ({ text: item.text, kana: item.kana })),
+    },
   });
   const data = unwrapHaqumeiData(response);
   if (data.schema_version !== HAQUMEI_SCHEMA_VERSION) {

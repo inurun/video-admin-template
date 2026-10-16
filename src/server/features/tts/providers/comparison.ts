@@ -1,4 +1,4 @@
-import { storedG2pItemSchema, type StoredG2pItem } from "@/_schemas";
+import { g2pItemSchema, type G2pItem } from "@/_schemas";
 import { toG2pItem } from "@/server/features/tts/g2p-item";
 import type {
   TtsInputForProvider,
@@ -23,8 +23,8 @@ function normalizeSynthesisSettings<TSettings>(value: TSettings | null | undefin
   return value ?? undefined;
 }
 
-export function getUsableG2p(g2p: unknown, readText: string): StoredG2pItem | undefined {
-  const parsed = storedG2pItemSchema.safeParse(g2p);
+export function getUsableG2p(g2p: unknown, readText: string): G2pItem | undefined {
+  const parsed = g2pItemSchema.safeParse(g2p);
   if (!parsed.success || parsed.data.text !== readText) {
     return undefined;
   }
@@ -32,7 +32,7 @@ export function getUsableG2p(g2p: unknown, readText: string): StoredG2pItem | un
   return parsed.data;
 }
 
-export function g2pAudioIdentity(g2p: StoredG2pItem | undefined) {
+export function g2pAudioIdentity(g2p: G2pItem | undefined) {
   return g2p ? toG2pItem(g2p) : undefined;
 }
 

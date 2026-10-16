@@ -1,7 +1,6 @@
 import type { VoiceOption } from "@/_schemas";
 import type { ServerEnv } from "@/server/core/env";
 import { clearProjectTtsCache, readSavedProject } from "@/server/_shared/storage";
-import { analyzeText } from "@/server/features/haqumei-api/analyze";
 import { validateG2pItem } from "@/server/features/haqumei-api/validate";
 import {
   listOptionalCoeiroinkVoices,
@@ -11,8 +10,8 @@ import {
 import { getHaqumeiApiUrl } from "@/server/features/haqumei-api/client";
 import { getVoicepeakBase, listVoicepeakVoices } from "@/server/features/voicepeak/use-case";
 import {
-  ttsAnalyzeRequestSchema,
   ttsClearCacheRequestSchema,
+  ttsG2pGenerateRequestSchema,
   ttsSynthesizeRequestSchema,
   ttsValidateRequestSchema,
 } from "./contract";
@@ -21,7 +20,8 @@ import { getTtsProvider } from "./providers/registry";
 import { enqueueProjectMutation } from "@/server/features/project/project-mutation-queue";
 import { TtsCacheClearConflictError } from "@/server/features/tts/errors";
 
-export { analyzeTtsPageWithLlm } from "./llm-analysis";
+import { buildSingleG2pContext } from "./g2p-context";
+import { generateG2p } from "./llm-g2p";
 
 async function loadProviderVoices<T>(label: string, baseUrl: string, task: Promise<T>): Promise<T> {
   try {
@@ -62,9 +62,31 @@ export async function listTtsVoices(serverEnv: ServerEnv) {
   return [...voisona, ...voicevox, ...voicepeak, ...coeiroink];
 }
 
-export async function analyzeTts(serverEnv: ServerEnv, input: unknown) {
-  const parsed = ttsAnalyzeRequestSchema.parse(input);
-  return { g2p: await analyzeText(serverEnv, parsed.text) };
+async function generateSingleG2p(
+  serverEnv: ServerEnv,
+  input: { pageId: string; id: string; text: string; previous?: string; next?: string },
+) {
+  const result = (
+    await generateG2p(serverEnv, {
+      mode: "single",
+      pages: buildSingleG2pContext(input),
+    })
+  ).get(input.id);
+  if (!result) {
+    throw new Error(`G2P generation returned no item for tts ${input.id}`);
+  }
+  return result;
+}
+
+export async function generateTtsG2p(serverEnv: ServerEnv, input: unknown) {
+  const { pageId, item } = ttsG2pGenerateRequestSchema.parse(input);
+  return generateSingleG2p(serverEnv, {
+    pageId,
+    id: item.id,
+    text: getEffectiveReadText(item),
+    previous: item.previous ? getEffectiveReadText(item.previous) : undefined,
+    next: item.next ? getEffectiveReadText(item.next) : undefined,
+  });
 }
 
 export async function validateTtsG2p(serverEnv: ServerEnv, input: unknown) {
@@ -77,7 +99,9 @@ export async function synthesizeTts(serverEnv: ServerEnv, input: unknown) {
   const provider = getTtsProvider(parsed.provider);
   const readText = getEffectiveReadText(parsed);
   const g2p = provider.usesG2p
-    ? (getUsableG2p(parsed.g2p, readText) ?? (await analyzeText(serverEnv, readText)))
+    ? (getUsableG2p(parsed.g2p, readText) ??
+      (await generateSingleG2p(serverEnv, { pageId: "preview", id: "preview", text: readText }))
+        .g2p)
     : parsed.g2p;
   const synthesisInput = {
     ...parsed,

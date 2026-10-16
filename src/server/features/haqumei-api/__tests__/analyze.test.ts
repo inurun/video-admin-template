@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { analyzeTexts } from "../analyze";
 import { HaqumeiApiError } from "../error";
-import { createAnalyzeItem, createG2pItem } from "@/_schemas/__tests__/g2p-fixture";
+import { createG2pItem } from "@/_schemas/__tests__/g2p-fixture";
 
 const { getHaqumeiApiClientMock } = vi.hoisted(() => ({
   getHaqumeiApiClientMock: vi.fn(),
@@ -54,9 +54,9 @@ describe("analyzeTexts", () => {
         POST: async () => ({
           response: new Response(null, { status: 200 }),
           data: {
-            schema_version: "2",
+            schema_version: "3",
             haqumei_version: "0.8.5",
-            items: firstChunk.map((text) => createAnalyzeItem(text)),
+            items: firstChunk.map((text) => createG2pItem(text)),
           },
         }),
       })
@@ -73,44 +73,29 @@ describe("analyzeTexts", () => {
     });
   });
 
-  it("keeps dictionary_words and rejects a missing field", async () => {
-    getHaqumeiApiClientMock
-      .mockReturnValueOnce({
-        POST: async () => ({
-          response: new Response(null, { status: 200 }),
-          data: {
-            schema_version: "2",
-            haqumei_version: "0.12.0",
-            items: [
-              {
-                text: "雨衣",
-                kana: "アメコロ'",
-                warnings: [],
-                dictionary_words: [{ word_index: 0, kind: "fixed" }],
-              },
-            ],
+  it("requests schema v3 and drops dictionary_words", async () => {
+    const post = vi.fn(async () => ({
+      response: new Response(null, { status: 200 }),
+      data: {
+        schema_version: "3",
+        haqumei_version: "0.12.2",
+        items: [
+          {
+            text: "雨衣",
+            kana: "雨衣:アメコロ'",
+            warnings: [],
+            dictionary_words: [{ word_index: 0, kind: "fixed" }],
           },
-        }),
-      })
-      .mockReturnValueOnce({
-        POST: async () => ({
-          response: new Response(null, { status: 200 }),
-          data: {
-            schema_version: "2",
-            haqumei_version: "0.12.0",
-            items: [createG2pItem("雨衣", "アメコロ'")],
-          },
-        }),
-      });
+        ],
+      },
+    }));
+    getHaqumeiApiClientMock.mockReturnValueOnce({ POST: post });
 
     await expect(analyzeTexts({}, ["雨衣"])).resolves.toEqual([
-      {
-        text: "雨衣",
-        kana: "アメコロ'",
-        warnings: [],
-        dictionary_words: [{ word_index: 0, kind: "fixed" }],
-      },
+      createG2pItem("雨衣", "雨衣:アメコロ'"),
     ]);
-    await expect(analyzeTexts({}, ["雨衣"])).rejects.toThrow();
+    expect(post).toHaveBeenCalledWith("/v1/analyze", {
+      body: { schema_version: "3", texts: ["雨衣"] },
+    });
   });
 });

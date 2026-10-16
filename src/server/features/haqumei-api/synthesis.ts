@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import {
-  type StoredG2pItem,
+  type G2pItem,
   type VoicevoxSynthesisSettings,
   type VoisonaSynthesisSettings,
   type CoeiroinkSynthesisSettings,
@@ -32,7 +32,7 @@ async function writeWavFromBlob(outputPath: string, audio: Blob) {
 export function planVoicevoxSynthesis(input: {
   serverEnv: ServerEnv;
   projectPath: string;
-  g2p: StoredG2pItem;
+  g2p: G2pItem;
   voiceName: string;
   voiceVersion?: string;
   synthesisSettings?: VoicevoxSynthesisSettings;
@@ -77,7 +77,7 @@ export function planVoicevoxSynthesis(input: {
 export function synthesizeVoicevox(input: {
   serverEnv: ServerEnv;
   projectPath: string;
-  g2p: StoredG2pItem;
+  g2p: G2pItem;
   voiceName: string;
   voiceVersion?: string;
   synthesisSettings?: VoicevoxSynthesisSettings;
@@ -88,7 +88,7 @@ export function synthesizeVoicevox(input: {
 export function planVoisonaSynthesis(input: {
   serverEnv: ServerEnv;
   projectPath: string;
-  g2p: StoredG2pItem;
+  g2p: G2pItem;
   voiceName: string;
   voiceVersion?: string;
   synthesisSettings?: VoisonaSynthesisSettings;
@@ -133,7 +133,7 @@ export function planVoisonaSynthesis(input: {
 export function synthesizeVoisona(input: {
   serverEnv: ServerEnv;
   projectPath: string;
-  g2p: StoredG2pItem;
+  g2p: G2pItem;
   voiceName: string;
   voiceVersion?: string;
   synthesisSettings?: VoisonaSynthesisSettings;
@@ -144,7 +144,7 @@ export function synthesizeVoisona(input: {
 export function planCoeiroinkSynthesis(input: {
   serverEnv: ServerEnv;
   projectPath: string;
-  g2p: StoredG2pItem;
+  g2p: G2pItem;
   speakerUuid: string;
   styleId: number;
   modelVersion: string;
@@ -191,7 +191,7 @@ export function planCoeiroinkSynthesis(input: {
 export function synthesizeCoeiroink(input: {
   serverEnv: ServerEnv;
   projectPath: string;
-  g2p: StoredG2pItem;
+  g2p: G2pItem;
   speakerUuid: string;
   styleId: number;
   modelVersion: string;

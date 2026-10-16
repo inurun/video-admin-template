@@ -27,7 +27,7 @@ describe("validateG2pItems", () => {
     getHaqumeiApiClientMock.mockReturnValueOnce({
       POST: async () => ({
         response: new Response(null, { status: 200 }),
-        data: { schema_version: "2", haqumei_version: "0.8.5", items: [g2p] },
+        data: { schema_version: "3", haqumei_version: "0.8.5", items: [g2p] },
       }),
     });
 

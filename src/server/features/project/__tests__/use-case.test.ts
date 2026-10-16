@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_VOICE_PRESETS,
   EMPTY_TIMELINE,
+  type G2pItem,
   SEQUENCE_TRACK_ID,
   type SavedPage,
   type SavedProject,
@@ -12,7 +13,7 @@ import {
 import { EYECATCH_TEXT_MIN_DURATION_SEC } from "@/constants";
 import { toTimeline } from "../to-timeline";
 import type { SaveSequenceItem } from "@/server/features/project/contract";
-import { ameKoroAnalyzeItem, createG2pItem } from "@/_schemas/__tests__/g2p-fixture";
+import { createG2pItem } from "@/_schemas/__tests__/g2p-fixture";
 import { HaqumeiApiError } from "@/server/features/haqumei-api/error";
 
 const accessMock = vi.fn();
@@ -40,7 +41,7 @@ const planVoisonaSynthesisMock = vi.fn();
 const planVoicevoxSynthesisMock = vi.fn();
 const planVoicepeakSynthesisMock = vi.fn();
 const readCachedWavMock = vi.fn();
-const requestOpenRouterCorrectionsMock = vi.fn();
+const generateG2pMock = vi.fn();
 const validateG2pItemsMock = vi.fn();
 
 vi.mock("node:fs/promises", () => ({
@@ -92,15 +93,13 @@ vi.mock("@/server/features/tts/wav-cache", async () => {
   };
 });
 
-vi.mock("@/server/features/tts/openrouter", async () => {
-  const actual = await vi.importActual<typeof import("@/server/features/tts/openrouter")>(
-    "@/server/features/tts/openrouter",
-  );
-  return {
-    ...actual,
-    requestOpenRouterCorrections: (...args: unknown[]) => requestOpenRouterCorrectionsMock(...args),
-  };
-});
+vi.mock("@/server/features/tts/llm-g2p", () => ({
+  generateG2p: (...args: unknown[]) => generateG2pMock(...args),
+}));
+
+function llmG2p(entries: Record<string, G2pItem>) {
+  return new Map(Object.entries(entries).map(([id, g2p]) => [id, { g2p, source: "llm" }]));
+}
 
 vi.mock("@/server/features/haqumei-api/validate", () => ({
   validateG2pItems: (...args: unknown[]) => validateG2pItemsMock(...args),
@@ -223,12 +222,9 @@ describe("project use-case", () => {
     const { resetSynthesisJobsForTests } = await import("../tts-synthesis-jobs");
     const { resetAnalysisJobsForTests } = await import("../tts-analysis-jobs");
     const { resetProjectMutationQueueForTests } = await import("../project-mutation-queue");
-    const { resetMissingOpenRouterApiKeyWarningForTests } =
-      await import("@/server/features/tts/llm-g2p-profile");
     resetSynthesisJobsForTests();
     resetAnalysisJobsForTests();
     resetProjectMutationQueueForTests();
-    resetMissingOpenRouterApiKeyWarningForTests();
     vi.useFakeTimers();
     vi.setSystemTime(now);
   });
@@ -992,184 +988,6 @@ describe("project use-case", () => {
 
     expect(analyzeTextsMock).not.toHaveBeenCalled();
     expect(synthesizeVoicevoxMock).toHaveBeenCalledWith(expect.objectContaining({ g2p: edited }));
-  });
-
-  it("keeps Analyze dictionary_words on saved baseline and drops them after a kana edit", async () => {
-    readSavedProjectMock.mockResolvedValueOnce({ pages: [] });
-    analyzeTextsMock.mockResolvedValueOnce([ameKoroAnalyzeItem]);
-    synthesizeVoisonaMock
-      .mockResolvedValueOnce(audio("/tts/project/voisona-1.wav", 1))
-      .mockResolvedValueOnce(audio("/tts/project/edited.wav", 1));
-
-    await saveProject({}, "project", {
-      meta: defaultMeta,
-      bgm: [],
-      pages: [
-        {
-          id: "page-1",
-          title: "Page 1",
-          type: "main",
-          meta: { tags: [] },
-          padBeforeSec: 0,
-          padAfterSec: 0,
-          richText: "雨衣",
-          tts: [
-            {
-              id: "tts-1",
-              provider: "voisona",
-              text: "雨衣",
-              voiceName: "voice",
-              padBeforeSec: 0,
-              padAfterSec: 0,
-              volume: 1,
-              speech: {},
-            },
-          ],
-        },
-      ],
-    });
-    await flushJobs();
-
-    expect(contentPage(lastWrittenProject().pages).tts[0]?.speech.g2p).toEqual(ameKoroAnalyzeItem);
-
-    const edited = { ...ameKoroAnalyzeItem, kana: "ウイ'" };
-    readSavedProjectMock.mockResolvedValueOnce(lastWrittenProject());
-
-    const second = await saveProject({}, "project", {
-      meta: defaultMeta,
-      bgm: [],
-      pages: [
-        {
-          id: "page-1",
-          title: "Page 1",
-          type: "main",
-          meta: { tags: [] },
-          padBeforeSec: 0,
-          padAfterSec: 0,
-          richText: "雨衣",
-          tts: [
-            {
-              id: "tts-1",
-              provider: "voisona",
-              text: "雨衣",
-              readText: "雨衣",
-              voiceName: "voice",
-              padBeforeSec: 0,
-              padAfterSec: 0,
-              volume: 1,
-              speech: { g2p: edited },
-            },
-          ],
-        },
-      ],
-    });
-
-    expect(analyzeTextsMock).toHaveBeenCalledTimes(1);
-    expect(contentPage(second.project.pages).tts[0]?.speech.g2p).toEqual({
-      text: "雨衣",
-      kana: "ウイ'",
-      warnings: [],
-    });
-  });
-
-  it("keeps a newly analyzed dictionary_words snapshot on first save", async () => {
-    readSavedProjectMock.mockResolvedValueOnce({ pages: [] });
-    synthesizeVoisonaMock.mockResolvedValueOnce(audio("/tts/project/voisona-1.wav", 1));
-
-    const saved = await saveProject({}, "project", {
-      meta: defaultMeta,
-      bgm: [],
-      pages: [
-        {
-          id: "page-1",
-          title: "Page 1",
-          type: "main",
-          meta: { tags: [] },
-          padBeforeSec: 0,
-          padAfterSec: 0,
-          richText: "雨衣",
-          tts: [
-            {
-              id: "tts-1",
-              provider: "voisona",
-              text: "雨衣",
-              voiceName: "voice",
-              padBeforeSec: 0,
-              padAfterSec: 0,
-              volume: 1,
-              speech: { g2p: ameKoroAnalyzeItem },
-            },
-          ],
-        },
-      ],
-    });
-
-    expect(analyzeTextsMock).not.toHaveBeenCalled();
-    expect(contentPage(saved.project.pages).tts[0]?.speech.g2p).toEqual(ameKoroAnalyzeItem);
-  });
-
-  it("keeps a re-analyzed dictionary_words snapshot when previous text/kana differ", async () => {
-    readSavedProjectMock.mockResolvedValueOnce({
-      pages: [
-        {
-          id: "page-1",
-          title: "Page 1",
-          type: "main",
-          meta: { tags: [] },
-          padBeforeSec: 0,
-          padAfterSec: 0,
-          durationSec: 1,
-          richText: "雨衣",
-          tts: [
-            {
-              id: "tts-1",
-              provider: "voisona",
-              text: "雨衣",
-              readText: "雨衣",
-              voiceName: "voice",
-              padBeforeSec: 0,
-              padAfterSec: 0,
-              volume: 1,
-              audio: { status: "ready", src: "/tts/project/old.wav", durationSec: 1 },
-              speech: { g2p: { text: "雨衣", kana: "ウイ'", warnings: [] } },
-            },
-          ],
-        },
-      ],
-    });
-    synthesizeVoisonaMock.mockResolvedValueOnce(audio("/tts/project/voisona-1.wav", 1));
-
-    const saved = await saveProject({}, "project", {
-      meta: defaultMeta,
-      bgm: [],
-      pages: [
-        {
-          id: "page-1",
-          title: "Page 1",
-          type: "main",
-          meta: { tags: [] },
-          padBeforeSec: 0,
-          padAfterSec: 0,
-          richText: "雨衣",
-          tts: [
-            {
-              id: "tts-1",
-              provider: "voisona",
-              text: "雨衣",
-              readText: "雨衣",
-              voiceName: "voice",
-              padBeforeSec: 0,
-              padAfterSec: 0,
-              volume: 1,
-              speech: { g2p: ameKoroAnalyzeItem },
-            },
-          ],
-        },
-      ],
-    });
-
-    expect(analyzeTextsMock).not.toHaveBeenCalled();
-    expect(contentPage(saved.project.pages).tts[0]?.speech.g2p).toEqual(ameKoroAnalyzeItem);
   });
 
   it("resynthesizes null tts when the project preset changes", async () => {
@@ -2679,16 +2497,14 @@ describe("project use-case", () => {
     expect(result.project.pages.map((page) => page.id)).toEqual(["page-a", "page-b"]);
   });
 
-  it("writes analyzing audio before Gemma finishes when an API key is set", async () => {
+  it("writes analyzing audio without analyze before the LLM finishes", async () => {
     readSavedProjectMock.mockResolvedValueOnce({ pages: [] });
-    analyzeTextsMock.mockResolvedValueOnce([helloG2p]);
     let resolveLlm: ((value: unknown) => void) | undefined;
-    requestOpenRouterCorrectionsMock.mockReturnValueOnce(
+    generateG2pMock.mockReturnValueOnce(
       new Promise((resolve) => {
         resolveLlm = resolve;
       }),
     );
-    validateG2pItemsMock.mockResolvedValueOnce([helloG2p]);
     synthesizeVoisonaMock.mockResolvedValueOnce(audio("/tts/project/voisona-1.wav", 2));
 
     const saved = await saveProject({ OPENROUTER_API_KEY: "secret" }, "project", {
@@ -2719,31 +2535,17 @@ describe("project use-case", () => {
     });
 
     expect(contentPage(saved.project.pages).tts[0]?.audio.status).toBe("analyzing");
-    expect(contentPage(saved.project.pages).tts[0]?.speech.g2p).toEqual(helloG2p);
+    expect(contentPage(saved.project.pages).tts[0]?.speech.g2p).toBeUndefined();
     expect(writeSavedProjectMock).toHaveBeenCalledTimes(1);
+    expect(analyzeTextsMock).not.toHaveBeenCalled();
     expect(synthesizeVoisonaMock).not.toHaveBeenCalled();
-    expect(requestOpenRouterCorrectionsMock).toHaveBeenCalledTimes(1);
-    expect(requestOpenRouterCorrectionsMock.mock.calls[0]?.[2]).toMatchObject({
-      profile: expect.objectContaining({ id: "gemini-3.8-flash" }),
+    expect(generateG2pMock).toHaveBeenCalledTimes(1);
+    expect(generateG2pMock.mock.calls[0]?.[1]).toMatchObject({
+      mode: "page",
+      pages: [{ id: "page-1", utterances: [{ id: "tts-1", text: "Hello", target: true }] }],
     });
 
-    resolveLlm?.({
-      requestId: "generation-1",
-      model: "google/gemma-4-31b-it",
-      actualProvider: "coreweave",
-      reasoningEffort: "none",
-      structuredOutput: [{ id: "tts-1", changed: false, kana: "", reason: "維持" }],
-      renderedKana: [helloG2p.kana],
-      corrections: [{ id: "tts-1", changed: false, kana: helloG2p.kana, reason: "維持" }],
-      usage: {
-        promptTokens: 1,
-        completionTokens: 1,
-        reasoningTokens: 0,
-        cachedTokens: 0,
-        totalTokens: 2,
-        costUsd: 0,
-      },
-    });
+    resolveLlm?.(llmG2p({ "tts-1": helloG2p }));
     await flushJobs();
     expect(contentPage(lastWrittenProject().pages).tts[0]?.audio).toMatchObject({
       status: "ready",
@@ -2753,24 +2555,7 @@ describe("project use-case", () => {
 
   it("applies the project voice preset when synthesizing after automatic G2P", async () => {
     readSavedProjectMock.mockResolvedValueOnce({ pages: [] });
-    analyzeTextsMock.mockResolvedValueOnce([helloG2p]);
-    requestOpenRouterCorrectionsMock.mockResolvedValueOnce({
-      requestId: "generation-1",
-      model: "google/gemma-4-31b-it",
-      actualProvider: "coreweave",
-      reasoningEffort: "none",
-      structuredOutput: [{ id: "tts-1", changed: false, kana: "", reason: "維持" }],
-      renderedKana: [helloG2p.kana],
-      corrections: [{ id: "tts-1", changed: false, kana: helloG2p.kana, reason: "維持" }],
-      usage: {
-        promptTokens: 1,
-        completionTokens: 1,
-        reasoningTokens: 0,
-        cachedTokens: 0,
-        totalTokens: 2,
-        costUsd: 0,
-      },
-    });
+    generateG2pMock.mockResolvedValueOnce(llmG2p({ "tts-1": helloG2p }));
     synthesizeVoicevoxMock.mockResolvedValueOnce(audio("/tts/project/voicevox-1.wav", 1));
 
     const saved = await saveProject({ OPENROUTER_API_KEY: "secret" }, "project", {
@@ -2819,11 +2604,10 @@ describe("project use-case", () => {
     expect(contentPage(lastWrittenProject().pages).tts[0]?.synthesisSettings).toBeUndefined();
   });
 
-  it("reuses analyzing after baseline G2P is reconciled onto the form", async () => {
+  it("synthesizes a usable G2P sent while analyzing instead of waiting", async () => {
     readSavedProjectMock.mockResolvedValueOnce({ pages: [] });
-    analyzeTextsMock.mockResolvedValueOnce([helloG2p]);
     let rejectLlm: ((error: Error) => void) | undefined;
-    requestOpenRouterCorrectionsMock.mockReturnValueOnce(
+    generateG2pMock.mockReturnValueOnce(
       new Promise((_, reject) => {
         rejectLlm = reject;
       }),
@@ -2855,8 +2639,8 @@ describe("project use-case", () => {
         },
       ],
     });
-    const firstAudio = contentPage(first.project.pages).tts[0]?.audio;
-    const analysisKey = firstAudio?.status === "analyzing" ? firstAudio.analysisKey : undefined;
+    expect(contentPage(first.project.pages).tts[0]?.audio.status).toBe("analyzing");
+    synthesizeVoisonaMock.mockResolvedValue(audio("/tts/project/voisona-1.wav"));
 
     const second = await saveProject({ OPENROUTER_API_KEY: "secret" }, "project", {
       meta: defaultMeta,
@@ -2886,13 +2670,12 @@ describe("project use-case", () => {
       ],
     });
 
-    expect(contentPage(second.project.pages).tts[0]?.audio).toEqual({
-      status: "analyzing",
-      analysisKey,
+    expect(contentPage(second.project.pages).tts[0]).toMatchObject({
+      audio: { status: "pending" },
+      speech: { g2p: helloG2p },
     });
-    expect(requestOpenRouterCorrectionsMock).toHaveBeenCalledTimes(1);
-    expect(analyzeTextsMock).toHaveBeenCalledTimes(1);
-    synthesizeVoisonaMock.mockResolvedValue(audio("/tts/project/voisona-1.wav"));
+    expect(generateG2pMock).toHaveBeenCalledTimes(1);
+    expect(analyzeTextsMock).not.toHaveBeenCalled();
     rejectLlm?.(new Error("stop"));
     await flushJobs();
   });
@@ -2918,7 +2701,7 @@ describe("project use-case", () => {
               readText: "Hello",
               voiceName: "old-voice",
               audio: { status: "analyzing", analysisKey },
-              speech: { g2p: helloG2p },
+              speech: {},
             },
           ],
         },
@@ -2946,7 +2729,7 @@ describe("project use-case", () => {
               padBeforeSec: 0,
               padAfterSec: 0,
               volume: 1,
-              speech: { g2p: helloG2p },
+              speech: {},
             },
           ],
         },
@@ -2956,9 +2739,9 @@ describe("project use-case", () => {
     expect(contentPage(saved.project.pages).tts[0]).toMatchObject({
       voiceName: "new-voice",
       audio: { status: "analyzing", analysisKey },
-      speech: { g2p: helloG2p },
+      speech: {},
     });
-    expect(requestOpenRouterCorrectionsMock).not.toHaveBeenCalled();
+    expect(generateG2pMock).not.toHaveBeenCalled();
   });
 
   it("ends analyzing when the provider changes to VoicePeak", async () => {
@@ -3019,7 +2802,7 @@ describe("project use-case", () => {
 
     expect(contentPage(saved.project.pages).tts[0]?.audio.status).toBe("pending");
     expect(contentPage(saved.project.pages).tts[0]?.provider).toBe("voicepeak");
-    expect(requestOpenRouterCorrectionsMock).not.toHaveBeenCalled();
+    expect(generateG2pMock).not.toHaveBeenCalled();
     await flushJobs();
   });
 
@@ -3057,14 +2840,14 @@ describe("project use-case", () => {
 
     expect(contentPage(saved.project.pages).tts[0]?.audio.status).toBe("pending");
     expect(analyzeTextsMock).not.toHaveBeenCalled();
-    expect(requestOpenRouterCorrectionsMock).not.toHaveBeenCalled();
+    expect(generateG2pMock).not.toHaveBeenCalled();
     await flushJobs();
   });
 
-  it("skips automatic LLM when readText is kana or symbols only", async () => {
-    const unG2p = createG2pItem("うん？");
+  it("queues the LLM for kana-only text too", async () => {
+    const unG2p = createG2pItem("うん？", "うん:ウ'ン？");
     readSavedProjectMock.mockResolvedValueOnce({ pages: [] });
-    analyzeTextsMock.mockResolvedValueOnce([unG2p]);
+    generateG2pMock.mockResolvedValueOnce(llmG2p({ "tts-1": unG2p }));
     synthesizeVoisonaMock.mockResolvedValueOnce(audio("/tts/project/voisona-1.wav"));
 
     const saved = await saveProject({ OPENROUTER_API_KEY: "secret" }, "project", {
@@ -3094,71 +2877,13 @@ describe("project use-case", () => {
       ],
     });
 
-    expect(contentPage(saved.project.pages).tts[0]?.audio.status).toBe("pending");
-    expect(contentPage(saved.project.pages).tts[0]?.speech.g2p).toEqual(unG2p);
-    expect(analyzeTextsMock).toHaveBeenCalledWith(expect.anything(), ["うん？"]);
-    expect(requestOpenRouterCorrectionsMock).not.toHaveBeenCalled();
-    await flushJobs();
-  });
-
-  it("queues automatic LLM when readText contains kanji", async () => {
-    const g2p = createG2pItem("うん大丈夫？");
-    readSavedProjectMock.mockResolvedValueOnce({ pages: [] });
-    analyzeTextsMock.mockResolvedValueOnce([g2p]);
-    requestOpenRouterCorrectionsMock.mockResolvedValueOnce({
-      requestId: "generation-1",
-      model: "google/gemma-4-31b-it",
-      actualProvider: "coreweave",
-      reasoningEffort: "none",
-      structuredOutput: [{ id: "tts-1", changed: false, kana: "", reason: "維持" }],
-      renderedKana: [g2p.kana],
-      corrections: [{ id: "tts-1", changed: false, kana: g2p.kana, reason: "維持" }],
-      usage: {
-        promptTokens: 1,
-        completionTokens: 1,
-        reasoningTokens: 0,
-        cachedTokens: 0,
-        totalTokens: 2,
-        costUsd: 0,
-      },
-    });
-    validateG2pItemsMock.mockResolvedValueOnce([g2p]);
-    synthesizeVoisonaMock.mockResolvedValueOnce(audio("/tts/project/voisona-1.wav"));
-
-    const saved = await saveProject({ OPENROUTER_API_KEY: "secret" }, "project", {
-      meta: defaultMeta,
-      pages: [
-        {
-          id: "page-1",
-          title: "Page 1",
-          type: "main",
-          meta: { tags: [] },
-          padBeforeSec: 0,
-          padAfterSec: 0,
-          richText: "<p>うん大丈夫？</p>",
-          tts: [
-            {
-              id: "tts-1",
-              provider: "voisona",
-              text: "うん大丈夫？",
-              voiceName: "voice",
-              padBeforeSec: 0,
-              padAfterSec: 0,
-              volume: 1,
-              speech: {},
-            },
-          ],
-        },
-      ],
-    });
-
     expect(contentPage(saved.project.pages).tts[0]?.audio.status).toBe("analyzing");
-    expect(requestOpenRouterCorrectionsMock).toHaveBeenCalledTimes(1);
+    expect(analyzeTextsMock).not.toHaveBeenCalled();
     await flushJobs();
+    expect(contentPage(lastWrittenProject().pages).tts[0]?.speech.g2p).toEqual(unG2p);
   });
 
   it("does not create analyzing when the OpenRouter API key is missing", async () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     readSavedProjectMock.mockResolvedValueOnce({ pages: [] });
     analyzeTextsMock.mockResolvedValueOnce([helloG2p]);
     synthesizeVoisonaMock.mockResolvedValueOnce(audio("/tts/project/voisona-1.wav"));
@@ -3191,11 +2916,8 @@ describe("project use-case", () => {
     });
 
     expect(contentPage(saved.project.pages).tts[0]?.audio.status).toBe("pending");
-    expect(requestOpenRouterCorrectionsMock).not.toHaveBeenCalled();
-    expect(warn).toHaveBeenCalledWith(
-      "[llm-g2p] OPENROUTER_API_KEY is not set; automatic G2P correction is skipped",
-    );
-    warn.mockRestore();
+    expect(contentPage(saved.project.pages).tts[0]?.speech.g2p).toEqual(helloG2p);
+    expect(generateG2pMock).not.toHaveBeenCalled();
     await flushJobs();
   });
 
@@ -3223,30 +2945,13 @@ describe("project use-case", () => {
               readText: "Hello",
               voiceName: "voice",
               audio: { status: "analyzing", analysisKey },
-              speech: { g2p: helloG2p },
+              speech: {},
             },
           ],
         },
       ],
     });
-    requestOpenRouterCorrectionsMock.mockResolvedValueOnce({
-      requestId: "generation-1",
-      model: "google/gemma-4-31b-it",
-      actualProvider: "coreweave",
-      reasoningEffort: "none",
-      structuredOutput: [{ id: "tts-1", changed: false, kana: "", reason: "維持" }],
-      renderedKana: [helloG2p.kana],
-      corrections: [{ id: "tts-1", changed: false, kana: helloG2p.kana, reason: "維持" }],
-      usage: {
-        promptTokens: 1,
-        completionTokens: 1,
-        reasoningTokens: 0,
-        cachedTokens: 0,
-        totalTokens: 2,
-        costUsd: 0,
-      },
-    });
-    validateG2pItemsMock.mockResolvedValueOnce([helloG2p]);
+    generateG2pMock.mockResolvedValueOnce(llmG2p({ "tts-1": helloG2p }));
     synthesizeVoisonaMock.mockResolvedValueOnce(audio("/tts/project/voisona-1.wav", 2));
 
     const { saveProjectChanges } = await import("../use-case");
@@ -3260,7 +2965,7 @@ describe("project use-case", () => {
       status: "analyzing",
       analysisKey,
     });
-    expect(requestOpenRouterCorrectionsMock).toHaveBeenCalledTimes(1);
+    expect(generateG2pMock).toHaveBeenCalledTimes(1);
     await flushJobs();
     expect(contentPage(lastWrittenProject().pages).tts[0]?.audio.status).toBe("ready");
   });

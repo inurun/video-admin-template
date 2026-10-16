@@ -4,7 +4,7 @@
     "description": "Admin + HyperFrames sample template",
     "width": 1920,
     "height": 1080,
-    "updatedAt": "2026-09-21T05:44:50.444Z",
+    "updatedAt": "2026-10-16T09:12:40.993Z",
     "weather": {},
     "niconico": {
       "title": "HTML説明文テスト",
@@ -27,7 +27,35 @@
       },
       "tts": [
         {
-          "id": "a9461dc8-acfe-4eec-b3cb-9dbcafbe5e31",
+          "id": "b50f5244-0475-4a4f-b1ae-2522d5167399",
+          "text": "テストだよ",
+          "readText": "テストだよ",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "テストだよ",
+              "kana": "テスト:テ'スト|だ:ダ|よ:ヨ",
+              "warnings": []
+            }
+          },
+          "avatar": {
+            "base": "normal",
+            "eyes": "opened",
+            "mouth": "opened"
+          },
+          "provider": "voisona",
+          "voiceName": "futaba-minato_ja_JP",
+          "voiceVersion": "2.0.2",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/0d52bb0659bcd168991ef5ece91df5f2.wav",
+            "durationSec": 0.965
+          }
+        },
+        {
+          "id": "29e0e590-0913-49f6-9414-891ef55a6d29",
           "text": "これはvoisonaのtsmlサンプルだよ！claudeとか読めないし、ラーメンは辛いし",
           "readText": "これはvoisonaのtsmlサンプルだよ！claudeとか読めないし、ラーメンは辛いし",
           "padBeforeSec": 0,
@@ -36,30 +64,8 @@
           "speech": {
             "g2p": {
               "text": "これはvoisonaのtsmlサンプルだよ！claudeとか読めないし、ラーメンは辛いし",
-              "kana": "コレ|ワ'/ヴォイソナ|ノ'/ティーエスエムエル'/サ'ンプル|ダ|ヨ！クロード|トカ'/ヨメ'|ナイ|シ、ラ'ーメン|ワ/カラ'イ|シ",
-              "warnings": [
-                {
-                  "code": "unknown_word",
-                  "source_span": {
-                    "start_utf16": 3,
-                    "end_utf16": 10
-                  }
-                },
-                {
-                  "code": "unknown_word",
-                  "source_span": {
-                    "start_utf16": 11,
-                    "end_utf16": 15
-                  }
-                },
-                {
-                  "code": "unknown_word",
-                  "source_span": {
-                    "start_utf16": 22,
-                    "end_utf16": 28
-                  }
-                }
-              ]
+              "kana": "これ:コレ|は:ワ'/voisona:ボイ'ソナ|の:ノ/tsml:ティーエスエムエ'ル/サンプル:サ'ンプル|だ:ダ|よ:ヨ！claude:クロ'ード|とか:トカ/読め:ヨメ'|ない:ナイ|し:シ、ラーメン:ラ'ーメン|は:ワ/辛い:カラ'イ|し:シ",
+              "warnings": []
             }
           },
           "avatar": {
@@ -72,12 +78,12 @@
           "voiceVersion": "2.0.2",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/0ae04be1505268952b70a4832a90631b.wav",
-            "durationSec": 5.425
+            "src": "/tts/project/33ee6482d2611d4d058eef318d51068a.wav",
+            "durationSec": 5.375
           }
         },
         {
-          "id": "e29c3eee-8560-4f13-a5ce-692330b432af",
+          "id": "d5ba40fe-644f-4bc4-8b7f-376788389e04",
           "text": "界隈の主はあっちの方にいった",
           "readText": "界隈の主はあっちの方にいった",
           "padBeforeSec": 0,
@@ -86,18 +92,8 @@
           "speech": {
             "g2p": {
               "text": "界隈の主はあっちの方にいった",
-              "kana": "カ'イワイ|ノ/ヌ'シ|ワ/アッチ'|ノ/ホウ|ニ'/イッ|タ'",
-              "warnings": [],
-              "dictionary_words": [
-                {
-                  "word_index": 2,
-                  "kind": "contextual"
-                },
-                {
-                  "word_index": 6,
-                  "kind": "contextual"
-                }
-              ]
+              "kana": "界隈:カ'イワイ|の:ノ/主:ヌ'シ|は:ワ/あっち:アッチ'|の:ノ/方:ホ'ー|に:ニ/いった:イッタ'",
+              "warnings": []
             }
           },
           "avatar": {
@@ -110,12 +106,12 @@
           "voiceVersion": "2.0.2",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/0aed5de250f461acb931dcdae18b8487.wav",
-            "durationSec": 2.2800000000000002
+            "src": "/tts/project/fe47ed4150d6c26b1aa3e10cffe8e186.wav",
+            "durationSec": 2.255
           }
         },
         {
-          "id": "a4489975-e842-4a1c-b297-c15fb32a679e",
+          "id": "b0889c23-4e08-4341-8470-4a71e8fc07ef",
           "text": "この料理はとても辛くて辛い",
           "readText": "この料理はとても辛くて辛い",
           "padBeforeSec": 0,
@@ -124,7 +120,7 @@
           "speech": {
             "g2p": {
               "text": "この料理はとても辛くて辛い",
-              "kana": "コノ'/リョ'ーリ|ワ/トテモ'/カラ'/ク'テ|カラ/イ'",
+              "kana": "この:コノ'/料理:リョ'ーリ|は:ワ/とても:トテモ'/辛く:カ'ラク|て:テ/辛い:ツライ'",
               "warnings": []
             }
           },
@@ -138,12 +134,12 @@
           "voiceVersion": "2.0.2",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/1254ee4c4ddb980adbd3f76a0b8fc899.wav",
-            "durationSec": 2.1550000000000002
+            "src": "/tts/project/fe5a1282c2dfdbcbfc4c61c71747c512.wav",
+            "durationSec": 2.165
           }
         },
         {
-          "id": "8a5104a1-319f-4da8-a344-b05262d0adb7",
+          "id": "423c448d-d5bf-45d1-9138-60f9bf3a3ca6",
           "text": "二着の服を着て出かける",
           "readText": "二着の服を着て出かける",
           "padBeforeSec": 0,
@@ -152,7 +148,7 @@
           "speech": {
             "g2p": {
               "text": "二着の服を着て出かける",
-              "kana": "ニ'|キ|ノ/フク'|ヲ/チャク|テ'/デカケル'",
+              "kana": "二:ニ'|着:チャク|の:ノ/服:フク'|を:ヲ/着:キ|て:テ'/出かける:デカケル'",
               "warnings": []
             }
           },
@@ -166,12 +162,12 @@
           "voiceVersion": "2.0.2",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/a04b09860dc957aa8a10e1c0a1970cc5.wav",
-            "durationSec": 1.8
+            "src": "/tts/project/276e2184c4eed3aac02da2c5b93c7bf7.wav",
+            "durationSec": 1.8350000000000002
           }
         },
         {
-          "id": "f34f4979-1cf1-4008-b8b3-0a2e2ebf3ecc",
+          "id": "9d390f73-63d0-429d-bf47-55154808d4a8",
           "text": "主に池の主を紹介する",
           "readText": "主に池の主を紹介する",
           "padBeforeSec": 0,
@@ -180,7 +176,7 @@
           "speech": {
             "g2p": {
               "text": "主に池の主を紹介する",
-              "kana": "ヌ'シ|ニ/イケ'|ノ/ヌ'シ|ヲ/ショーカイ|スル'",
+              "kana": "主:オ'モ|に:ニ/池:イケ'|の:ノ/主:ヌ'シ|を:ヲ/紹介:ショーカイ|する:スル'",
               "warnings": []
             }
           },
@@ -194,12 +190,12 @@
           "voiceVersion": "2.0.2",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/9925dd83cc1c8e5697d08ad1ea64d9c7.wav",
-            "durationSec": 1.955
+            "src": "/tts/project/9a6efac35bb0698068e7f4a73299db54.wav",
+            "durationSec": 1.885
           }
         },
         {
-          "id": "4f400fb3-ab71-40bd-96f9-9520aa2ba2a2",
+          "id": "a2be60f1-7f41-42c9-a9e3-eadec0cd8521",
           "text": "かぜひきです",
           "readText": "かぜひきです",
           "padBeforeSec": 0,
@@ -208,9 +204,8 @@
           "speech": {
             "g2p": {
               "text": "かぜひきです",
-              "kana": "カゼヒキ|デ'ス",
-              "warnings": [],
-              "dictionary_words": []
+              "kana": "かぜひき:カゼヒキ|です:デ'ス",
+              "warnings": []
             }
           },
           "avatar": {
@@ -222,15 +217,10 @@
           "speakerUuid": "272c0178-a248-11f1-82fa-0242ac1c000c",
           "styleId": 1295160681,
           "modelVersion": "0.0.1",
-          "synthesisSettings": {
-            "speedScale": 1.2,
-            "prePhonemeLength": 0,
-            "postPhonemeLength": 0
-          },
           "audio": {
             "status": "ready",
-            "src": "/tts/project/ee357009a78d781742057ce26913854b.wav",
-            "durationSec": 1.1636281179138324
+            "src": "/tts/project/c23824df90c9fcf4f59dfee0fe3a35d8.wav",
+            "durationSec": 1.1520181405895693
           }
         }
       ]
@@ -253,14 +243,7 @@
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {
-            "g2p": {
-              "text": "テスト",
-              "kana": "テ'スト",
-              "warnings": [],
-              "dictionary_words": []
-            }
-          },
+          "speech": {},
           "avatar": {
             "base": "normal",
             "eyes": "opened",
@@ -294,14 +277,7 @@
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {
-            "g2p": {
-              "text": "テスト",
-              "kana": "テ'スト",
-              "warnings": [],
-              "dictionary_words": []
-            }
-          },
+          "speech": {},
           "avatar": {
             "base": "normal",
             "eyes": "opened",
@@ -335,14 +311,7 @@
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {
-            "g2p": {
-              "text": "テスト",
-              "kana": "テ'スト",
-              "warnings": [],
-              "dictionary_words": []
-            }
-          },
+          "speech": {},
           "avatar": {
             "base": "normal",
             "eyes": "opened",
@@ -376,14 +345,7 @@
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {
-            "g2p": {
-              "text": "テスト",
-              "kana": "テ'スト",
-              "warnings": [],
-              "dictionary_words": []
-            }
-          },
+          "speech": {},
           "avatar": {
             "base": "normal",
             "eyes": "opened",
@@ -417,14 +379,7 @@
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {
-            "g2p": {
-              "text": "テスト",
-              "kana": "テ'スト",
-              "warnings": [],
-              "dictionary_words": []
-            }
-          },
+          "speech": {},
           "avatar": {
             "base": "normal",
             "eyes": "opened",
@@ -458,14 +413,7 @@
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {
-            "g2p": {
-              "text": "テスト",
-              "kana": "テ'スト",
-              "warnings": [],
-              "dictionary_words": []
-            }
-          },
+          "speech": {},
           "avatar": {
             "base": "normal",
             "eyes": "opened",
@@ -499,14 +447,7 @@
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {
-            "g2p": {
-              "text": "テスト",
-              "kana": "テ'スト",
-              "warnings": [],
-              "dictionary_words": []
-            }
-          },
+          "speech": {},
           "avatar": {
             "base": "normal",
             "eyes": "opened",
@@ -540,13 +481,7 @@
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {
-            "g2p": {
-              "text": "テストだも",
-              "kana": "テ'スト|ダ|モ",
-              "warnings": []
-            }
-          },
+          "speech": {},
           "avatar": {
             "base": "normal",
             "eyes": "opened",
@@ -567,13 +502,7 @@
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {
-            "g2p": {
-              "text": "テスト",
-              "kana": "テ'スト",
-              "warnings": []
-            }
-          },
+          "speech": {},
           "avatar": {
             "base": "normal",
             "eyes": "opened",
@@ -594,13 +523,7 @@
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {
-            "g2p": {
-              "text": "なんだもん",
-              "kana": "ナ'ン|ダ|モン",
-              "warnings": []
-            }
-          },
+          "speech": {},
           "avatar": {
             "base": "normal",
             "eyes": "opened",
@@ -621,14 +544,7 @@
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {
-            "g2p": {
-              "text": "なんだもん？",
-              "kana": "ナ'ン|ダ|モン？",
-              "warnings": [],
-              "dictionary_words": []
-            }
-          },
+          "speech": {},
           "avatar": {
             "base": "normal",
             "eyes": "opened",
@@ -662,13 +578,7 @@
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {
-            "g2p": {
-              "text": "ラブコメ",
-              "kana": "ラブ'|コメ",
-              "warnings": []
-            }
-          },
+          "speech": {},
           "avatar": {
             "base": "normal",
             "eyes": "opened",
@@ -689,14 +599,7 @@
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {
-            "g2p": {
-              "text": "なのです",
-              "kana": "ナ'|ノ|デス",
-              "warnings": [],
-              "dictionary_words": []
-            }
-          },
+          "speech": {},
           "avatar": {
             "base": "normal",
             "eyes": "opened",
@@ -1575,14 +1478,7 @@
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {
-            "g2p": {
-              "text": "テストなのだ",
-              "kana": "テ'スト|ナ|ノ|ダ",
-              "warnings": [],
-              "dictionary_words": []
-            }
-          },
+          "speech": {},
           "provider": "voicevox",
           "voiceName": "3",
           "audio": {
@@ -1598,14 +1494,7 @@
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {
-            "g2p": {
-              "text": "弱そう",
-              "kana": "ヨワ|ソ'ー",
-              "warnings": [],
-              "dictionary_words": []
-            }
-          },
+          "speech": {},
           "provider": "voicevox",
           "voiceName": "3",
           "audio": {

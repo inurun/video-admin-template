@@ -3,6 +3,8 @@ import { splitKanaMoras } from "@/_schemas/dictionary";
 export type PhraseCloser = "slash" | "pause" | "question" | "exclamation" | "end";
 
 export type KanaViewWord = {
+  /** schema v3 の `表記:読み` の表記。 */
+  surface?: string;
   moras: string[];
 };
 
@@ -20,6 +22,7 @@ const CLOSERS: Record<string, PhraseCloser> = {
 };
 
 type Token =
+  | { type: "surface"; text: string }
   | { type: "mora"; text: string }
   | { type: "quote" }
   | { type: "pipe" }
@@ -57,6 +60,12 @@ function tokenizeKana(kana: string): Token[] | null {
     ) {
       end += 1;
     }
+    const colon = kana.indexOf(":", index);
+    if (colon >= 0 && colon < end) {
+      tokens.push({ type: "surface", text: kana.slice(index, colon) });
+      index = colon + 1;
+      continue;
+    }
     const moras = splitKanaMoras(kana.slice(index, end));
     if (moras.length === 0) {
       return null;
@@ -91,6 +100,7 @@ export function parseKanaView(kana: string): KanaViewPhrase[] | null {
   const phrases: KanaViewPhrase[] = [];
   let words: KanaViewWord[] = [];
   let moras: string[] = [];
+  let surface: string | undefined;
   let quotePos: number | undefined;
   let phraseMora = 0;
   let lastWasMora = false;
@@ -100,8 +110,9 @@ export function parseKanaView(kana: string): KanaViewPhrase[] | null {
     if (moras.length === 0) {
       return false;
     }
-    words.push({ moras });
+    words.push(surface === undefined ? { moras } : { surface, moras });
     moras = [];
+    surface = undefined;
     lastWasMora = false;
     return true;
   }
@@ -127,6 +138,14 @@ export function parseKanaView(kana: string): KanaViewPhrase[] | null {
   }
 
   for (const [index, token] of tokens.entries()) {
+    if (token.type === "surface") {
+      if (moras.length > 0 || surface !== undefined || !token.text) {
+        return null;
+      }
+      surface = token.text;
+      continue;
+    }
+
     if (token.type === "mora") {
       if (!expectWord && moras.length === 0 && words.length === 0) {
         return null;
@@ -184,6 +203,9 @@ export function serializeKanaView(phrases: KanaViewPhrase[]) {
     for (const [wordIndex, word] of phrase.words.entries()) {
       if (wordIndex > 0) {
         out += "|";
+      }
+      if (word.surface !== undefined) {
+        out += `${word.surface}:`;
       }
       for (const mora of word.moras) {
         moraIndex += 1;

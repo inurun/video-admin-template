@@ -36,7 +36,7 @@ export async function deleteDictionaryEntry(id: number) {
 
 export async function analyzeDictionaryText(text: string) {
   const result = await parseApiJson<{ g2p: G2pItem }>(
-    await api.tts.analyze.$post({ json: { text } }),
+    await api.dictionary.analyze.$post({ json: { text } }),
   );
   return result.g2p;
 }

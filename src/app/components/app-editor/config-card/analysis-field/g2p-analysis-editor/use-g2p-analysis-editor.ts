@@ -116,7 +116,7 @@ export function useG2pAnalysisEditor(
       boundary: phraseBoundaryLabel(phrase.closer),
       words: phrase.words.map((word, wordIndex) => ({
         key: `word-${phraseIndex}-${wordIndex}`,
-        label: word.moras.join(""),
+        label: word.surface ? `${word.surface} ${word.moras.join("")}` : word.moras.join(""),
         chained: wordIndex > 0,
         onToggleChain: canToggleChain(phrases, phraseIndex, wordIndex)
           ? () => {

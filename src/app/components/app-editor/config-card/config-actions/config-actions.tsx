@@ -1,4 +1,4 @@
-import { Sparkles, FlaskConical, Volume2 } from "lucide-react";
+import { Sparkles, Volume2 } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { useConfigTtsActions } from "@/app/components/app-editor/config-card/config-actions/use-config-actions";
 import { TtsSettingsDialog } from "@/app/components/app-editor/config-card/tts-settings-dialog/tts-settings-dialog";
@@ -19,34 +19,10 @@ function AnalyzeButton({
       variant="secondary"
       disabled={disabled}
       onClick={onClick}
-      title={isAnalyzing ? "Analyzing" : "Analyze"}
-      aria-label={isAnalyzing ? "Analyzing" : "Analyze"}
+      title={isAnalyzing ? "Regenerating" : "Regenerate"}
+      aria-label={isAnalyzing ? "Regenerating" : "Regenerate"}
     >
       <Sparkles className={isAnalyzing ? "animate-pulse" : undefined} />
-    </Button>
-  );
-}
-
-function LlmAnalyzeButton({
-  disabled,
-  pending,
-  onClick,
-}: {
-  disabled: boolean;
-  pending: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <Button
-      type="button"
-      size="icon"
-      variant="secondary"
-      disabled={disabled}
-      onClick={onClick}
-      title={pending ? "LLM G2P running" : "LLM G2P"}
-      aria-label="LLM G2P"
-    >
-      <FlaskConical className={pending ? "animate-pulse" : undefined} />
     </Button>
   );
 }
@@ -68,16 +44,8 @@ function PreviewButton({ disabled, onClick }: { disabled: boolean; onClick: () =
 }
 
 export function ConfigActions() {
-  const {
-    analyzeDisabled,
-    analyzeSelected,
-    isAnalyzing,
-    llmAnalyzeDisabled,
-    llmAnalyzeSelected,
-    isLlmAnalyzing,
-    previewDisabled,
-    previewSelected,
-  } = useConfigTtsActions();
+  const { analyzeDisabled, analyzeSelected, isAnalyzing, previewDisabled, previewSelected } =
+    useConfigTtsActions();
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -85,11 +53,6 @@ export function ConfigActions() {
         disabled={analyzeDisabled}
         isAnalyzing={isAnalyzing}
         onClick={analyzeSelected}
-      />
-      <LlmAnalyzeButton
-        disabled={llmAnalyzeDisabled}
-        pending={isLlmAnalyzing}
-        onClick={llmAnalyzeSelected}
       />
       <PreviewButton disabled={previewDisabled} onClick={previewSelected} />
       <TtsSettingsDialog />

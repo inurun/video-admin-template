@@ -116,6 +116,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/g2p/migrate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["migrate_g2p"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/g2p/validate": {
         parameters: {
             query?: never;
@@ -262,6 +278,11 @@ export interface components {
             warnings?: components["schemas"]["Warning"][];
         };
         AnalyzeRequest: {
+            /**
+             * @description `"2"`（省略時）または `"3"`。v3 の kana は word ごとに `表記:読み` を持つ。
+             * @example 3
+             */
+            schema_version?: string | null;
             texts: string[];
         };
         AnalyzeResponse: {
@@ -385,6 +406,10 @@ export interface components {
             text: string;
             warnings?: components["schemas"]["Warning"][];
         };
+        /** @description schema v2 の item を v3 にする。再解析で割り当てた表記を付けるだけで、読み・核・境界は変えない。 */
+        MigrateRequest: {
+            items: components["schemas"]["G2pItem"][];
+        };
         Morpheme: {
             accent_nucleus: number;
             part_of_speech: components["schemas"]["PartOfSpeech"];
@@ -409,6 +434,11 @@ export interface components {
         };
         ValidateRequest: {
             items: components["schemas"]["G2pItem"][];
+            /**
+             * @description `"2"`（省略時）または `"3"`。v3 は原文を再解析せず、表記と原文を文字列で照合する。
+             * @example 3
+             */
+            schema_version?: string | null;
         };
         ValidateResponse: {
             haqumei_version: string;
@@ -889,6 +919,62 @@ export interface operations {
                 content?: never;
             };
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    migrate_g2p: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MigrateRequest"];
+            };
+        };
+        responses: {
+            /** @description schema v3 items */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateResponse"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -479,6 +479,74 @@
         }
       }
     },
+    "/v1/g2p/migrate": {
+      "post": {
+        "tags": [],
+        "operationId": "migrate_g2p",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MigrateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "schema v3 items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/g2p/validate": {
       "post": {
         "tags": [],
@@ -1017,6 +1085,11 @@
         "type": "object",
         "required": ["texts"],
         "properties": {
+          "schema_version": {
+            "type": ["string", "null"],
+            "description": "`\"2\"`（省略時）または `\"3\"`。v3 の kana は word ごとに `表記:読み` を持つ。",
+            "example": "3"
+          },
           "texts": {
             "type": "array",
             "items": {
@@ -1429,6 +1502,20 @@
         },
         "additionalProperties": false
       },
+      "MigrateRequest": {
+        "type": "object",
+        "description": "schema v2 の item を v3 にする。再解析で割り当てた表記を付けるだけで、読み・核・境界は変えない。",
+        "required": ["items"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/G2pItem"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "Morpheme": {
         "type": "object",
         "required": ["surface", "reading", "accent_nucleus", "part_of_speech"],
@@ -1509,6 +1596,11 @@
             "items": {
               "$ref": "#/components/schemas/G2pItem"
             }
+          },
+          "schema_version": {
+            "type": ["string", "null"],
+            "description": "`\"2\"`（省略時）または `\"3\"`。v3 は原文を再解析せず、表記と原文を文字列で照合する。",
+            "example": "3"
           }
         },
         "additionalProperties": false

@@ -13,7 +13,7 @@ export type AppHotkeys = Record<AppHotkeyAction, string>;
 
 export const APP_HOTKEY_LABELS: Record<AppHotkeyAction, string> = {
   save: "Save",
-  analyze: "Analyze TSML",
+  analyze: "Regenerate G2P",
   addTts: "Add TTS",
   deleteTts: "Delete TTS",
   addPage: "Add Page",

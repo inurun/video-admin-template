@@ -2,9 +2,8 @@ import { Hono } from "hono";
 import { jsonError } from "@/server/_shared/http";
 import { getServerEnv } from "@/server/core/env";
 import {
-  analyzeTts,
-  analyzeTtsPageWithLlm,
   clearTtsCache,
+  generateTtsG2p,
   listTtsVoices,
   synthesizeTts,
   validateTtsG2p,
@@ -12,11 +11,9 @@ import {
 import { TtsCacheClearConflictError } from "@/server/features/tts/errors";
 import {
   synthesizeResponseSchema,
-  ttsAnalyzeRequestSchema,
-  ttsAnalyzeResponseSchema,
-  ttsLlmAnalysisRequestSchema,
-  ttsLlmAnalysisResponseSchema,
   ttsClearCacheRequestSchema,
+  ttsG2pGenerateRequestSchema,
+  ttsG2pGenerateResponseSchema,
   ttsClearCacheResponseSchema,
   ttsSynthesizeRequestSchema,
   ttsValidateRequestSchema,
@@ -32,14 +29,6 @@ export const ttsApp = new Hono()
       return jsonError(c, 500, error, "Failed to load voices");
     }
   })
-  .post("/tts/analyze", async (c) => {
-    try {
-      const json = ttsAnalyzeRequestSchema.parse(await c.req.json());
-      return c.json(ttsAnalyzeResponseSchema.parse(await analyzeTts(getServerEnv(c), json)));
-    } catch (error) {
-      return jsonError(c, 500, error, "Analyze failed");
-    }
-  })
   .post("/tts/g2p/validate", async (c) => {
     try {
       const json = ttsValidateRequestSchema.parse(await c.req.json());
@@ -48,14 +37,14 @@ export const ttsApp = new Hono()
       return jsonError(c, 500, error, "Validate failed");
     }
   })
-  .post("/tts/analyze/llm", async (c) => {
+  .post("/tts/g2p/generate", async (c) => {
     try {
-      const json = ttsLlmAnalysisRequestSchema.parse(await c.req.json());
+      const json = ttsG2pGenerateRequestSchema.parse(await c.req.json());
       return c.json(
-        ttsLlmAnalysisResponseSchema.parse(await analyzeTtsPageWithLlm(getServerEnv(c), json)),
+        ttsG2pGenerateResponseSchema.parse(await generateTtsG2p(getServerEnv(c), json)),
       );
     } catch (error) {
-      return jsonError(c, 500, error, "LLM analyze failed");
+      return jsonError(c, 500, error, "G2P generate failed");
     }
   })
   .post("/tts/synthesize", async (c) => {
