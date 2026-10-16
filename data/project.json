@@ -4,7 +4,7 @@
     "description": "Admin + HyperFrames sample template",
     "width": 1920,
     "height": 1080,
-    "updatedAt": "2026-10-16T09:12:40.993Z",
+    "updatedAt": "2026-10-16T09:15:41.640Z",
     "weather": {},
     "niconico": {
       "title": "HTML説明文テスト",
@@ -55,7 +55,7 @@
           }
         },
         {
-          "id": "29e0e590-0913-49f6-9414-891ef55a6d29",
+          "id": "72503fe7-3bbe-4e27-b94d-4c76eb73766e",
           "text": "これはvoisonaのtsmlサンプルだよ！claudeとか読めないし、ラーメンは辛いし",
           "readText": "これはvoisonaのtsmlサンプルだよ！claudeとか読めないし、ラーメンは辛いし",
           "padBeforeSec": 0,
@@ -64,7 +64,7 @@
           "speech": {
             "g2p": {
               "text": "これはvoisonaのtsmlサンプルだよ！claudeとか読めないし、ラーメンは辛いし",
-              "kana": "これ:コレ|は:ワ'/voisona:ボイ'ソナ|の:ノ/tsml:ティーエスエムエ'ル/サンプル:サ'ンプル|だ:ダ|よ:ヨ！claude:クロ'ード|とか:トカ/読め:ヨメ'|ない:ナイ|し:シ、ラーメン:ラ'ーメン|は:ワ/辛い:カラ'イ|し:シ",
+              "kana": "これ:コレ|は:ワ'/voisona:ボイ'ソナ|の:ノ/tsml:ティーエスエムエ'ル/サンプル:サ'ンプル|だ:ダ|よ:ヨ！claude:クロ'ード|とか:トカ/読め:ヨメ|ない:ナ'イ|し:シ、ラーメン:ラ'ーメン|は:ワ/辛い:カラ'イ|し:シ",
               "warnings": []
             }
           },
@@ -78,12 +78,12 @@
           "voiceVersion": "2.0.2",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/33ee6482d2611d4d058eef318d51068a.wav",
-            "durationSec": 5.375
+            "src": "/tts/project/cf46219e0d819c8e0b77fe4ae52a07d7.wav",
+            "durationSec": 5.38
           }
         },
         {
-          "id": "d5ba40fe-644f-4bc4-8b7f-376788389e04",
+          "id": "aa024511-c45c-45ca-ae72-c00e23ba1b80",
           "text": "界隈の主はあっちの方にいった",
           "readText": "界隈の主はあっちの方にいった",
           "padBeforeSec": 0,
@@ -92,7 +92,7 @@
           "speech": {
             "g2p": {
               "text": "界隈の主はあっちの方にいった",
-              "kana": "界隈:カ'イワイ|の:ノ/主:ヌ'シ|は:ワ/あっち:アッチ'|の:ノ/方:ホ'ー|に:ニ/いった:イッタ'",
+              "kana": "界隈:カイワイ|の:ノ'/主:ヌ'シ|は:ワ/あっち:アッチ'|の:ノ/方:ホ'ー|に:ニ/いった:イッタ'",
               "warnings": []
             }
           },
@@ -106,12 +106,12 @@
           "voiceVersion": "2.0.2",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/fe47ed4150d6c26b1aa3e10cffe8e186.wav",
-            "durationSec": 2.255
+            "src": "/tts/project/315aea433e95c5dea7b099344db22daf.wav",
+            "durationSec": 2.295
           }
         },
         {
-          "id": "b0889c23-4e08-4341-8470-4a71e8fc07ef",
+          "id": "f5435580-4797-4366-9562-223a1430cf07",
           "text": "この料理はとても辛くて辛い",
           "readText": "この料理はとても辛くて辛い",
           "padBeforeSec": 0,
@@ -139,7 +139,7 @@
           }
         },
         {
-          "id": "423c448d-d5bf-45d1-9138-60f9bf3a3ca6",
+          "id": "332099ca-ef4d-41f8-8336-a89275c96df9",
           "text": "二着の服を着て出かける",
           "readText": "二着の服を着て出かける",
           "padBeforeSec": 0,
@@ -148,7 +148,7 @@
           "speech": {
             "g2p": {
               "text": "二着の服を着て出かける",
-              "kana": "二:ニ'|着:チャク|の:ノ/服:フク'|を:ヲ/着:キ|て:テ'/出かける:デカケル'",
+              "kana": "二着:ニ'チャク|の:ノ/服:フク'|を:ヲ/着:キ|て:テ'/出かける:デカケル'",
               "warnings": []
             }
           },
@@ -162,12 +162,12 @@
           "voiceVersion": "2.0.2",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/276e2184c4eed3aac02da2c5b93c7bf7.wav",
-            "durationSec": 1.8350000000000002
+            "src": "/tts/project/e6466c906e16036ee26256235871c802.wav",
+            "durationSec": 1.8250000000000002
           }
         },
         {
-          "id": "9d390f73-63d0-429d-bf47-55154808d4a8",
+          "id": "d7b3225d-0c48-4e9a-8c14-fea56a3fd041",
           "text": "主に池の主を紹介する",
           "readText": "主に池の主を紹介する",
           "padBeforeSec": 0,
@@ -195,7 +195,7 @@
           }
         },
         {
-          "id": "a2be60f1-7f41-42c9-a9e3-eadec0cd8521",
+          "id": "d04c25aa-9f11-4374-864e-6ae35deaea1c",
           "text": "かぜひきです",
           "readText": "かぜひきです",
           "padBeforeSec": 0,
