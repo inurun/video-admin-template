@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { AUTO_SAVE_DELAY } from "@/constants";
 import { cancelScheduledAutoSave, watchAutoSave } from "../auto-save";
 import { createEditorSessionStore } from "../../store/editor-session-store";
 import { captureDirtySnapshot, hasDirtyChanges } from "../../store/editor-session-state";
@@ -19,14 +20,14 @@ describe("auto save", () => {
     return { store, stop, edit, save };
   }
 
-  it("waits ten seconds after the latest edit and ignores clean sessions", async () => {
+  it("waits the auto-save delay after the latest edit and ignores clean sessions", async () => {
     const { edit, save, stop } = setup();
-    await vi.advanceTimersByTimeAsync(20_000);
+    await vi.advanceTimersByTimeAsync(AUTO_SAVE_DELAY * 2);
     expect(save).not.toHaveBeenCalled();
     edit();
-    await vi.advanceTimersByTimeAsync(9_000);
+    await vi.advanceTimersByTimeAsync(AUTO_SAVE_DELAY - 1_000);
     edit();
-    await vi.advanceTimersByTimeAsync(9_999);
+    await vi.advanceTimersByTimeAsync(AUTO_SAVE_DELAY - 1);
     expect(save).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(1);
     expect(save).toHaveBeenCalledTimes(1);
@@ -37,7 +38,7 @@ describe("auto save", () => {
     const { store, edit, save, stop } = setup();
     edit();
     cancelScheduledAutoSave(store);
-    await vi.advanceTimersByTimeAsync(20_000);
+    await vi.advanceTimersByTimeAsync(AUTO_SAVE_DELAY * 2);
     expect(save).not.toHaveBeenCalled();
     stop();
   });
@@ -48,13 +49,13 @@ describe("auto save", () => {
     const saved = captureDirtySnapshot(store.getState());
     cancelScheduledAutoSave(store);
     edit();
-    await vi.advanceTimersByTimeAsync(5_000);
+    await vi.advanceTimersByTimeAsync(AUTO_SAVE_DELAY / 2);
     store.getState().markSaved(saved);
     expect(hasDirtyChanges(store.getState())).toBe(true);
-    await vi.advanceTimersByTimeAsync(5_000);
+    await vi.advanceTimersByTimeAsync(AUTO_SAVE_DELAY / 2);
     expect(save).toHaveBeenCalledTimes(1);
     store.getState().markSaved(captureDirtySnapshot(store.getState()));
-    await vi.advanceTimersByTimeAsync(20_000);
+    await vi.advanceTimersByTimeAsync(AUTO_SAVE_DELAY * 2);
     expect(save).toHaveBeenCalledTimes(1);
     stop();
   });
@@ -66,11 +67,11 @@ describe("auto save", () => {
       }),
     );
     edit();
-    await vi.advanceTimersByTimeAsync(30_000);
+    await vi.advanceTimersByTimeAsync(AUTO_SAVE_DELAY * 3);
     expect(save).toHaveBeenCalledTimes(1);
     expect(hasDirtyChanges(store.getState())).toBe(true);
     edit();
-    await vi.advanceTimersByTimeAsync(10_000);
+    await vi.advanceTimersByTimeAsync(AUTO_SAVE_DELAY);
     expect(save).toHaveBeenCalledTimes(2);
     stop();
   });
@@ -79,7 +80,7 @@ describe("auto save", () => {
     const { edit, save, stop } = setup();
     edit();
     stop();
-    await vi.advanceTimersByTimeAsync(10_000);
+    await vi.advanceTimersByTimeAsync(AUTO_SAVE_DELAY);
     expect(save).not.toHaveBeenCalled();
   });
 });

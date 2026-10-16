@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { AUTO_SAVE_DELAY } from "@/constants";
 import { schedulePageZenApply } from "../schedule-page-zen-apply";
 import { createBlankPageInput } from "@/app/features/page/lib/page-draft";
 
@@ -16,10 +17,10 @@ describe("page Zen auto Apply", () => {
       save: vi.fn(async () => {}),
     };
   }
-  it("applies after ten seconds and saves immediately afterwards", async () => {
+  it("applies after the auto-save delay and saves immediately afterwards", async () => {
     const options = input();
     schedulePageZenApply(options);
-    await vi.advanceTimersByTimeAsync(9_999);
+    await vi.advanceTimersByTimeAsync(AUTO_SAVE_DELAY - 1);
     expect(options.apply).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(1);
     expect(options.apply).toHaveBeenCalledTimes(1);
@@ -32,7 +33,7 @@ describe("page Zen auto Apply", () => {
     const options = input();
     const cancel = schedulePageZenApply(options);
     cancel?.();
-    await vi.advanceTimersByTimeAsync(10_000);
+    await vi.advanceTimersByTimeAsync(AUTO_SAVE_DELAY);
     expect(options.apply).not.toHaveBeenCalled();
     expect(options.save).not.toHaveBeenCalled();
   });
@@ -46,14 +47,14 @@ describe("page Zen auto Apply", () => {
     ]) {
       const options = { ...input(), ...override };
       schedulePageZenApply(options);
-      await vi.advanceTimersByTimeAsync(10_000);
+      await vi.advanceTimersByTimeAsync(AUTO_SAVE_DELAY);
       expect(options.apply).not.toHaveBeenCalled();
     }
   });
   it("does not save when the current page no longer accepts Apply", async () => {
     const options = { ...input(), apply: vi.fn(() => undefined) };
     schedulePageZenApply(options);
-    await vi.advanceTimersByTimeAsync(10_000);
+    await vi.advanceTimersByTimeAsync(AUTO_SAVE_DELAY);
     expect(options.save).not.toHaveBeenCalled();
   });
   it("resets the deadline on edits and does not retry failed saving", async () => {
@@ -64,12 +65,12 @@ describe("page Zen auto Apply", () => {
       }),
     };
     const cancel = schedulePageZenApply(options);
-    await vi.advanceTimersByTimeAsync(9_000);
+    await vi.advanceTimersByTimeAsync(AUTO_SAVE_DELAY - 1_000);
     cancel?.();
     schedulePageZenApply({ ...options, source: "changed" });
-    await vi.advanceTimersByTimeAsync(9_999);
+    await vi.advanceTimersByTimeAsync(AUTO_SAVE_DELAY - 1);
     expect(options.apply).not.toHaveBeenCalled();
-    await vi.advanceTimersByTimeAsync(20_001);
+    await vi.advanceTimersByTimeAsync(AUTO_SAVE_DELAY * 2 + 1);
     expect(options.save).toHaveBeenCalledTimes(1);
   });
 });
