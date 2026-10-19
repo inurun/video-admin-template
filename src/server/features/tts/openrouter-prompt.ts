@@ -6,11 +6,12 @@ pages lists each page's utterances in playback order. Convert only target=true u
 # Format
 Example: 猫が窓から外を見ている！ → 猫:ネ'コ|が:ガ/窓:マ'ド|から:カラ/外:ソ'ト|を:ヲ/見:ミ'|て:テ|いる:イル！
 - Word = surface:reading. Words in one accent phrase are joined by |.
-- A phrase ends with / (no pause), 、 (pause), ？ or ！. Put 、？！ exactly where the text has punctuation (、。… → 、, ?？ → ？, !！ → ！), same count; never add 、 anywhere else. A sentence-final 。 may be dropped.
+- A phrase ends with / (no pause), 、 (pause), ？ or ！. Put 、？！ exactly where the text has punctuation (、。… → 、, ?？ → ？, !！ → ！), same count; never add 、 anywhere else. A run of pause marks (……, 、、) is one 、. A sentence-final 。 or … may be dropped. Never end kana with /.
 - ' marks the accent nucleus: exactly one per phrase, right after the nucleus mora. Flat phrase: ' after its last mora.
 
 # Surface
-- Copy the text verbatim (kanji, kana, latin, width, case). Surfaces concatenated must equal the text minus punctuation, brackets and spaces. Never put : | / ' 、 ？ ！ or spaces in a surface.
+- Copy the text verbatim (kanji, kana, latin, width, case). Surfaces concatenated must equal the text minus punctuation, brackets and spaces. Never put : | / ' 、 ？ ！ or spaces in a surface; ' goes in the reading only.
+- Every character the reading covers is in the surface (なんだ:ナ'ンダ, never な:ナ'ン|だ:ダ).
 - Skip brackets and symbols, except dictionary words containing them (e.g. （笑）): use that whole word as one surface.
 - Word granularity is free.
 - Numbers: copy the digits (3.14:サンテンイチヨン, 6:ロッ|本:ポン). To split a number into several phrases, rewrite it as kanji numerals and keep counters as separate words (1985年 → 千:セ'ン/九百:キューヒャク/八十五:ハチジューゴ|年:ネ'ン; 十:ジュー|月:ガツ, never 十月).
@@ -21,7 +22,7 @@ Example: 猫が窓から外を見ている！ → 猫:ネ'コ|が:ガ/窓:マ'�
 
 # Accent (Tokyo)
 - Nucleus on mora 1: H L L…; on mora n>1: L H…H(n) L…; flat: L H H…. Morae 1 and 2 always differ; no rise after a fall.
-- About one phrase per bunsetsu. Particles, auxiliaries and helpers (ない, たい, ている, ておく, ちゃう, そう, ます) stay in the preceding word's phrase (行きたくない:イキタク'ナイ). Split a phrase that would need two falls.
+- About one phrase per bunsetsu. Particles, auxiliaries and helpers (ない, たい, ている, ておく, ちゃう, そう, ます, のだ, では) stay in the preceding word's phrase (行きたくない:イキタク'ナイ); never make a phrase of particles or auxiliaries alone. Split a phrase that would need two falls.
 - Odaka and flat differ before a particle: 犬が:イヌ'|ガ, 水が:ミズ|ガ'.
 - Conjugation moves verb nuclei: 起きる:オキ'ル, 起きた:オ'キタ, 起きない:オキ'ナイ; flat verbs stay flat (遊んで:アソンデ'). ます/ました: nucleus on マ. です keeps an accented word's nucleus (猫です:ネ'コ|デス), otherwise デ'ス (学生です:ガクセー|デ'ス).
 - Numeral + counter has its own accent: 1:イ'ッ|本:ポン, 3:サン|人:ニ'ン.
@@ -32,7 +33,7 @@ Example: 猫が窓から外を見ている！ → 猫:ネ'コ|が:ガ/窓:マ'�
 - contextual: pick the candidate whose examples fit the context.
 
 # Check each target before output
-1. Exactly one ' in every phrase.
+1. Exactly one ' in every phrase: count the ' between each pair of / 、 ？ ！.
 2. Surfaces concatenate to the text minus symbols; no character dropped.
 3. 、？！ count and positions match the text.
 4. fixed dictionary readings are used.

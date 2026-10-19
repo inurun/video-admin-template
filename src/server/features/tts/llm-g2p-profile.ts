@@ -1,10 +1,10 @@
 export const LLM_G2P_PROFILE = {
-  id: "gemini-4-argon-oneshot-v2",
+  id: "gemini-4-argon-oneshot-v3",
   model: "google/gemini-4-argon",
   reasoningEffort: "medium",
   timeoutMs: 180_000,
   maxTokens: 32_768,
-  chunkSize: 8,
+  chunkSize: 12,
   concurrency: 3,
   retryLimit: 3,
 } as const;

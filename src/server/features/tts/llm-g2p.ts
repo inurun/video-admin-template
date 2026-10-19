@@ -9,6 +9,7 @@ import { HaqumeiApiError } from "@/server/features/haqumei-api/error";
 import { validateG2pItems } from "@/server/features/haqumei-api/validate";
 import { closerMismatchMessage } from "@/server/features/tts/g2p-closers";
 import { contextForChunk, type G2pPageContext } from "@/server/features/tts/g2p-context";
+import { normalizeLlmKana } from "@/server/features/tts/g2p-kana-normalize";
 import { selectDictionaryHints } from "@/server/features/tts/g2p-dictionary";
 import {
   chunkItems,
@@ -47,6 +48,8 @@ type AttemptLog = {
   ms: number;
   usage: OpenRouterUsage;
   kana: Record<string, string>;
+  /** normalizeLlmKana で書き換えた件数。 */
+  normalized: number;
   errors: Record<string, CandidateError[]>;
 };
 
@@ -158,6 +161,7 @@ async function validateCandidates(serverEnv: ServerEnv, candidates: Candidate[])
 function toAttemptLog(
   kind: AttemptLog["kind"],
   result: OpenRouterG2pResult,
+  candidates: Candidate[],
   ms: number,
   errors: Map<string, CandidateError[]>,
 ): AttemptLog {
@@ -169,7 +173,10 @@ function toAttemptLog(
     finishReason: result.finishReason,
     ms,
     usage: result.usage,
-    kana: Object.fromEntries(result.kanaById),
+    kana: Object.fromEntries(candidates.map((candidate) => [candidate.id, candidate.kana])),
+    normalized: candidates.filter(
+      (candidate) => candidate.kana !== (result.kanaById.get(candidate.id) ?? ""),
+    ).length,
     errors: Object.fromEntries(errors),
   };
 }
@@ -185,7 +192,7 @@ async function runChunk(
   const candidateOf = (id: string, result: OpenRouterG2pResult): Candidate => ({
     id,
     text: textById.get(id) ?? "",
-    kana: result.kanaById.get(id) ?? "",
+    kana: normalizeLlmKana(result.kanaById.get(id) ?? ""),
   });
 
   try {
@@ -197,7 +204,7 @@ async function runChunk(
     const firstMs = elapsedMs(startedAt);
     const firstCandidates = ids.map((id) => candidateOf(id, first));
     const firstCheck = await validateCandidates(serverEnv, firstCandidates);
-    attempts.push(toAttemptLog("generate", first, firstMs, firstCheck.errors));
+    attempts.push(toAttemptLog("generate", first, firstCandidates, firstMs, firstCheck.errors));
     for (const [id, g2p] of firstCheck.valid) valid.set(id, g2p);
     if (firstCheck.errors.size === 0) {
       return { ids, valid, attempts };
@@ -225,11 +232,9 @@ async function runChunk(
     startedAt = performance.now();
     const repair = await requestOpenRouterG2p(serverEnv, { kind: "repair", items: repairItems });
     const repairMs = elapsedMs(startedAt);
-    const repairCheck = await validateCandidates(
-      serverEnv,
-      repairItems.map((item) => candidateOf(item.id, repair)),
-    );
-    attempts.push(toAttemptLog("repair", repair, repairMs, repairCheck.errors));
+    const repairCandidates = repairItems.map((item) => candidateOf(item.id, repair));
+    const repairCheck = await validateCandidates(serverEnv, repairCandidates);
+    attempts.push(toAttemptLog("repair", repair, repairCandidates, repairMs, repairCheck.errors));
     for (const [id, g2p] of repairCheck.valid) valid.set(id, g2p);
     return { ids, valid, attempts };
   } catch (error) {

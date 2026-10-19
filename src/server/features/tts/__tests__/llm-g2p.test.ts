@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createG2pItem } from "@/_schemas/__tests__/g2p-fixture";
 import { HaqumeiApiError } from "@/server/features/haqumei-api/error";
+import { LLM_G2P_PROFILE } from "../llm-g2p-profile";
 import { ZERO_USAGE } from "../openrouter";
 import type { G2pPageContext } from "../g2p-context";
 
@@ -142,6 +143,20 @@ describe("generateG2p", () => {
     expect(result.get("a")?.g2p.kana).toBe("強すぎ:ツヨスギ'/笑:ワライ'");
   });
 
+  it("normalizes format slips instead of sending them to repair", async () => {
+    requestG2pMock.mockResolvedValueOnce(llmResult({ a: "えーと:エ'ート、、", b: "いや:イ'ヤ/" }));
+    echoValidate();
+
+    const result = await generateG2p(env, {
+      mode: "page",
+      pages: page({ a: "えーと……", b: "いや" }),
+    });
+
+    expect(requestG2pMock).toHaveBeenCalledOnce();
+    expect(result.get("a")?.g2p.kana).toBe("えーと:エ'ート、");
+    expect(result.get("b")?.g2p.kana).toBe("いや:イ'ヤ");
+  });
+
   it("falls back to analyze when repair also fails or the LLM errors", async () => {
     requestG2pMock
       .mockResolvedValueOnce(llmResult({ a: "x" }))
@@ -173,7 +188,9 @@ describe("generateG2p", () => {
   });
 
   it("splits pages into chunks but keeps one request in single mode", async () => {
-    const texts = Object.fromEntries(Array.from({ length: 9 }, (_, i) => [`t${i}`, "あ"]));
+    const texts = Object.fromEntries(
+      Array.from({ length: LLM_G2P_PROFILE.chunkSize + 1 }, (_, i) => [`t${i}`, "あ"]),
+    );
     requestG2pMock.mockImplementation(async (_env, request) =>
       llmResult(
         Object.fromEntries(
