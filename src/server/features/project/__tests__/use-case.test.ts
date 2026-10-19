@@ -2921,6 +2921,69 @@ describe("project use-case", () => {
     await flushJobs();
   });
 
+  it("keeps the saved G2P when a save arrives without it", async () => {
+    const savedTts = (readText: string) => ({
+      id: "tts-1",
+      provider: "voisona",
+      text: "Hello",
+      readText,
+      voiceName: "voice",
+      padBeforeSec: 0,
+      padAfterSec: 0,
+      volume: 1,
+      speech: {},
+    });
+    const request = (readText: string) => ({
+      meta: defaultMeta,
+      pages: [
+        {
+          id: "page-1",
+          title: "Page 1",
+          type: "main",
+          meta: { tags: [] },
+          padBeforeSec: 0,
+          padAfterSec: 0,
+          richText: "<p>Hello</p>",
+          tts: [savedTts(readText)],
+        },
+      ],
+    });
+    const previous = {
+      pages: [
+        {
+          ...request("Hello").pages[0],
+          durationSec: 1.2,
+          tts: [
+            {
+              ...savedTts("Hello"),
+              audio: { status: "ready", src: "/tts/project/old.wav", durationSec: 1.2 },
+              speech: { g2p: helloG2p },
+            },
+          ],
+        },
+      ],
+    };
+
+    readSavedProjectMock.mockResolvedValueOnce(previous);
+    const kept = await saveProject({ OPENROUTER_API_KEY: "secret" }, "project", request("Hello"));
+    expect(contentPage(kept.project.pages).tts[0]).toMatchObject({
+      speech: { g2p: helloG2p },
+      audio: { status: "ready", src: "/tts/project/old.wav" },
+    });
+
+    readSavedProjectMock.mockResolvedValueOnce(previous);
+    generateG2pMock.mockResolvedValueOnce(llmG2p({ "tts-1": createG2pItem("Hi") }));
+    synthesizeVoisonaMock.mockResolvedValueOnce(audio("/tts/project/voisona-1.wav"));
+    const changed = await saveProject({ OPENROUTER_API_KEY: "secret" }, "project", request("Hi"));
+    expect(contentPage(changed.project.pages).tts[0]?.audio.status).toBe("analyzing");
+
+    expect(generateG2pMock).toHaveBeenCalledOnce();
+    expect(synthesizeVoisonaMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ g2p: helloG2p }),
+    );
+    await flushJobs();
+  });
+
   it("queues the LLM for kana-only text too", async () => {
     const unG2p = createG2pItem("うん？", "うん:ウ'ン？");
     readSavedProjectMock.mockResolvedValueOnce({ pages: [] });

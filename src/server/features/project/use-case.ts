@@ -411,6 +411,22 @@ function createAnalyzingReuseTts(
   };
 }
 
+/**
+ * 保存リクエストに g2p が無いのは「クライアントがまだ受け取っていない」であって再生成の要求ではない。
+ * 読みが同じなら保存済みの g2p を使う。再生成は /tts/g2p/generate だけが行う。
+ */
+function withSavedG2p(item: SaveTtsItem, previous: SavedTts | undefined): SaveTtsItem {
+  if (!previous || !getTtsProvider(item.provider).usesG2p) {
+    return item;
+  }
+  const readText = getEffectiveReadText(item);
+  if (getUsableG2p(item.speech?.g2p, readText)) {
+    return item;
+  }
+  const g2p = getUsableG2p(previous.speech.g2p, readText);
+  return g2p ? ({ ...item, speech: { ...item.speech, g2p } } as SaveTtsItem) : item;
+}
+
 async function planSavedTts(
   projectPath: string,
   item: SaveTtsItem,
@@ -420,6 +436,7 @@ async function planSavedTts(
   spoken: boolean,
   forceResynthesis = false,
 ): Promise<PlannedTts> {
+  item = withSavedG2p(item, previous);
   validateTts(item);
   const nextInput = createTtsComparisonInput(withEffectiveSynthesisSettings(item, nextPresets));
   const reuse = await classifyTtsReuse(
