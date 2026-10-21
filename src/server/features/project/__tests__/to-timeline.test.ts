@@ -227,6 +227,42 @@ describe("toTimeline", () => {
     expect(clip?.durationSec).toBe(10.5);
   });
 
+  it("plays scene music over each nested clip with the scene's id, looping the file", () => {
+    const page = savedPageSchema.parse({
+      id: "outro",
+      title: "Outro",
+      type: "outro",
+      meta: {
+        tags: [],
+        blocks: [
+          { id: "a", url: "https://a.example", impression: "" },
+          { id: "b", url: "https://b.example", impression: "" },
+          { id: "c", url: "https://c.example", impression: "" },
+        ],
+      },
+      padBeforeSec: 0,
+      padAfterSec: 0,
+      richText: null,
+      tts: [],
+    });
+    const timeline = toTimeline(project([page]), undefined, { "battle.mp3": 2 }, [
+      { clip: "outro-page-1", src: "battle.mp3", volume: 1 },
+    ]);
+    const bgm = timeline.tracks.find((track) => track.id === BGM_TRACK_ID);
+    expect(bgm?.clips).toEqual([
+      {
+        id: "bgm-scene-0-0",
+        startSec: 5.5,
+        durationSec: 5,
+        clips: [
+          { id: "bgm-scene-0-0-0", startSec: 0, durationSec: 2, clips: [] },
+          { id: "bgm-scene-0-0-1", startSec: 2, durationSec: 2, clips: [] },
+          { id: "bgm-scene-0-0-2", startSec: 4, durationSec: 1, clips: [] },
+        ],
+      },
+    ]);
+  });
+
   it("sizes endcard from advertiser pages minus slide overlap", () => {
     const page = savedPageSchema.parse({
       id: "endcard",

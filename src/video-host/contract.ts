@@ -27,8 +27,15 @@ export type VideoAudioConfig = {
     fadeSec: number;
     /** `drop` is subtracted from the track volume while TTS plays. */
     duck: { drop: number; downSec: number; holdSec: number; releaseSec: number };
+    /**
+     * Scene music: while a page's nested timeline clip with this id plays (say a battle inside
+     * the endcard), `src` replaces the project BGM, crossfading over `fadeSec` at both edges.
+     */
+    scenes: readonly BgmScene[];
   };
 };
+
+export type BgmScene = { clip: string; src: string; volume: number };
 
 export type VideoDefinition = VideoAudioConfig & {
   Composition: (props: HfData) => HfNode;

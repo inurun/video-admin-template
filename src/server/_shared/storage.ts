@@ -23,6 +23,7 @@ import {
 } from "@/server/features/project/contract";
 import { toTimeline } from "@/server/features/project/to-timeline";
 import { measureBgmDurations } from "@/server/features/bgm/bgm-durations";
+import { audioConfig } from "@/video/config";
 import { normalizeProjectMeta } from "@/server/features/project/normalize-project-meta";
 
 export const PROJECT_ROOT = process.cwd();
@@ -422,7 +423,8 @@ export async function readSavedProjectDocument(projectPath: string) {
     const timeline = toTimeline(
       project,
       existing ?? legacyPreviousTimeline(raw),
-      await measureBgmDurations(project.bgm, MUSICS_DIR),
+      await measureBgmDurations(bgmSrcs(project), MUSICS_DIR),
+      audioConfig.bgm.scenes,
     );
     if (didProjectMetaChange(parsed.meta, project.meta)) {
       await writeJsonAtomic(filePath, project);
@@ -447,6 +449,14 @@ export async function readSavedProject(projectPath: string): Promise<SavedProjec
 export async function readSavedTimeline(projectPath: string): Promise<SavedTimeline> {
   const { timeline } = await readSavedProjectDocument(projectPath);
   return timeline;
+}
+
+/** Every BGM file the timeline may loop: the project's tracks and the scene music. */
+function bgmSrcs(project: SavedProject) {
+  return [
+    ...project.bgm.map((track) => track.src),
+    ...audioConfig.bgm.scenes.map((scene) => scene.src),
+  ];
 }
 
 export function createProjectWriteTempPath(filePath: string) {
@@ -478,7 +488,8 @@ export async function writeSavedProject(
   const timeline = toTimeline(
     project,
     previousTimeline,
-    await measureBgmDurations(project.bgm, MUSICS_DIR),
+    await measureBgmDurations(bgmSrcs(project), MUSICS_DIR),
+    audioConfig.bgm.scenes,
   );
   await writeJsonAtomic(createProjectFilePath(projectPath), project);
   await writeJsonAtomic(createTimelineFilePath(projectPath), timeline);

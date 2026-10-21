@@ -1,7 +1,13 @@
 // Every sound the video plays, as data. Static <audio> is the only audio HF render detects,
 // so the server and the preview entry both build it from this list.
 // Imports stay DOM-free: the server builds the HTML from this module.
-import { BGM_TRACK_ID, type BgmTrack, type SavedProject, type SavedTimeline } from "@/_schemas";
+import {
+  BGM_TRACK_ID,
+  type BgmTrack,
+  type SavedProject,
+  type SavedTimeline,
+  type SavedTimelineClip,
+} from "@/_schemas";
 import { staticFile } from "../static-file";
 import type { VideoAudioConfig } from "../contract";
 import { secondsRangeToFrames, secondsToFrames } from "../frame-utils";
@@ -99,70 +105,114 @@ export function sampleVolume(
   });
 }
 
+/** Clip-local volume for each play of a track clip, cut to the video and the track span. */
+function collectPlays(
+  trackClip: SavedTimelineClip,
+  src: string,
+  totalFrames: number,
+  fps: number,
+  volumeAt: (trackFrame: number) => number,
+): AudioClip[] {
+  const startFrame = secondsToFrames(trackClip.startSec, fps);
+  const endFrame = secondsToFrames(trackClip.startSec + trackClip.durationSec, fps);
+  return trackClip.clips.flatMap((play) => {
+    const frames = toFrames(trackClip.startSec + play.startSec, play.durationSec, fps);
+    const from = Math.max(frames.from, 0);
+    const to = Math.min(frames.to, endFrame, totalFrames);
+    if (to <= from) {
+      return [];
+    }
+    return [
+      {
+        id: play.id,
+        src,
+        startSec: from / fps,
+        durationSec: (to - from) / fps,
+        ...(from > frames.from ? { mediaStartSec: (from - frames.from) / fps } : {}),
+        volume: sampleVolume((frame) => volumeAt(from - startFrame + frame), to - from, fps),
+      },
+    ];
+  });
+}
+
 /**
  * BGM: one clip per play of the file from the timeline's `bgm` track, so a loop never depends
  * on the player wrapping media. Fades and ducks per frame over the whole track span: each play
- * samples its own slice of that curve.
+ * samples its own slice of that curve. Scene music (`bgm-scene-*`) crossfades in for its span
+ * while the project tracks fade out under it.
  */
 function collectBgmClips(
   project: SavedProject,
   timeline: SavedTimeline,
   totalFrames: number,
   fps: number,
-  { fadeSec, duck }: VideoAudioConfig["bgm"],
+  { fadeSec, duck, scenes }: VideoAudioConfig["bgm"],
 ): AudioClip[] {
   const duckableIntervals = collectDuckableIntervals(project, timeline, fps);
   const fadeFrames = Math.round(fadeSec * fps);
-  const holdFrames = Math.round(duck.holdSec * fps);
-  const fadeDownFrames = Math.round(duck.downSec * fps);
-  const fadeUpFrames = Math.round(duck.releaseSec * fps);
+  const duckAt = (frame: number) =>
+    computeDuckAmount(
+      frame,
+      duckableIntervals,
+      Math.round(duck.holdSec * fps),
+      Math.round(duck.downSec * fps),
+      Math.round(duck.releaseSec * fps),
+      duck.drop,
+    );
   const bgmClips = timeline.tracks.find((track) => track.id === BGM_TRACK_ID)?.clips ?? [];
+  const spanFrames = (clip: SavedTimelineClip) => {
+    const start = secondsToFrames(clip.startSec, fps);
+    // Fades span the clip's own length, even past the video end.
+    const length = Math.max(1, secondsToFrames(clip.startSec + clip.durationSec, fps) - start);
+    return { start, length };
+  };
+  const sceneSpans = bgmClips.flatMap((clip) => {
+    const match = /^bgm-scene-(\d+)-\d+$/.exec(clip.id);
+    const scene = match ? scenes[Number(match[1])] : undefined;
+    return scene ? [{ clip, scene, ...spanFrames(clip) }] : [];
+  });
+  /** How far scene music has taken over at a frame: 0 outside, 1 inside, ramps at the edges. */
+  const sceneCover = (frame: number) =>
+    sceneSpans.reduce(
+      (cover, span) =>
+        Math.max(
+          cover,
+          frame < span.start || frame >= span.start + span.length
+            ? 0
+            : computeFadeFactor(frame - span.start, span.length, true, true, fadeFrames),
+        ),
+      0,
+    );
 
-  return project.bgm.flatMap((track: BgmTrack, index) => {
+  const trackClips = project.bgm.flatMap((track: BgmTrack, index) => {
     const trackClip = bgmClips.find((clip) => clip.id === `bgm-${index}`);
     if (!trackClip) {
       return [];
     }
-    const startFrame = secondsToFrames(trackClip.startSec, fps);
-    // Fades span the track's own length, even past the video end.
-    const durationFrames = Math.max(
-      1,
-      secondsToFrames(trackClip.startSec + trackClip.durationSec, fps) - startFrame,
+    const { start, length } = spanFrames(trackClip);
+    return collectPlays(
+      trackClip,
+      staticFile(`bgm/${track.src}`),
+      totalFrames,
+      fps,
+      (localFrame) =>
+        Math.max(0, track.volume - duckAt(start + localFrame)) *
+        computeFadeFactor(localFrame, length, track.fadeIn, track.fadeOut, fadeFrames) *
+        (1 - sceneCover(start + localFrame)),
     );
-    const volumeAt = (localFrame: number) =>
-      Math.max(
-        0,
-        track.volume -
-          computeDuckAmount(
-            startFrame + localFrame,
-            duckableIntervals,
-            holdFrames,
-            fadeDownFrames,
-            fadeUpFrames,
-            duck.drop,
-          ),
-      ) * computeFadeFactor(localFrame, durationFrames, track.fadeIn, track.fadeOut, fadeFrames);
-    const src = staticFile(`bgm/${track.src}`);
-
-    return trackClip.clips.flatMap((play) => {
-      const frames = toFrames(trackClip.startSec + play.startSec, play.durationSec, fps);
-      const from = Math.max(frames.from, 0);
-      const to = Math.min(frames.to, startFrame + durationFrames, totalFrames);
-      if (to <= from) {
-        return [];
-      }
-      return [
-        {
-          id: play.id,
-          src,
-          startSec: from / fps,
-          durationSec: (to - from) / fps,
-          ...(from > frames.from ? { mediaStartSec: (from - frames.from) / fps } : {}),
-          volume: sampleVolume((frame) => volumeAt(from - startFrame + frame), to - from, fps),
-        },
-      ];
-    });
   });
+  const sceneClips = sceneSpans.flatMap(({ clip, scene, start, length }) =>
+    collectPlays(
+      clip,
+      staticFile(`bgm/${scene.src}`),
+      totalFrames,
+      fps,
+      (localFrame) =>
+        Math.max(0, scene.volume - duckAt(start + localFrame)) *
+        computeFadeFactor(localFrame, length, true, true, fadeFrames),
+    ),
+  );
+  return [...trackClips, ...sceneClips];
 }
 
 export function createAudioManifest(

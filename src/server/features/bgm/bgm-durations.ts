@@ -1,7 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { ALL_FORMATS, FilePathSource, Input } from "mediabunny";
-import type { BgmTrack } from "@/_schemas";
 import type { BgmDurations } from "@/server/features/project/to-timeline";
 
 type CachedDuration = { mtimeMs: number; size: number; durationSec: number };
@@ -33,14 +32,13 @@ async function measureCached(filePath: string): Promise<number | undefined> {
   }
 }
 
-/** Length of each BGM file the tracks use, keyed by `BgmTrack.src`. */
+/** Length of each BGM file (project tracks and scene music), keyed by its `src`. */
 export async function measureBgmDurations(
-  tracks: BgmTrack[],
+  srcs: readonly string[],
   musicsDir: string,
 ): Promise<BgmDurations> {
-  const srcs = [...new Set(tracks.map((track) => track.src))];
   const entries = await Promise.all(
-    srcs.map(
+    [...new Set(srcs)].map(
       async (src) => [src, await measureCached(path.join(musicsDir, path.basename(src)))] as const,
     ),
   );

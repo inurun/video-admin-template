@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  BGM_TRACK_ID,
   DEFAULT_PROJECT_META,
   SEQUENCE_TRACK_ID,
   type BgmTrack,
@@ -25,7 +26,11 @@ import {
 const FPS = 30;
 const CONFIG: VideoAudioConfig = {
   ttsPageTypes: ["intro", "eyecatch-text", "main", "comments"],
-  bgm: { fadeSec: 1.5, duck: { drop: 0.2, downSec: 0.5, holdSec: 0.5, releaseSec: 1 } },
+  bgm: {
+    fadeSec: 1.5,
+    duck: { drop: 0.2, downSec: 0.5, holdSec: 0.5, releaseSec: 1 },
+    scenes: [],
+  },
 };
 const BGM_DUCK = CONFIG.bgm.duck;
 const BGM_FADE_SEC = CONFIG.bgm.fadeSec;
@@ -239,6 +244,46 @@ describe("createAudioManifest", () => {
       expect(clip).not.toHaveProperty("mediaStartSec");
       expect(clip).not.toHaveProperty("loop");
     }
+  });
+
+  it("crossfades scene music in over its span while the project BGM fades out under it", () => {
+    const project = withBgm(projectFromPages([eyecatchOf(10)]), [{}]);
+    const base = toTimeline(project);
+    const timeline = {
+      ...base,
+      tracks: base.tracks.map((track) =>
+        track.id === BGM_TRACK_ID
+          ? {
+              ...track,
+              clips: [
+                ...track.clips,
+                {
+                  id: "bgm-scene-0-0",
+                  startSec: 4,
+                  durationSec: 4,
+                  clips: [{ id: "bgm-scene-0-0-0", startSec: 0, durationSec: 4, clips: [] }],
+                },
+              ],
+            }
+          : track,
+      ),
+    };
+    const clips = createAudioManifest(project, timeline, FPS, {
+      ...CONFIG,
+      bgm: { ...CONFIG.bgm, scenes: [{ clip: "battle", src: "battle.mp3", volume: 0.8 }] },
+    });
+
+    const [main, scene] = bgmClips(clips);
+    expect(scene).toMatchObject({ id: "bgm-scene-0-0-0", src: "bgm/battle.mp3", startSec: 4 });
+    // The eyecatch TTS plays throughout, so both are ducked by `drop`.
+    const drop = BGM_DUCK.drop;
+    const sceneLane = scene!.volume as AudioVolumePoint[];
+    expect(lerp(sceneLane, 0)).toBeCloseTo(0, 5);
+    expect(lerp(sceneLane, 2)).toBeCloseTo(0.8 - drop, 5);
+    const mainLane = main!.volume as AudioVolumePoint[];
+    expect(lerp(mainLane, 1)).toBeCloseTo(0.5 - drop, 5);
+    expect(lerp(mainLane, 6)).toBeCloseTo(0, 5);
+    expect(lerp(mainLane, 9)).toBeCloseTo(0.5 - drop, 5);
   });
 
   it("continues the fade / duck curve across loop boundaries", () => {

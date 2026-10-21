@@ -2,7 +2,6 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import type { BgmTrack } from "@/_schemas";
 import { measureBgmDurations } from "../bgm-durations";
 
 /** Silent 16-bit mono PCM. */
@@ -25,15 +24,6 @@ function wav(durationSec: number, sampleRate = 8000) {
   return buffer;
 }
 
-const track = (src: string): BgmTrack => ({
-  src,
-  startSec: null,
-  endSec: null,
-  fadeIn: false,
-  fadeOut: false,
-  volume: 1,
-});
-
 let dir = "";
 
 beforeAll(async () => {
@@ -47,11 +37,8 @@ afterAll(async () => {
 });
 
 describe("measureBgmDurations", () => {
-  it("measures each file the tracks use and skips missing ones", async () => {
-    const durations = await measureBgmDurations(
-      [track("a.wav"), track("a.wav"), track("b.wav"), track("missing.mp3")],
-      dir,
-    );
+  it("measures each file once and skips missing ones", async () => {
+    const durations = await measureBgmDurations(["a.wav", "a.wav", "b.wav", "missing.mp3"], dir);
 
     expect(Object.keys(durations).sort()).toEqual(["a.wav", "b.wav"]);
     expect(durations["a.wav"]).toBeCloseTo(1.5, 6);
@@ -61,9 +48,9 @@ describe("measureBgmDurations", () => {
   it("re-measures a file replaced under the same name", async () => {
     const filePath = path.join(dir, "c.wav");
     await fs.writeFile(filePath, wav(1));
-    expect((await measureBgmDurations([track("c.wav")], dir))["c.wav"]).toBeCloseTo(1, 6);
+    expect((await measureBgmDurations(["c.wav"], dir))["c.wav"]).toBeCloseTo(1, 6);
 
     await fs.writeFile(filePath, wav(2));
-    expect((await measureBgmDurations([track("c.wav")], dir))["c.wav"]).toBeCloseTo(2, 6);
+    expect((await measureBgmDurations(["c.wav"], dir))["c.wav"]).toBeCloseTo(2, 6);
   });
 });
