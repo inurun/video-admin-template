@@ -171,7 +171,10 @@ function collectBgmClips(
     const scene = match ? scenes[Number(match[1])] : undefined;
     return scene ? [{ clip, scene, ...spanFrames(clip) }] : [];
   });
-  /** How far scene music has taken over at a frame: 0 outside, 1 inside, ramps at the edges. */
+  /**
+   * How far scene music has taken over at a frame: 0 outside, 1 inside, ramps at the edges. A
+   * scene that runs to the video end keeps the cover, so the project BGM does not come back.
+   */
   const sceneCover = (frame: number) =>
     sceneSpans.reduce(
       (cover, span) =>
@@ -179,7 +182,13 @@ function collectBgmClips(
           cover,
           frame < span.start || frame >= span.start + span.length
             ? 0
-            : computeFadeFactor(frame - span.start, span.length, true, true, fadeFrames),
+            : computeFadeFactor(
+                frame - span.start,
+                span.length,
+                true,
+                span.start + span.length < totalFrames,
+                fadeFrames,
+              ),
         ),
       0,
     );

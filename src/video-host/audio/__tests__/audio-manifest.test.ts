@@ -286,6 +286,38 @@ describe("createAudioManifest", () => {
     expect(lerp(mainLane, 9)).toBeCloseTo(0.5 - drop, 5);
   });
 
+  it("keeps the project BGM out when scene music runs to the video end", () => {
+    const project = withBgm(projectFromPages([eyecatchOf(10)]), [{}]);
+    const base = toTimeline(project);
+    const timeline = {
+      ...base,
+      tracks: base.tracks.map((track) =>
+        track.id === BGM_TRACK_ID
+          ? {
+              ...track,
+              clips: [
+                ...track.clips,
+                {
+                  id: "bgm-scene-0-0",
+                  startSec: 6,
+                  durationSec: 4,
+                  clips: [{ id: "bgm-scene-0-0-0", startSec: 0, durationSec: 4, clips: [] }],
+                },
+              ],
+            }
+          : track,
+      ),
+    };
+    const clips = createAudioManifest(project, timeline, FPS, {
+      ...CONFIG,
+      bgm: { ...CONFIG.bgm, scenes: [{ clip: "battle", src: "battle.mp3", volume: 0.8 }] },
+    });
+
+    const [main, scene] = bgmClips(clips);
+    expect(lerp(main!.volume as AudioVolumePoint[], 9.5)).toBeCloseTo(0, 5);
+    expect(lerp(scene!.volume as AudioVolumePoint[], 3.5)).toBeGreaterThan(0);
+  });
+
   it("continues the fade / duck curve across loop boundaries", () => {
     const project = withBgm(
       projectFromPages([
