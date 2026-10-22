@@ -33,9 +33,16 @@ export type VideoAudioConfig = {
      */
     scenes: readonly BgmScene[];
   };
+  /**
+   * Sound effects: every timeline clip with this id, nested at any depth in the sequence
+   * track (say a hit inside a battle action), plays `src` from its start for its length.
+   */
+  cues: readonly SoundCue[];
 };
 
 export type BgmScene = { clip: string; src: string; volume: number };
+
+export type SoundCue = { clip: string; src: string; volume: number };
 
 export type VideoDefinition = VideoAudioConfig & {
   Composition: (props: HfData) => HfNode;

@@ -31,6 +31,7 @@ const CONFIG: VideoAudioConfig = {
     duck: { drop: 0.2, downSec: 0.5, holdSec: 0.5, releaseSec: 1 },
     scenes: [],
   },
+  cues: [],
 };
 const BGM_DUCK = CONFIG.bgm.duck;
 const BGM_FADE_SEC = CONFIG.bgm.fadeSec;
@@ -316,6 +317,45 @@ describe("createAudioManifest", () => {
     const [main, scene] = bgmClips(clips);
     expect(lerp(main!.volume as AudioVolumePoint[], 9.5)).toBeCloseTo(0, 5);
     expect(lerp(scene!.volume as AudioVolumePoint[], 3.5)).toBeGreaterThan(0);
+  });
+
+  it("plays a cue for every nested clip with its id, cut to the video end", () => {
+    const project = projectFromPages([eyecatchOf(10)]);
+    const base = toTimeline(project);
+    const nest = (id: string, startSec: number, clips: SavedTimelineClip[] = []) => ({
+      id,
+      startSec,
+      durationSec: 1,
+      clips,
+    });
+    const timeline = {
+      ...base,
+      tracks: base.tracks.map((track) =>
+        track.id === SEQUENCE_TRACK_ID
+          ? {
+              ...track,
+              clips: track.clips.map((clip) => ({
+                ...clip,
+                clips: [
+                  nest("action-0", 2, [nest("hit", 0.5)]),
+                  nest("action-1", 5, [nest("hit", 0.2)]),
+                  nest("hit", 9.5),
+                ],
+              })),
+            }
+          : track,
+      ),
+    };
+    const clips = createAudioManifest(project, timeline, FPS, {
+      ...CONFIG,
+      cues: [{ clip: "hit", src: "hit.mp3", volume: 0.3 }],
+    });
+
+    expect(clips.filter((clip) => clip.src === "se/hit.mp3")).toEqual([
+      { id: "cue-hit", src: "se/hit.mp3", startSec: 2.5, durationSec: 1, volume: 0.3 },
+      { id: "cue-hit-1", src: "se/hit.mp3", startSec: 5.2, durationSec: 1, volume: 0.3 },
+      { id: "cue-hit-2", src: "se/hit.mp3", startSec: 9.5, durationSec: 0.5, volume: 0.3 },
+    ]);
   });
 
   it("continues the fade / duck curve across loop boundaries", () => {

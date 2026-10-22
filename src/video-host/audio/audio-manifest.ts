@@ -224,6 +224,41 @@ function collectBgmClips(
   return [...trackClips, ...sceneClips];
 }
 
+/** Sound effects: one clip per sequence-track clip (at any depth) whose id has a cue. */
+function collectCueClips(
+  timeline: SavedTimeline,
+  totalFrames: number,
+  fps: number,
+  cues: VideoAudioConfig["cues"],
+): AudioClip[] {
+  const cueByClip = new Map(cues.map((cue) => [cue.clip, cue]));
+  const walk = (clips: readonly SavedTimelineClip[], offsetSec: number): AudioClip[] =>
+    clips.flatMap((clip) => {
+      const startSec = offsetSec + clip.startSec;
+      const nested = walk(clip.clips, startSec);
+      const cue = cueByClip.get(clip.id);
+      if (!cue) {
+        return nested;
+      }
+      const frames = toFrames(startSec, clip.durationSec, fps);
+      const to = Math.min(frames.to, totalFrames);
+      if (to <= frames.from) {
+        return nested;
+      }
+      return [
+        {
+          id: `cue-${clip.id}`,
+          src: staticFile(`se/${cue.src}`),
+          startSec: frames.from / fps,
+          durationSec: (to - frames.from) / fps,
+          volume: cue.volume,
+        },
+        ...nested,
+      ];
+    });
+  return walk(getSequenceClips(timeline), 0);
+}
+
 export function createAudioManifest(
   project: SavedProject,
   timeline: SavedTimeline,
@@ -235,8 +270,9 @@ export function createAudioManifest(
   const clips = [
     ...collectBgmClips(project, timeline, totalFrames, fps, config.bgm),
     ...collectTtsClips(project, timeline, totalFrames, fps, config.ttsPageTypes),
+    ...collectCueClips(timeline, totalFrames, fps, config.cues),
   ];
-  // TTS ids are only enforced unique on comments pages.
+  // TTS ids are only enforced unique on comments pages; cue clip ids repeat across parents.
   const seen = new Map<string, number>();
   return clips.map((clip) => {
     const count = seen.get(clip.id) ?? 0;
