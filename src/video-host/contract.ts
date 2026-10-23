@@ -32,6 +32,12 @@ export type VideoAudioConfig = {
      * the endcard), `src` replaces the project BGM, crossfading over `fadeSec` at both edges.
      */
     scenes: readonly BgmScene[];
+    /**
+     * Rests: while a sequence-track clip with this id plays (at any depth, say a victory jingle),
+     * every BGM is silent. It fades out over `fadeOutSec` from the clip start and back in over
+     * `fadeInSec` up to the clip end.
+     */
+    rests: readonly BgmRest[];
   };
   /**
    * Sound effects: every timeline clip with this id, nested at any depth in the sequence
@@ -41,6 +47,8 @@ export type VideoAudioConfig = {
 };
 
 export type BgmScene = { clip: string; src: string; volume: number };
+
+export type BgmRest = { clip: string; fadeOutSec: number; fadeInSec: number };
 
 export type SoundCue = { clip: string; src: string; volume: number };
 

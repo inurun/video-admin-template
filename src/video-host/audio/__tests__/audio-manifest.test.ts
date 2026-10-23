@@ -30,6 +30,7 @@ const CONFIG: VideoAudioConfig = {
     fadeSec: 1.5,
     duck: { drop: 0.2, downSec: 0.5, holdSec: 0.5, releaseSec: 1 },
     scenes: [],
+    rests: [],
   },
   cues: [],
 };
@@ -317,6 +318,47 @@ describe("createAudioManifest", () => {
     const [main, scene] = bgmClips(clips);
     expect(lerp(main!.volume as AudioVolumePoint[], 9.5)).toBeCloseTo(0, 5);
     expect(lerp(scene!.volume as AudioVolumePoint[], 3.5)).toBeGreaterThan(0);
+  });
+
+  it("silences the BGM through a rest clip at any depth, fading out and back in", () => {
+    const project = withBgm(projectFromPages([eyecatchOf(10)]), [{}]);
+    const base = toTimeline(project);
+    const timeline = {
+      ...base,
+      tracks: base.tracks.map((track) =>
+        track.id === SEQUENCE_TRACK_ID
+          ? {
+              ...track,
+              clips: track.clips.map((clip) => ({
+                ...clip,
+                clips: [
+                  {
+                    id: "battle",
+                    startSec: 2,
+                    durationSec: 6,
+                    clips: [{ id: "victory", startSec: 2, durationSec: 3, clips: [] }],
+                  },
+                ],
+              })),
+            }
+          : track,
+      ),
+    };
+    const clips = createAudioManifest(project, timeline, FPS, {
+      ...CONFIG,
+      bgm: { ...CONFIG.bgm, rests: [{ clip: "victory", fadeOutSec: 0.5, fadeInSec: 1 }] },
+    });
+
+    const lane = bgmClips(clips)[0]!.volume as AudioVolumePoint[];
+    // Against the same BGM without the rest (ducking included).
+    const plain = bgmClips(createAudioManifest(project, timeline, FPS, CONFIG))[0]!.volume;
+    const restOf = (t: number) =>
+      lerp(lane, t) / (typeof plain === "number" ? plain : lerp(plain, t));
+    expect(restOf(3.5)).toBeCloseTo(1, 5);
+    expect(restOf(4.25)).toBeCloseTo(0.5, 5);
+    expect(lerp(lane, 5)).toBeCloseTo(0, 5);
+    expect(restOf(6.5)).toBeCloseTo(0.5, 5);
+    expect(restOf(7.5)).toBeCloseTo(1, 5);
   });
 
   it("plays a cue for every nested clip with its id, cut to the video end", () => {

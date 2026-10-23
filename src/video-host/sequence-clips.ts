@@ -10,3 +10,18 @@ export function getPageClip(
 ): SavedTimelineClip | undefined {
   return getSequenceClips(timeline).find((clip) => clip.id === pageId);
 }
+
+/** Every sequence-track clip at any depth, with its start in timeline seconds, parents first. */
+export function flattenSequenceClips(
+  timeline: SavedTimeline,
+): { clip: SavedTimelineClip; startSec: number }[] {
+  const walk = (
+    clips: readonly SavedTimelineClip[],
+    offsetSec: number,
+  ): { clip: SavedTimelineClip; startSec: number }[] =>
+    clips.flatMap((clip) => {
+      const startSec = offsetSec + clip.startSec;
+      return [{ clip, startSec }, ...walk(clip.clips, startSec)];
+    });
+  return walk(getSequenceClips(timeline), 0);
+}

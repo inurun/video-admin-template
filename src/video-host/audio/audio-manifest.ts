@@ -11,10 +11,11 @@ import {
 import { staticFile } from "../static-file";
 import type { VideoAudioConfig } from "../contract";
 import { secondsRangeToFrames, secondsToFrames } from "../frame-utils";
-import { getSequenceClips } from "../sequence-clips";
+import { flattenSequenceClips, getSequenceClips } from "../sequence-clips";
 import { collectDuckableIntervals } from "./ducking/collect-duckable-intervals";
 import { computeDuckAmount } from "./ducking/compute-duck-amount";
 import { computeFadeFactor } from "./ducking/compute-fade-factor";
+import { ramp } from "./ducking/ramp";
 
 export type AudioVolumePoint = { t: number; v: number };
 
@@ -146,7 +147,7 @@ function collectBgmClips(
   timeline: SavedTimeline,
   totalFrames: number,
   fps: number,
-  { fadeSec, duck, scenes }: VideoAudioConfig["bgm"],
+  { fadeSec, duck, scenes, rests }: VideoAudioConfig["bgm"],
 ): AudioClip[] {
   const duckableIntervals = collectDuckableIntervals(project, timeline, fps);
   const fadeFrames = Math.round(fadeSec * fps);
@@ -192,6 +193,36 @@ function collectBgmClips(
         ),
       0,
     );
+  const restSpans = flattenSequenceClips(timeline).flatMap(({ clip, startSec }) => {
+    const rest = rests.find((item) => item.clip === clip.id);
+    if (!rest) {
+      return [];
+    }
+    const { start, duration } = secondsRangeToFrames(startSec, clip.durationSec, fps);
+    return [
+      {
+        start,
+        end: start + duration,
+        fadeOut: Math.round(rest.fadeOutSec * fps),
+        fadeIn: Math.round(rest.fadeInSec * fps),
+      },
+    ];
+  });
+  /** How silent every BGM is at a frame: 1 inside a rest, ramping at its edges. */
+  const restCover = (frame: number) =>
+    restSpans.reduce(
+      (cover, span) =>
+        frame < span.start || frame >= span.end
+          ? cover
+          : Math.max(
+              cover,
+              Math.min(
+                ramp(frame, [span.start, span.start + span.fadeOut], [0, 1]),
+                ramp(frame, [span.end - span.fadeIn, span.end], [1, 0]),
+              ),
+            ),
+      0,
+    );
 
   const trackClips = project.bgm.flatMap((track: BgmTrack, index) => {
     const trackClip = bgmClips.find((clip) => clip.id === `bgm-${index}`);
@@ -207,7 +238,8 @@ function collectBgmClips(
       (localFrame) =>
         Math.max(0, track.volume - duckAt(start + localFrame)) *
         computeFadeFactor(localFrame, length, track.fadeIn, track.fadeOut, fadeFrames) *
-        (1 - sceneCover(start + localFrame)),
+        (1 - sceneCover(start + localFrame)) *
+        (1 - restCover(start + localFrame)),
     );
   });
   const sceneClips = sceneSpans.flatMap(({ clip, scene, start, length }) =>
@@ -218,7 +250,8 @@ function collectBgmClips(
       fps,
       (localFrame) =>
         Math.max(0, scene.volume - duckAt(start + localFrame)) *
-        computeFadeFactor(localFrame, length, true, true, fadeFrames),
+        computeFadeFactor(localFrame, length, true, true, fadeFrames) *
+        (1 - restCover(start + localFrame)),
     ),
   );
   return [...trackClips, ...sceneClips];
@@ -232,31 +265,26 @@ function collectCueClips(
   cues: VideoAudioConfig["cues"],
 ): AudioClip[] {
   const cueByClip = new Map(cues.map((cue) => [cue.clip, cue]));
-  const walk = (clips: readonly SavedTimelineClip[], offsetSec: number): AudioClip[] =>
-    clips.flatMap((clip) => {
-      const startSec = offsetSec + clip.startSec;
-      const nested = walk(clip.clips, startSec);
-      const cue = cueByClip.get(clip.id);
-      if (!cue) {
-        return nested;
-      }
-      const frames = toFrames(startSec, clip.durationSec, fps);
-      const to = Math.min(frames.to, totalFrames);
-      if (to <= frames.from) {
-        return nested;
-      }
-      return [
-        {
-          id: `cue-${clip.id}`,
-          src: staticFile(`se/${cue.src}`),
-          startSec: frames.from / fps,
-          durationSec: (to - frames.from) / fps,
-          volume: cue.volume,
-        },
-        ...nested,
-      ];
-    });
-  return walk(getSequenceClips(timeline), 0);
+  return flattenSequenceClips(timeline).flatMap(({ clip, startSec }) => {
+    const cue = cueByClip.get(clip.id);
+    if (!cue) {
+      return [];
+    }
+    const frames = toFrames(startSec, clip.durationSec, fps);
+    const to = Math.min(frames.to, totalFrames);
+    if (to <= frames.from) {
+      return [];
+    }
+    return [
+      {
+        id: `cue-${clip.id}`,
+        src: staticFile(`se/${cue.src}`),
+        startSec: frames.from / fps,
+        durationSec: (to - frames.from) / fps,
+        volume: cue.volume,
+      },
+    ];
+  });
 }
 
 export function createAudioManifest(
