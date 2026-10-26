@@ -5,7 +5,7 @@ import { EditorView, tooltips } from "@codemirror/view";
 import { useForm } from "react-hook-form";
 import { useTheme } from "next-themes";
 import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
-import type { AvatarSettings, VoiceOption } from "@/_schemas";
+import type { AvatarOverride, VoiceOption } from "@/_schemas";
 import { getVoiceValue } from "@/app/features/editor";
 import { useSettings } from "@/app/features/settings";
 import { eventMatchesHotkey } from "@/app/features/settings/lib/hotkeys";
@@ -21,7 +21,11 @@ export function useTtsComposer({
 }: {
   initialVoiceId: string;
   pageId: string;
-  onAppend: (input: { text: string; voice: VoiceOption; avatar: AvatarSettings }) => void;
+  onAppend: (input: {
+    text: string;
+    voice: VoiceOption;
+    avatar: AvatarOverride | undefined;
+  }) => void;
 }) {
   const { options, hotkeys, voiceSettings } = useSettings();
   const { resolvedTheme } = useTheme();

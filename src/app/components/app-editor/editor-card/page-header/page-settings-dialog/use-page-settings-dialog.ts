@@ -12,9 +12,11 @@ import {
 } from "@/app/features/comments";
 import { useCommentImport } from "./comment-import/use-comment-import";
 import {
+  getPageAvatarTypes,
   getPageSettingsTags,
   getSelectedPageSettingsFormValues,
   pageSettingsFormSchema,
+  toMainPageMeta,
   toPageSettingsFormValues,
   type PageSettingsFormValues,
 } from "./page-settings-dialog.lib";
@@ -39,6 +41,8 @@ export function usePageSettingsDialog() {
   });
   const currentPage = pageForm.getValues();
   const commentsPage = currentPage.type === "comments" ? currentPage : null;
+  const mainPage = currentPage.type === "main" ? currentPage : null;
+  const avatarTypes = mainPage ? getPageAvatarTypes(mainPage.tts, mainPage.meta.avatars) : [];
   const importer = useCommentImport(commentsPage, open);
 
   const applyToPage = useCallback(
@@ -47,10 +51,17 @@ export function usePageSettingsDialog() {
       const page = pageForm.getValues();
       if (page.type !== "comments") {
         pageForm.setValue("title", values.title, { shouldDirty: true, shouldValidate: true });
-        pageForm.setValue("meta.tags", getPageSettingsTags(values), {
-          shouldDirty: true,
-          shouldValidate: true,
-        });
+        if (page.type === "main") {
+          pageForm.setValue("meta", toMainPageMeta(values), {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+        } else {
+          pageForm.setValue("meta.tags", getPageSettingsTags(values), {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+        }
         setOpen(false);
         return true;
       }
@@ -141,6 +152,8 @@ export function usePageSettingsDialog() {
     handleOpenChange,
     submit,
     commentsPage: commentsPage as CommentsPageFormValues | null,
+    isMain: mainPage !== null,
+    avatarTypes,
     importer,
     applyError,
     insertSelected,

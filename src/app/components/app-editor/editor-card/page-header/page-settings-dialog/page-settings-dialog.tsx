@@ -14,6 +14,7 @@ import {
 import { Field, FieldError } from "@/app/components/ui/field";
 import { Input } from "@/app/components/ui/input";
 import { CommentImport } from "./comment-import/comment-import";
+import { MainAvatarDefaultsField } from "./main-avatar-defaults-field/main-avatar-defaults-field";
 import { usePageSettingsDialog } from "@/app/components/app-editor/editor-card/page-header/page-settings-dialog/use-page-settings-dialog";
 import { cn } from "@/_shared/lib/utils";
 
@@ -37,7 +38,14 @@ export function PageSettingsDialog() {
         <Settings />
       </DialogTrigger>
       <DialogContent
-        className={cn("max-h-[90vh]", isComments ? "w-[min(96vw,960px)]" : "w-[min(92vw,420px)]")}
+        className={cn(
+          "max-h-[90vh]",
+          isComments
+            ? "w-[min(96vw,960px)]"
+            : dialog.isMain
+              ? "w-[min(92vw,560px)]"
+              : "w-[min(92vw,420px)]",
+        )}
       >
         <form
           className="flex min-h-0 flex-1 flex-col gap-4"
@@ -46,7 +54,12 @@ export function PageSettingsDialog() {
           <DialogHeader>
             <DialogTitle>Page Settings</DialogTitle>
           </DialogHeader>
-          <DialogMain className="grid min-h-0 flex-1 gap-4 overflow-hidden">
+          <DialogMain
+            className={cn(
+              "grid min-h-0 flex-1 gap-4",
+              dialog.isMain ? "overflow-y-auto" : "overflow-hidden",
+            )}
+          >
             <Field data-invalid={Boolean(dialog.form.formState.errors.title)}>
               <label className="grid gap-2 text-sm font-medium">
                 Title
@@ -110,6 +123,19 @@ export function PageSettingsDialog() {
                 );
               })}
             </div>
+            {dialog.isMain ? (
+              <Controller
+                control={dialog.form.control}
+                name="avatars"
+                render={({ field }) => (
+                  <MainAvatarDefaultsField
+                    avatarTypes={dialog.avatarTypes}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+            ) : null}
             {isComments ? <CommentImport importer={dialog.importer} /> : null}
             {dialog.applyError ? <FieldError errors={[{ message: dialog.applyError }]} /> : null}
           </DialogMain>

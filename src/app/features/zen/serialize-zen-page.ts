@@ -1,6 +1,7 @@
 import type { PageFormValues } from "@/app/features/page/model/page-form-schema";
 import type { TtsFormValues } from "@/app/features/tts/model/tts-form-schema";
-import { getAvatarTypeForVoice, resolveAvatarSettings, ttsVoiceId } from "@/_schemas";
+import { ttsVoiceId } from "@/_schemas";
+import { avatarOverridesEqual, toAvatarOverride } from "@/app/features/tts/lib/avatar-override";
 import { createVoiceAliasMap } from "@/app/features/zen/create-alias-map";
 import { serializeAvatarTokens } from "@/app/features/zen/avatar-tokens";
 import type { ZenAliasTarget, ZenSpeakerBlock } from "@/app/features/zen/types";
@@ -26,9 +27,9 @@ function toSpeakerBlocks(
 
   for (const item of tts) {
     const alias = resolveAlias(item, voiceAliases);
-    const avatar = resolveAvatarSettings(getAvatarTypeForVoice(item), item.avatar);
+    const avatar = toAvatarOverride(item.avatar);
     const last = speakers.at(-1);
-    if (last && last.alias === alias && JSON.stringify(last.avatar) === JSON.stringify(avatar)) {
+    if (last && last.alias === alias && avatarOverridesEqual(last.avatar, avatar)) {
       last.lines.push(serializeSpeechText(item.text));
       continue;
     }
@@ -68,10 +69,7 @@ export function serializeZenPage(
       lines.push("");
     }
 
-    const tokens = serializeAvatarTokens(
-      speaker.avatar,
-      aliases.get(speaker.alias)?.avatarType ?? "demo",
-    );
+    const tokens = serializeAvatarTokens(speaker.avatar);
     lines.push(`@${speaker.alias}${tokens ? ` ${tokens}` : ""}`);
     for (const line of speaker.lines) {
       lines.push(line);

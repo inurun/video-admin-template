@@ -1,7 +1,7 @@
 import CodeMirror from "@uiw/react-codemirror";
 import { Controller } from "react-hook-form";
 import { Send } from "lucide-react";
-import type { AvatarSettings, VoiceOption } from "@/_schemas";
+import type { AvatarOverride, VoiceOption } from "@/_schemas";
 import { Button } from "@/app/components/ui/button";
 import { FieldError } from "@/app/components/ui/field";
 import {
@@ -21,7 +21,11 @@ export function TtsComposer({
 }: {
   initialVoiceId: string;
   pageId: string;
-  onAppend: (input: { text: string; voice: VoiceOption; avatar: AvatarSettings }) => void;
+  onAppend: (input: {
+    text: string;
+    voice: VoiceOption;
+    avatar: AvatarOverride | undefined;
+  }) => void;
 }) {
   const composer = useTtsComposer({ initialVoiceId, pageId, onAppend });
 

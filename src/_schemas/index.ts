@@ -18,6 +18,7 @@ export {
   type SavedTimelineTrack,
 } from "./timeline";
 export {
+  AVATAR_TYPES,
   DEFAULT_AVATAR_TYPE,
   getAvatarTypeByVoiceName,
   getAvatarTypeForVoice,
@@ -28,7 +29,9 @@ export {
 } from "./catalog";
 export {
   avatarOptions,
-  avatarSettingsSchema,
+  avatarOverrideSchema,
+  avatarTypeSchema,
+  mainPageMetaSchema,
   bgmTrackSchema,
   commentGroupSchema,
   commentSceneSchema,
@@ -77,7 +80,9 @@ export {
   WEATHER_LOCATION_IDS,
   WEATHER_LOCATION_LABELS,
   weatherConditionSchema,
+  type AvatarOverride,
   type AvatarSettings,
+  type MainPageMeta,
   type AvatarType,
   type BgmTrack,
   type CommentGroup,
@@ -95,6 +100,7 @@ export {
   type PageType,
   type SavedCommentsPage,
   type SavedEndcardPage,
+  type SavedMainPage,
   type SavedEyecatchTextPage,
   type SavedOutroPage,
   type SavedPage,

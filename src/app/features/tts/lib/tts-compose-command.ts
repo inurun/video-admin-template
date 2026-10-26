@@ -2,10 +2,10 @@ import {
   avatarOptions,
   getAvatarTypeForVoice,
   getOpenedMouthOptions,
-  resolveAvatarSettings,
-  type AvatarSettings,
+  type AvatarOverride,
   type VoiceOption,
 } from "@/_schemas";
+import { toAvatarOverride } from "@/app/features/tts/lib/avatar-override";
 
 const commandDefinitions = {
   b: {
@@ -25,7 +25,7 @@ const commandDefinitions = {
 type CommandKey = keyof typeof commandDefinitions;
 
 export type TtsComposeResult =
-  | { ok: true; text: string; avatar: AvatarSettings }
+  | { ok: true; text: string; avatar: AvatarOverride | undefined }
   | { ok: false; error: string };
 
 export function getTtsComposeCommandOptions(voice: VoiceOption, used: Set<string> = new Set()) {
@@ -45,9 +45,7 @@ export function parseTtsComposeInput(source: string, voice: VoiceOption): TtsCom
   }
   if (input.startsWith("\\/")) {
     const text = input.slice(1).trim();
-    return text
-      ? { ok: true, text, avatar: resolveAvatarSettings(getAvatarTypeForVoice(voice), undefined) }
-      : { ok: false, error: "Text is required." };
+    return text ? { ok: true, text, avatar: undefined } : { ok: false, error: "Text is required." };
   }
 
   let rest = input;
@@ -77,9 +75,9 @@ export function parseTtsComposeInput(source: string, voice: VoiceOption): TtsCom
   if (!text) {
     return { ok: false, error: "Text is required after commands." };
   }
-  const avatar = resolveAvatarSettings(getAvatarTypeForVoice(voice), undefined);
+  const avatar: AvatarOverride = {};
   for (const [key, value] of Object.entries(values) as Array<[CommandKey, string]>) {
     avatar[commandDefinitions[key].field] = value;
   }
-  return { ok: true, text, avatar };
+  return { ok: true, text, avatar: toAvatarOverride(avatar) };
 }

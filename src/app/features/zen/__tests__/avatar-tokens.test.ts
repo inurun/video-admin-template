@@ -5,17 +5,14 @@ import { parseAvatarTokens, serializeAvatarTokens } from "../avatar-tokens";
 import { createZenCompletionSource } from "../components/zen-editor/zen-completion";
 
 describe("avatar dot tokens", () => {
-  it("accepts all fields in any order and supplies defaults", () => {
+  it("accepts all fields in any order and leaves omitted fields unset", () => {
     expect(parseAvatarTokens(["m.opened", "e.shaded-opened", "b.normal"], "demo")).toEqual({
       base: "normal",
       eyes: "shaded-opened",
       mouth: "opened",
     });
-    expect(parseAvatarTokens([], "demo")).toEqual({
-      base: "normal",
-      eyes: "opened",
-      mouth: "opened",
-    });
+    expect(parseAvatarTokens(["e.shaded-opened"], "demo")).toEqual({ eyes: "shaded-opened" });
+    expect(parseAvatarTokens([], "demo")).toBeUndefined();
   });
   it.each(["opened", "e:opened", "x.opened", "b.missing", "e.closed", "m.closed", "e."])(
     "rejects invalid token %s",
@@ -26,13 +23,11 @@ describe("avatar dot tokens", () => {
   it("rejects repeated keys", () => {
     expect(() => parseAvatarTokens(["e.opened", "e.shaded-opened"], "demo")).toThrow("Duplicate");
   });
-  it("serializes only non-default fields and round trips them", () => {
-    const avatar = parseAvatarTokens(["b.normal", "e.shaded-opened", "m.opened"], "demo");
-    expect(serializeAvatarTokens(avatar, "demo")).toBe("e.shaded-opened");
-    expect(parseAvatarTokens(serializeAvatarTokens(avatar, "demo").split(" "), "demo")).toEqual(
-      avatar,
-    );
-    expect(serializeAvatarTokens(parseAvatarTokens([], "demo"), "demo")).toBe("");
+  it("serializes set override fields and round trips them", () => {
+    const avatar = parseAvatarTokens(["m.opened", "e.shaded-opened"], "demo");
+    expect(serializeAvatarTokens(avatar)).toBe("e.shaded-opened m.opened");
+    expect(parseAvatarTokens(serializeAvatarTokens(avatar).split(" "), "demo")).toEqual(avatar);
+    expect(serializeAvatarTokens(undefined)).toBe("");
   });
   it("completes keys and values without repeating used fields", () => {
     const complete = createZenCompletionSource([{ alias: "speaker", avatarType: "demo" }]);

@@ -1,4 +1,5 @@
 export {
+  AVATAR_TYPES,
   DEFAULT_AVATAR_TYPE,
   avatarOptions,
   getAvatarTypeByVoiceName,

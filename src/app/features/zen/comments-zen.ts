@@ -1,8 +1,9 @@
 import type { CommentGroup, CommentScene, NiconicoComment } from "@/_schemas/project/comments";
-import type { AvatarSettings } from "@/_schemas";
+import type { AvatarOverride } from "@/_schemas";
 import type { CommentsPageFormValues } from "@/app/features/page/model/page-form-schema";
 import type { TtsFormValues } from "@/app/features/tts/model/tts-form-schema";
-import { getAvatarTypeForVoice, resolveAvatarSettings, ttsVoiceId } from "@/_schemas";
+import { ttsVoiceId } from "@/_schemas";
+import { toAvatarOverride } from "@/app/features/tts/lib/avatar-override";
 import { createVoiceAliasMap } from "@/app/features/zen/create-alias-map";
 import { serializeAvatarTokens } from "@/app/features/zen/avatar-tokens";
 import { extractInlineTags, uniqueTags } from "@/app/features/zen/tag-utils";
@@ -17,7 +18,7 @@ const TTS_REF_PATTERN = /^\{#tts:([^}]+)\}$/;
 
 export type ZenCommentsReplyDraft = {
   alias: string;
-  avatar: AvatarSettings;
+  avatar: AvatarOverride | undefined;
   text: string;
   ttsId: string | null;
   lineNumber: number;
@@ -131,9 +132,9 @@ export function serializeZenCommentsPage(
           continue;
         }
         const alias = resolveAlias(item, voiceAliases);
-        const avatar = resolveAvatarSettings(getAvatarTypeForVoice(item), item.avatar);
-        const tokens = serializeAvatarTokens(avatar, aliases.get(alias)?.avatarType ?? "demo");
-        const key = `${alias}\0${JSON.stringify(avatar)}`;
+        const avatar = toAvatarOverride(item.avatar);
+        const tokens = serializeAvatarTokens(avatar);
+        const key = `${alias}\0${tokens}`;
         if (key !== lastKey) {
           const extras = [tokens, `{#tts:${item.id}}`].filter(Boolean).join(" ");
           lines.push(`@${alias}${extras ? ` ${extras}` : ""}`);
@@ -385,7 +386,7 @@ export function parseZenCommentsPage(
         }
         usedTtsRefs.add(ttsId);
       }
-      let avatar: AvatarSettings;
+      let avatar: AvatarOverride | undefined;
       try {
         avatar = parseAvatarTokens(avatarTokens, target.avatarType);
       } catch (error) {
@@ -671,7 +672,12 @@ export function applyZenCommentsPage(
         if (next.text !== reply.text) {
           next = applyTtsTextChange(next, reply.text);
         }
-        resolved = { ...next, avatar: reply.avatar, speech: next.speech ?? {} };
+        const { avatar: _avatar, ...rest } = next;
+        resolved = {
+          ...rest,
+          ...(reply.avatar ? { avatar: reply.avatar } : {}),
+          speech: next.speech ?? {},
+        };
       } else {
         resolved = { ...createZenTts(voiceOptions, target, reply.text, reply.avatar), speech: {} };
       }

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { g2pItemSchema } from "@/_schemas/g2p";
 import {
-  avatarSettingsSchema,
+  avatarOverrideSchema,
   coeiroinkSynthesisSettingsSchema,
   voicepeakSynthesisSettingsSchema,
   voicevoxSynthesisSettingsSchema,
@@ -20,7 +20,7 @@ const ttsFormBaseSchema = {
   padAfterSec: z.number().default(0),
   volume: z.number().min(0).max(1).default(1),
   speech: ttsFormSpeechSchema.optional(),
-  avatar: avatarSettingsSchema.optional(),
+  avatar: avatarOverrideSchema.optional(),
 };
 
 const namedTtsFormIdentity = {

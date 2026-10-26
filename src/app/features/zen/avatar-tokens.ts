@@ -1,10 +1,10 @@
 import {
   avatarOptions,
   getOpenedMouthOptions,
-  resolveAvatarSettings,
-  type AvatarSettings,
+  type AvatarOverride,
   type AvatarType,
 } from "@/_schemas";
+import { toAvatarOverride } from "@/app/features/tts/lib/avatar-override";
 
 export const avatarTokenFields = { b: "base", e: "eyes", m: "mouth" } as const;
 
@@ -12,8 +12,9 @@ export function getZenAvatarOptions(type: AvatarType) {
   return { ...avatarOptions[type], mouth: getOpenedMouthOptions(type) };
 }
 
-export function parseAvatarTokens(tokens: string[], type: AvatarType): AvatarSettings {
-  const avatar = resolveAvatarSettings(type, undefined);
+/** Tokens are TTS overrides; omitted fields fall back to the page default. */
+export function parseAvatarTokens(tokens: string[], type: AvatarType): AvatarOverride | undefined {
+  const avatar: AvatarOverride = {};
   const options = getZenAvatarOptions(type);
   const seen = new Set<string>();
   for (const token of tokens) {
@@ -29,13 +30,11 @@ export function parseAvatarTokens(tokens: string[], type: AvatarType): AvatarSet
     }
     avatar[field] = value;
   }
-  return avatar;
+  return toAvatarOverride(avatar);
 }
 
-export function serializeAvatarTokens(avatar: AvatarSettings, type: AvatarType) {
-  const defaults = resolveAvatarSettings(type, undefined);
+export function serializeAvatarTokens(avatar: AvatarOverride | undefined) {
   return Object.entries(avatarTokenFields)
-    .filter(([, field]) => avatar[field] !== defaults[field])
-    .map(([key, field]) => `${key}.${avatar[field]}`)
+    .flatMap(([key, field]) => (avatar?.[field] ? [`${key}.${avatar[field]}`] : []))
     .join(" ");
 }

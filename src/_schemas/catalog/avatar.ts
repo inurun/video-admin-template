@@ -14,6 +14,8 @@ export type AvatarAppearance = {
   mouth: string;
 };
 
+export const AVATAR_TYPES = Object.keys(avatarOptions) as [AvatarType, ...AvatarType[]];
+
 export const DEFAULT_AVATAR_TYPE: AvatarType = "demo";
 
 export const voiceNameAvatarMap: Record<string, AvatarType> = {};
@@ -50,17 +52,27 @@ function getDefaultAvatarSettings(type: AvatarType): AvatarAppearance {
   };
 }
 
+/** Resolves each field from the first layer holding a valid value, then the catalog default. */
 export function resolveAvatarSettings(
   type: AvatarType,
-  value: AvatarAppearance | undefined,
+  ...layers: Array<Partial<AvatarAppearance> | undefined>
 ): AvatarAppearance {
   const options = avatarOptions[type];
   const openedMouthOptions = getOpenedMouthOptions(type);
   const defaults = getDefaultAvatarSettings(type);
+  const pick = <T extends string>(
+    fieldOptions: readonly T[],
+    field: keyof AvatarAppearance,
+    fallback: T,
+  ) =>
+    layers.reduceRight<T>(
+      (current, layer) => pickOption(fieldOptions, layer?.[field], current),
+      fallback,
+    );
 
   return {
-    base: pickOption(options.base, value?.base, defaults.base),
-    eyes: pickOption(options.eyes, value?.eyes, defaults.eyes),
-    mouth: pickOption(openedMouthOptions, value?.mouth, defaults.mouth),
+    base: pick(options.base, "base", defaults.base),
+    eyes: pick(options.eyes, "eyes", defaults.eyes),
+    mouth: pick(openedMouthOptions, "mouth", defaults.mouth),
   };
 }

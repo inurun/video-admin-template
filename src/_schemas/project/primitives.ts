@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { WEATHER_LOCATION_IDS } from "@/_schemas/catalog/weather";
+import { AVATAR_TYPES, type AvatarAppearance } from "@/_schemas/catalog/avatar";
 
 export { avatarOptions, type AvatarType } from "@/_schemas/catalog/avatar";
 export { WEATHER_LOCATION_IDS, WEATHER_LOCATION_LABELS } from "@/_schemas/catalog/weather";
@@ -67,11 +68,14 @@ export const coeiroinkSynthesisSettingsSchema = z.object({
   outputSamplingRate: z.number().int().positive().optional(),
 });
 
-export const avatarSettingsSchema = z.object({
-  base: z.string().min(1),
-  eyes: z.string().min(1),
-  mouth: z.string().min(1),
+/** Only the fields that differ from the layer below (page default → catalog default). */
+export const avatarOverrideSchema = z.object({
+  base: z.string().min(1).optional(),
+  eyes: z.string().min(1).optional(),
+  mouth: z.string().min(1).optional(),
 });
+
+export const avatarTypeSchema = z.enum(AVATAR_TYPES);
 
 const namedVoiceOptionFields = {
   voiceName: z.string().min(1),
@@ -205,6 +209,13 @@ export const pageTagsMetaSchema = z
   })
   .default({ tags: [] });
 
+export const mainPageMetaSchema = z
+  .object({
+    tags: z.array(z.string().trim().min(1)).default([]),
+    avatars: z.partialRecord(avatarTypeSchema, avatarOverrideSchema).optional(),
+  })
+  .default({ tags: [] });
+
 export const outroPageMetaSchema = z
   .object({
     tags: z.array(z.string().trim().min(1)).default([]),
@@ -305,7 +316,9 @@ export type VoisonaSynthesisSettings = z.infer<typeof voisonaSynthesisSettingsSc
 export type VoicevoxSynthesisSettings = z.infer<typeof voicevoxSynthesisSettingsSchema>;
 export type VoicepeakSynthesisSettings = z.infer<typeof voicepeakSynthesisSettingsSchema>;
 export type CoeiroinkSynthesisSettings = z.infer<typeof coeiroinkSynthesisSettingsSchema>;
-export type AvatarSettings = z.infer<typeof avatarSettingsSchema>;
+export type AvatarSettings = AvatarAppearance;
+export type AvatarOverride = z.infer<typeof avatarOverrideSchema>;
+export type MainPageMeta = z.infer<typeof mainPageMetaSchema>;
 export type VoiceOption = z.infer<typeof voiceOptionSchema>;
 export type VoicePreset = z.infer<typeof voicePresetSchema>;
 export type PageType = z.infer<typeof pageTypeSchema>;

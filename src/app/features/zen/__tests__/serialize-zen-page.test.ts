@@ -50,7 +50,6 @@ function ttsItem(
     volume: 0.5,
     synthesisSettings: null,
     speech: { g2p: createG2pItem("kept") },
-    avatar: { base: "normal", eyes: "opened", mouth: "opened" },
     ...overrides,
   };
 }
@@ -83,7 +82,7 @@ describe("serializeZenPage", () => {
             voiceName: "14",
             text: "line\nbreak",
             readText: "line\nbreak",
-            avatar: { base: "normal", eyes: "shaded-opened", mouth: "opened" },
+            avatar: { eyes: "shaded-opened" },
           }),
         ],
       }),
@@ -166,9 +165,16 @@ world
       padBeforeSec: 1,
       padAfterSec: 2,
       volume: 0.5,
-      avatar: { base: "normal", eyes: "opened", mouth: "opened" },
       speech: { g2p: createG2pItem("kept") },
     });
+    expect(result[0]?.avatar).toEqual({ base: "normal", mouth: "opened" });
+  });
+
+  it("clears the avatar override when the script has no tokens", () => {
+    const existing = [ttsItem({ text: "hello", avatar: { eyes: "shaded-opened" } })];
+    const parsed = parseZenScript("@zunda\nhello", { aliases: aliasMap });
+    const result = applyZenTtsList(existing, parsed.pages[0]!.tts, aliasMap);
+    expect(result[0]).not.toHaveProperty("avatar");
   });
 
   it("keeps id and updates text with readText on a substitution", () => {

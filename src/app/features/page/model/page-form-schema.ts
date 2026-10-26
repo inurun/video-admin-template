@@ -10,6 +10,7 @@ import {
 import {
   endcardPageMetaSchema,
   outroPageMetaSchema,
+  mainPageMetaSchema,
   pageTagsMetaSchema,
 } from "@/_schemas/project/primitives";
 
@@ -36,7 +37,7 @@ export const pageFormSchema = z.discriminatedUnion("type", [
   z.object({
     ...pageFormSharedFields,
     type: z.literal("main"),
-    meta: pageTagsMetaSchema,
+    meta: mainPageMetaSchema,
   }),
   z
     .object({
@@ -62,6 +63,7 @@ export const pageFormSchema = z.discriminatedUnion("type", [
 ]);
 
 export type PageFormValues = z.infer<typeof pageFormSchema>;
+export type MainPageFormValues = Extract<PageFormValues, { type: "main" }>;
 export type EyecatchTextPageFormValues = Extract<PageFormValues, { type: "eyecatch-text" }>;
 export type CommentsPageFormValues = Extract<PageFormValues, { type: "comments" }>;
 export type OutroPageFormValues = Extract<PageFormValues, { type: "outro" }>;

@@ -9,6 +9,7 @@ import {
 import {
   endcardPageMetaSchema,
   outroPageMetaSchema,
+  mainPageMetaSchema,
   pageTagsMetaSchema,
   transitionVariantSchema,
 } from "@/_schemas/project/primitives";
@@ -38,7 +39,7 @@ export const savedPageSchema = z.discriminatedUnion("type", [
   z.object({
     ...savedPageSharedSchema,
     type: z.literal("main"),
-    meta: pageTagsMetaSchema,
+    meta: mainPageMetaSchema,
     tts: z.array(savedTtsSchema).min(1),
   }),
   z
@@ -78,6 +79,7 @@ export const savedSequenceItemSchema = z.union([savedPageSchema, savedTransition
 export type SavedPage = z.infer<typeof savedPageSchema>;
 export type SavedTransition = z.infer<typeof savedTransitionSchema>;
 export type SavedSequenceItem = z.infer<typeof savedSequenceItemSchema>;
+export type SavedMainPage = Extract<SavedPage, { type: "main" }>;
 export type SavedEyecatchTextPage = Extract<SavedPage, { type: "eyecatch-text" }>;
 export type SavedCommentsPage = Extract<SavedPage, { type: "comments" }>;
 export type SavedOutroPage = Extract<SavedPage, { type: "outro" }>;

@@ -4,7 +4,7 @@ import { isSortable } from "@dnd-kit/react/sortable";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import type { PageFormValues } from "@/app/features/page/model/page-form-schema";
 import type { TtsFormValues } from "@/app/features/tts/model/tts-form-schema";
-import type { AvatarSettings, VoiceOption } from "@/_schemas";
+import type { AvatarOverride, VoiceOption } from "@/_schemas";
 import { getVoiceValue } from "@/app/features/editor";
 import { useSelectedPage } from "@/app/features/page";
 import { useProjectRoute } from "@/app/features/project/context/project-route-context";
@@ -83,11 +83,19 @@ export function useTtsList() {
   );
 
   const appendTts = useCallback(
-    ({ text, voice, avatar }: { text: string; voice: VoiceOption; avatar: AvatarSettings }) => {
+    ({
+      text,
+      voice,
+      avatar,
+    }: {
+      text: string;
+      voice: VoiceOption;
+      avatar: AvatarOverride | undefined;
+    }) => {
       const draft = createTtsInput(options, undefined);
       const nextTts = {
         ...applyTtsTextChange(applyTtsVoiceChange(draft, voice), text),
-        avatar,
+        ...(avatar ? { avatar } : {}),
       };
       append(nextTts);
       selectTts(nextTts.id);

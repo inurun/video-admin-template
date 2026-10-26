@@ -10,11 +10,12 @@ import {
   refineCommentsPageRelations,
 } from "@/_schemas/project/comments";
 import {
-  avatarSettingsSchema,
+  avatarOverrideSchema,
   bgmTrackSchema,
   DEFAULT_VOICE_PRESETS,
   endcardPageMetaSchema,
   outroPageMetaSchema,
+  mainPageMetaSchema,
   pageTagsMetaSchema,
   projectNiconicoMetaSchema,
   transitionVariantSchema,
@@ -38,7 +39,7 @@ const saveTtsBaseFields = {
   padAfterSec: z.number().default(0),
   volume: z.number().min(0).max(1).default(1),
   speech: saveTtsSpeechSchema.optional(),
-  avatar: avatarSettingsSchema.optional(),
+  avatar: avatarOverrideSchema.optional(),
 };
 
 const namedSaveTtsIdentity = {
@@ -102,7 +103,7 @@ export const savePageItemSchema = z.discriminatedUnion("type", [
   z.object({
     ...savePageSharedFields,
     type: z.literal("main"),
-    meta: pageTagsMetaSchema,
+    meta: mainPageMetaSchema,
   }),
   z
     .object({

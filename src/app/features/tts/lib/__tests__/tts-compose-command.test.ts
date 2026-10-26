@@ -15,7 +15,15 @@ describe("parseTtsComposeInput", () => {
     ).toEqual({
       ok: true,
       text: "First line\nSecond line",
-      avatar: { base: "normal", eyes: "shaded-opened", mouth: "opened" },
+      avatar: { eyes: "shaded-opened", mouth: "opened" },
+    });
+  });
+
+  it("leaves the avatar unset without commands", () => {
+    expect(parseTtsComposeInput("Text", voice)).toEqual({
+      ok: true,
+      text: "Text",
+      avatar: undefined,
     });
   });
 
