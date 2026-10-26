@@ -3,6 +3,7 @@ import { Button } from "@/app/components/ui/button";
 import { PageSettingsDialog } from "@/app/components/app-editor/editor-card/page-header/page-settings-dialog/page-settings-dialog";
 import { ZenDialog } from "@/app/components/app-editor/editor-card/page-header/zen-dialog/zen-dialog";
 import { CommentsQaDialog } from "@/app/components/app-editor/editor-card/page-header/comments-qa-dialog/comments-qa-dialog";
+import { AutoExpressionButton } from "@/app/components/app-editor/editor-card/page-header/auto-expression-button/auto-expression-button";
 import { usePageHeader } from "@/app/components/app-editor/editor-card/page-header/use-page-header";
 
 export function PageHeader() {
@@ -15,6 +16,7 @@ export function PageHeader() {
       </div>
       {header.isTransition ? null : (
         <div className="flex items-center gap-1">
+          {header.supportsAutoExpression ? <AutoExpressionButton /> : null}
           {header.supportsZen ? <ZenDialog key={header.selectedPageId} /> : null}
           {header.supportsCommentsTools ? (
             <>

@@ -75,6 +75,17 @@ export const avatarOverrideSchema = z.object({
   mouth: z.string().min(1).optional(),
 });
 
+/**
+ * Who owns a line's eyes / mouth. Auto states carry the key of the turn text they were made for;
+ * a stale key means auto runs again on the next save. Manual lines are never touched by auto.
+ */
+export const avatarSourceSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("auto"), key: z.string().min(1) }),
+  z.object({ kind: z.literal("pending"), key: z.string().min(1) }),
+  z.object({ kind: z.literal("failed"), key: z.string().min(1) }),
+  z.object({ kind: z.literal("manual") }),
+]);
+
 export const avatarTypeSchema = z.enum(AVATAR_TYPES);
 
 const namedVoiceOptionFields = {
@@ -318,6 +329,7 @@ export type VoicepeakSynthesisSettings = z.infer<typeof voicepeakSynthesisSettin
 export type CoeiroinkSynthesisSettings = z.infer<typeof coeiroinkSynthesisSettingsSchema>;
 export type AvatarSettings = AvatarAppearance;
 export type AvatarOverride = z.infer<typeof avatarOverrideSchema>;
+export type AvatarSource = z.infer<typeof avatarSourceSchema>;
 export type MainPageMeta = z.infer<typeof mainPageMetaSchema>;
 export type VoiceOption = z.infer<typeof voiceOptionSchema>;
 export type VoicePreset = z.infer<typeof voicePresetSchema>;

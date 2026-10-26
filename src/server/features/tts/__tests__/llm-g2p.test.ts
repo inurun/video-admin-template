@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createG2pItem } from "@/_schemas/__tests__/g2p-fixture";
 import { HaqumeiApiError } from "@/server/features/haqumei-api/error";
 import { LLM_G2P_PROFILE } from "../llm-g2p-profile";
-import { ZERO_USAGE } from "../openrouter";
+import { ZERO_USAGE } from "@/server/core/openrouter";
 import type { G2pPageContext } from "../g2p-context";
 
 const {

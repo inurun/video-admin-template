@@ -7,7 +7,7 @@ import {
   useSavedProject,
   useSavedProjectStoreApi,
 } from "@/app/features/editor/store/saved-project-store-context";
-import { selectHasUnresolvedAudio } from "@/app/features/editor/store/saved-project-state";
+import { selectHasBackgroundWork } from "@/app/features/editor/store/saved-project-state";
 import { usePublish } from "@/app/features/publish";
 import { cancelPublish } from "@/app/features/publish/api/publish-api";
 import { cancelRender, startRender, type RenderState } from "@/app/features/render/api/render-api";
@@ -68,7 +68,7 @@ export type RenderContextValue = {
 export function useRenderProviderValue(): RenderContextValue {
   const { isPending: saving, save } = useEditor();
   const savedStore = useSavedProjectStoreApi();
-  const synthesizing = useSavedProject(selectHasUnresolvedAudio);
+  const synthesizing = useSavedProject(selectHasBackgroundWork);
   const { options } = useSettings();
   const pageCount = useEditorSession((state) => state.sequenceOrder.length);
   const { projectPath } = useProject();
@@ -142,8 +142,8 @@ export function useRenderProviderValue(): RenderContextValue {
         return;
       }
 
-      if (selectHasUnresolvedAudio(savedStore.getState())) {
-        setRenderError("音声準備中。完了後にもう一度Renderしてください。");
+      if (selectHasBackgroundWork(savedStore.getState())) {
+        setRenderError("音声・表情を準備中。完了後にもう一度Renderしてください。");
         return;
       }
 

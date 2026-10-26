@@ -1,3 +1,5 @@
+import type { OpenRouterProfile } from "@/server/core/openrouter";
+
 export const LLM_G2P_PROFILE = {
   id: "gemini-4-argon-oneshot-v3",
   model: "google/gemini-4-argon",
@@ -7,7 +9,7 @@ export const LLM_G2P_PROFILE = {
   chunkSize: 12,
   concurrency: 3,
   retryLimit: 3,
-} as const;
+} as const satisfies OpenRouterProfile & { chunkSize: number; concurrency: number };
 
 export function chunkItems<T>(items: readonly T[], chunkSize: number) {
   const size = Math.max(1, chunkSize);
@@ -16,8 +18,4 @@ export function chunkItems<T>(items: readonly T[], chunkSize: number) {
     chunks.push(items.slice(index, index + size));
   }
   return chunks;
-}
-
-export function hasOpenRouterApiKey(serverEnv: { OPENROUTER_API_KEY?: string }) {
-  return Boolean(serverEnv.OPENROUTER_API_KEY?.trim());
 }

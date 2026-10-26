@@ -11,6 +11,7 @@ import {
 } from "@/_schemas/project/comments";
 import {
   avatarOverrideSchema,
+  avatarSourceSchema,
   bgmTrackSchema,
   DEFAULT_VOICE_PRESETS,
   endcardPageMetaSchema,
@@ -40,6 +41,7 @@ const saveTtsBaseFields = {
   volume: z.number().min(0).max(1).default(1),
   speech: saveTtsSpeechSchema.optional(),
   avatar: avatarOverrideSchema.optional(),
+  avatarSource: avatarSourceSchema.optional(),
 };
 
 const namedSaveTtsIdentity = {

@@ -12,6 +12,7 @@ import type { TransitionFormValues } from "@/app/features/page/model/transition-
 import type { ProjectSettingsFormValues } from "@/app/features/project/model/project-settings-form-schema";
 import type { TtsFormValues } from "@/app/features/tts/model/tts-form-schema";
 import { normalizeProjectMeta } from "@/app/features/project/lib/normalize-project-meta";
+import { avatarOverridesEqual } from "@/app/features/tts/lib/avatar-override";
 
 export function toTtsFormValues(item: SavedTts): TtsFormValues {
   const identity = toVoiceIdentity(item);
@@ -25,6 +26,7 @@ export function toTtsFormValues(item: SavedTts): TtsFormValues {
     ...(identity ? copyVoiceIdentity(identity) : { provider: item.provider, voiceName: "" }),
     ...(item.synthesisSettings ? { synthesisSettings: item.synthesisSettings } : {}),
     ...(item.avatar ? { avatar: item.avatar } : {}),
+    ...(item.avatarSource ? { avatarSource: item.avatarSource } : {}),
     speech: item.speech.g2p ? { g2p: item.speech.g2p } : {},
   } as TtsFormValues;
 }
@@ -85,33 +87,47 @@ export function toPageFormValues(page: SavedPage): PageFormValues {
   };
 }
 
+type AvatarFields = Pick<TtsFormValues, "avatar" | "avatarSource">;
+
+function avatarFieldsEqual(left: AvatarFields | undefined, right: AvatarFields | undefined) {
+  return (
+    avatarOverridesEqual(left?.avatar, right?.avatar) &&
+    JSON.stringify(left?.avatarSource ?? null) === JSON.stringify(right?.avatarSource ?? null)
+  );
+}
+
+function withSavedAvatar(item: TtsFormValues, saved: AvatarFields): TtsFormValues {
+  const { avatar: _avatar, avatarSource: _source, ...rest } = item;
+  return {
+    ...rest,
+    ...(saved.avatar ? { avatar: saved.avatar } : {}),
+    ...(saved.avatarSource ? { avatarSource: saved.avatarSource } : {}),
+  } as TtsFormValues;
+}
+
+/** Server-owned tts fields: the g2p it generated and the expressions auto set. */
 export function mergeSavedSpeechIntoPageForm(
   current: PageFormValues,
   savedFormPage: PageFormValues,
 ): PageFormValues {
-  const g2pById = new Map(
-    savedFormPage.tts.flatMap((item) =>
-      item.speech?.g2p ? [[item.id, item.speech.g2p] as const] : [],
-    ),
-  );
-  if (g2pById.size === 0) {
-    return current;
-  }
+  const savedById = new Map(savedFormPage.tts.map((item) => [item.id, item]));
 
   let changed = false;
   const tts = current.tts.map((item) => {
-    const g2p = g2pById.get(item.id);
-    if (!g2p || item.speech?.g2p === g2p) {
+    const saved = savedById.get(item.id);
+    if (!saved) {
       return item;
     }
-    changed = true;
-    return {
-      ...item,
-      speech: {
-        ...item.speech,
-        g2p,
-      },
-    };
+    let next = item;
+    const g2p = saved.speech?.g2p;
+    if (g2p && item.speech?.g2p !== g2p) {
+      next = { ...next, speech: { ...next.speech, g2p } };
+    }
+    if (item.avatarSource?.kind !== "manual" && !avatarFieldsEqual(item, saved)) {
+      next = withSavedAvatar(next, saved);
+    }
+    changed ||= next !== item;
+    return next;
   });
 
   return changed ? { ...current, tts } : current;
@@ -122,7 +138,7 @@ export function mergeUneditedSavedSpeechIntoPageForm(
   previousSavedPage: SavedSequenceItem | undefined,
   nextSavedPage: SavedPage,
 ): PageFormValues {
-  const previousTts =
+  const previousTts: Map<string, SavedTts> =
     previousSavedPage && previousSavedPage.type !== "transition"
       ? new Map(previousSavedPage.tts.map((item) => [item.id, item]))
       : new Map();
@@ -130,25 +146,24 @@ export function mergeUneditedSavedSpeechIntoPageForm(
 
   let changed = false;
   const tts = current.tts.map((item) => {
-    const nextG2p = nextById.get(item.id)?.speech.g2p;
-    if (!nextG2p) {
+    const saved = nextById.get(item.id);
+    if (!saved) {
       return item;
     }
+    const previous = previousTts.get(item.id);
+    let next = item;
 
+    const nextG2p = saved.speech.g2p;
     const currentKana = item.speech?.g2p?.kana;
-    const previousKana = previousTts.get(item.id)?.speech.g2p?.kana;
-    if (currentKana !== previousKana || currentKana === nextG2p.kana) {
-      return item;
+    if (nextG2p && currentKana === previous?.speech.g2p?.kana && currentKana !== nextG2p.kana) {
+      next = { ...next, speech: { ...next.speech, g2p: nextG2p } };
+    }
+    if (avatarFieldsEqual(item, previous) && !avatarFieldsEqual(item, saved)) {
+      next = withSavedAvatar(next, saved);
     }
 
-    changed = true;
-    return {
-      ...item,
-      speech: {
-        ...item.speech,
-        g2p: nextG2p,
-      },
-    };
+    changed ||= next !== item;
+    return next;
   });
 
   return changed ? { ...current, tts } : current;

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { g2pItemSchema } from "@/_schemas/g2p";
 import {
   avatarOverrideSchema,
+  avatarSourceSchema,
   coeiroinkSynthesisSettingsSchema,
   voicepeakSynthesisSettingsSchema,
   voicevoxSynthesisSettingsSchema,
@@ -21,6 +22,7 @@ const ttsBaseSchema = z.object({
   volume: z.number().min(0).max(1).default(1),
   speech: ttsSpeechSchema.optional(),
   avatar: avatarOverrideSchema.optional(),
+  avatarSource: avatarSourceSchema.optional(),
 });
 
 const namedTtsIdentity = {

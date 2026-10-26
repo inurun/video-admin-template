@@ -14,6 +14,7 @@ import {
   applyTtsVoiceChange,
   createTtsInput,
   getTtsMoveState,
+  MANUAL_AVATAR_SOURCE,
   resolveTtsIndexAfterInsert,
   resolveTtsIndexAfterRemove,
   useTts,
@@ -95,7 +96,7 @@ export function useTtsList() {
       const draft = createTtsInput(options, undefined);
       const nextTts = {
         ...applyTtsTextChange(applyTtsVoiceChange(draft, voice), text),
-        ...(avatar ? { avatar } : {}),
+        ...(avatar ? { avatar, avatarSource: MANUAL_AVATAR_SOURCE } : {}),
       };
       append(nextTts);
       selectTts(nextTts.id);

@@ -177,6 +177,18 @@ export function selectHasUnresolvedAudio(state: SavedProjectState) {
   );
 }
 
+export function selectHasPendingExpressions(state: SavedProjectState) {
+  return Object.values(state.itemsById).some(
+    (item) =>
+      item.type !== "transition" && item.tts.some((tts) => tts.avatarSource?.kind === "pending"),
+  );
+}
+
+/** Server work the editor waits for: audio and auto expressions. */
+export function selectHasBackgroundWork(state: SavedProjectState) {
+  return selectHasUnresolvedAudio(state) || selectHasPendingExpressions(state);
+}
+
 export function selectFailedTtsItemIds(state: Pick<SavedProjectState, "itemsById">) {
   return Object.values(state.itemsById).flatMap((item) => {
     if (item.type === "transition") {

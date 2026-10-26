@@ -12,6 +12,7 @@ import {
   ProjectNotFoundError,
   readSavedProject,
 } from "@/server/_shared/storage";
+import { avatarExpressionApp } from "@/server/features/avatar-expression";
 import { bgmApp } from "@/server/features/bgm";
 import { hfPreviewApp } from "@/server/features/hf-preview";
 import { nicoadApp } from "@/server/features/nicoad";
@@ -77,6 +78,7 @@ function createApi() {
   return new Hono()
     .route("/", projectApp)
     .route("/", ttsApp)
+    .route("/", avatarExpressionApp)
     .route("/", voicepeakApp)
     .route("/", renderApp)
     .route("/", publishApp)

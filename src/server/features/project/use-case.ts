@@ -64,7 +64,12 @@ import {
 } from "@/server/features/project/tts-analysis-jobs";
 import { listCommentGroupPlaybackTts } from "@/server/features/project/comments-presentation";
 import { createTtsAnalysisKey } from "@/server/features/tts/analysis-key";
-import { hasOpenRouterApiKey } from "@/server/features/tts/llm-g2p-profile";
+import { hasOpenRouterApiKey } from "@/server/core/openrouter";
+import {
+  planSavedPageExpressions,
+  startExpressionJobs,
+  type ExpressionJobTarget,
+} from "./avatar-expression-jobs";
 
 const DEFAULT_TTS_PLAYBACK_SETTINGS = {
   padBeforeSec: 0,
@@ -332,6 +337,7 @@ function createTtsFields(
     ...getTtsPlaybackSettings(item),
     ...(item.synthesisSettings ? { synthesisSettings: item.synthesisSettings } : {}),
     ...(item.avatar ? { avatar: item.avatar } : {}),
+    ...(item.avatarSource ? { avatarSource: item.avatarSource } : {}),
     speech: nextInput.g2p ? { g2p: nextInput.g2p } : {},
   };
 }
@@ -682,6 +688,7 @@ function toSaveTtsItemFromSaved(item: SavedTts): SaveTtsItem {
     volume: item.volume,
     ...(item.synthesisSettings ? { synthesisSettings: item.synthesisSettings } : {}),
     ...(item.avatar ? { avatar: item.avatar } : {}),
+    ...(item.avatarSource ? { avatarSource: item.avatarSource } : {}),
     speech: item.speech.g2p ? { g2p: item.speech.g2p } : {},
   } as SaveTtsItem;
 }
@@ -872,9 +879,19 @@ async function saveProjectChangesLocked(
 
   const jobs: SynthesisJob[] = [];
   const analysisJobs: AnalysisJobTarget[] = [];
+  const expressionJobs: ExpressionJobTarget[] = [];
   for (const planned of plannedPages) {
     const built = await buildSavedPage(serverEnv, projectPath, planned, forceResynthesis);
-    itemsById.set(built.page.id, built.page);
+    const expression = planSavedPageExpressions(
+      serverEnv,
+      projectPath,
+      built.page,
+      previousTtsById,
+    );
+    itemsById.set(built.page.id, expression.page);
+    if (expression.target) {
+      expressionJobs.push(expression.target);
+    }
     jobs.push(...built.jobs);
     analysisJobs.push(...built.analysisTargets);
     if (!updatedItemIds.includes(built.page.id)) {
@@ -909,6 +926,7 @@ async function saveProjectChangesLocked(
   );
   startAnalysisBatch(serverEnv, projectPath, analysisJobs);
   startSynthesisBatch(projectPath, jobs);
+  startExpressionJobs(serverEnv, projectPath, expressionJobs);
   return { project, timeline, updatedItemIds };
 }
 

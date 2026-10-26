@@ -441,6 +441,12 @@ export async function readSavedProjectDocument(projectPath: string) {
   }
 }
 
+/** Parses a project file as saved, without touching its timeline or meta. */
+export async function readSavedProjectFile(projectPath: string): Promise<SavedProject> {
+  const content = await fs.readFile(createProjectFilePath(projectPath), "utf8");
+  return parseSavedProject(JSON.parse(content));
+}
+
 export async function readSavedProject(projectPath: string): Promise<SavedProject> {
   const { project } = await readSavedProjectDocument(projectPath);
   return project;

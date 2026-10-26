@@ -2,7 +2,7 @@ import type { PageFormValues } from "@/app/features/page/model/page-form-schema"
 import { useCallback } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import { getAvatarTypeForVoice, resolveAvatarSettings, type AvatarOverride } from "@/_schemas";
-import { useSelectedTts, useTtsFormIndex } from "@/app/features/tts";
+import { MANUAL_AVATAR_SOURCE, useSelectedTts, useTtsFormIndex } from "@/app/features/tts";
 
 export function useAvatarSettingsField() {
   const { control, setValue } = useFormContext<PageFormValues>();
@@ -14,6 +14,7 @@ export function useAvatarSettingsField() {
   const onChange = useCallback(
     (value: AvatarOverride | undefined) => {
       setValue(`tts.${ttsIndex}.avatar`, value, { shouldDirty: true });
+      setValue(`tts.${ttsIndex}.avatarSource`, MANUAL_AVATAR_SOURCE, { shouldDirty: true });
     },
     [setValue, ttsIndex],
   );

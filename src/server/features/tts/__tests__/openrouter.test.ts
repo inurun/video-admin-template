@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { OpenRouterError, requestOpenRouterG2p } from "../openrouter";
+import { OpenRouterError } from "@/server/core/openrouter";
+import { requestOpenRouterG2p } from "../openrouter";
 import { LLM_G2P_PROFILE } from "../llm-g2p-profile";
 import { OPENROUTER_G2P_REPAIR_PROMPT } from "../openrouter-prompt";
 

@@ -2,7 +2,15 @@ import { hasVoiceIdentity, type VoiceOption } from "@/_schemas";
 import type { TtsFormValues } from "@/app/features/tts/model/tts-form-schema";
 import { applyTtsVoiceChange } from "@/app/features/tts/lib/apply-tts-voice-change";
 
-function emptyDraft(id: string, avatar: TtsFormValues["avatar"]): TtsFormValues {
+/** A new line starts from the source's avatar and who set it; auto re-reads it for the new text. */
+function sourceAvatar(sourceTts: TtsFormValues | undefined) {
+  return {
+    ...(sourceTts?.avatar ? { avatar: sourceTts.avatar } : {}),
+    ...(sourceTts?.avatarSource ? { avatarSource: sourceTts.avatarSource } : {}),
+  };
+}
+
+function emptyDraft(id: string, sourceTts: TtsFormValues | undefined): TtsFormValues {
   return {
     id,
     provider: "voisona",
@@ -15,7 +23,7 @@ function emptyDraft(id: string, avatar: TtsFormValues["avatar"]): TtsFormValues 
     volume: 1,
     synthesisSettings: null,
     speech: {},
-    ...(avatar ? { avatar } : {}),
+    ...sourceAvatar(sourceTts),
   };
 }
 
@@ -23,7 +31,7 @@ export function createTtsInput(
   options: VoiceOption[],
   sourceTts: TtsFormValues | undefined,
 ): TtsFormValues {
-  const draft = emptyDraft(crypto.randomUUID(), sourceTts?.avatar);
+  const draft = emptyDraft(crypto.randomUUID(), sourceTts);
 
   if (sourceTts && hasVoiceIdentity(sourceTts)) {
     if (sourceTts.provider === "coeiroink") {
@@ -40,7 +48,7 @@ export function createTtsInput(
         volume: 1,
         synthesisSettings: null,
         speech: {},
-        ...(sourceTts.avatar ? { avatar: sourceTts.avatar } : {}),
+        ...sourceAvatar(sourceTts),
       };
     }
 
@@ -56,7 +64,7 @@ export function createTtsInput(
       volume: 1,
       synthesisSettings: null,
       speech: {},
-      ...(sourceTts.avatar ? { avatar: sourceTts.avatar } : {}),
+      ...sourceAvatar(sourceTts),
     };
   }
 
@@ -69,7 +77,7 @@ export function createTtsInput(
   if (sourceTts?.avatar) {
     return {
       ...next,
-      avatar: sourceTts.avatar,
+      ...sourceAvatar(sourceTts),
       text: "",
       readText: "",
       synthesisSettings: null,

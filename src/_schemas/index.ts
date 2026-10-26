@@ -30,6 +30,7 @@ export {
 export {
   avatarOptions,
   avatarOverrideSchema,
+  avatarSourceSchema,
   avatarTypeSchema,
   mainPageMetaSchema,
   bgmTrackSchema,
@@ -81,6 +82,7 @@ export {
   WEATHER_LOCATION_LABELS,
   weatherConditionSchema,
   type AvatarOverride,
+  type AvatarSource,
   type AvatarSettings,
   type MainPageMeta,
   type AvatarType,

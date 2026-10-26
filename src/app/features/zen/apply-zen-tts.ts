@@ -2,7 +2,11 @@ import type { TtsFormValues } from "@/app/features/tts/model/tts-form-schema";
 import { getVoiceId, toVoiceIdentity, voiceIdentitiesEqual } from "@/_schemas";
 import { applyTtsTextChange } from "@/app/features/tts/lib/apply-tts-text-change";
 import { applyTtsVoiceChange } from "@/app/features/tts/lib/apply-tts-voice-change";
-import { avatarOverridesEqual, toAvatarOverride } from "@/app/features/tts/lib/avatar-override";
+import {
+  avatarOverridesEqual,
+  MANUAL_AVATAR_SOURCE,
+  toAvatarOverride,
+} from "@/app/features/tts/lib/avatar-override";
 import { createVoiceAliasMap } from "@/app/features/zen/create-alias-map";
 import type { ZenAliasTarget } from "@/app/features/zen/types";
 
@@ -23,7 +27,7 @@ function applyAvatar(existing: TtsFormValues, next: TtsFormValues): TtsFormValue
   if (avatarOverridesEqual(existing.avatar, next.avatar)) return existing;
   const { avatar: _avatar, ...rest } = existing;
   const avatar = toAvatarOverride(next.avatar);
-  return avatar ? { ...rest, avatar } : rest;
+  return { ...rest, ...(avatar ? { avatar } : {}), avatarSource: MANUAL_AVATAR_SOURCE };
 }
 
 function applySubstitute(existing: TtsFormValues, next: TtsFormValues): TtsFormValues {

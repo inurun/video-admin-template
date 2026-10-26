@@ -14,6 +14,31 @@ export type AvatarAppearance = {
   mouth: string;
 };
 
+type AvatarMouthFamily<T extends AvatarType> =
+  (typeof avatarOptions)[T]["mouth"][number] extends infer M
+    ? M extends `${infer F}-opened`
+      ? F
+      : never
+    : never;
+
+/** What auto expression may pick, with what each option means. Options left out are never picked. */
+export type AvatarExpressionCatalog = {
+  [T in AvatarType]: {
+    base: Partial<Record<(typeof avatarOptions)[T]["base"][number], string>>;
+    eyes: Partial<Record<(typeof avatarOptions)[T]["eyes"][number], string>>;
+    /** Keyed by family: `angry` stands for `angry-opened` / `angry-closed`. */
+    mouth: Partial<Record<AvatarMouthFamily<T>, string>>;
+  };
+};
+
+export const avatarExpressions: AvatarExpressionCatalog = {
+  demo: {
+    base: {},
+    eyes: { "shaded-opened": "落ち込み・げんなり・ドン引き" },
+    mouth: {},
+  },
+};
+
 export const AVATAR_TYPES = Object.keys(avatarOptions) as [AvatarType, ...AvatarType[]];
 
 export const DEFAULT_AVATAR_TYPE: AvatarType = "demo";
@@ -32,7 +57,10 @@ export function getAvatarTypeByVoiceName(voiceName: string | undefined): AvatarT
   return voiceName ? (voiceNameAvatarMap[voiceName] ?? DEFAULT_AVATAR_TYPE) : DEFAULT_AVATAR_TYPE;
 }
 
-export function getAvatarTypeForVoice(voice: { provider: string; voiceName?: string }): AvatarType {
+export function getAvatarTypeForVoice(voice: {
+  provider?: string;
+  voiceName?: string;
+}): AvatarType {
   if (voice.provider === "coeiroink") {
     return DEFAULT_AVATAR_TYPE;
   }

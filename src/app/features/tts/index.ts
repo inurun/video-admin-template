@@ -26,3 +26,4 @@ export {
   parseTtsComposeInput,
 } from "@/app/features/tts/lib/tts-compose-command";
 export { createTtsComposeCompletionSource } from "@/app/features/tts/lib/tts-compose-completion";
+export { MANUAL_AVATAR_SOURCE } from "@/app/features/tts/lib/avatar-override";

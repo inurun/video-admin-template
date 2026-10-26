@@ -40,6 +40,7 @@ export function usePageHeader() {
   return {
     selectedPageId,
     isTransition: selectedPageType === "transition",
+    supportsAutoExpression: selectedPageType === "main",
     supportsZen: selectedPageType === "main" || selectedPageType === "intro",
     supportsCommentsTools: selectedPageType === "comments",
     openCommentsZen: commentsZen.openZen,

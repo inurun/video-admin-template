@@ -1,4 +1,7 @@
-import type { AvatarOverride } from "@/_schemas";
+import type { AvatarOverride, AvatarSource } from "@/_schemas";
+
+/** Set whenever a person changes a line's avatar, so auto expression leaves it alone. */
+export const MANUAL_AVATAR_SOURCE: AvatarSource = { kind: "manual" };
 
 const AVATAR_FIELDS = ["base", "eyes", "mouth"] as const;
 

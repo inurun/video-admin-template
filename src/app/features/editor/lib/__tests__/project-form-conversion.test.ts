@@ -138,4 +138,52 @@ describe("page form values", () => {
     expect(mergeUneditedSavedSpeechIntoPageForm(edited, previous, next)).toBe(edited);
     expect(mergeUneditedSavedSpeechIntoPageForm(current, previous, previous)).toBe(current);
   });
+
+  it("takes auto expressions from the save result but keeps hand-set lines", () => {
+    const auto = { kind: "auto" as const, key: "k" };
+    const current = toPageFormValues(
+      createSavedMainPage({
+        tts: [
+          createSavedTts({ id: "a" }),
+          createSavedTts({ id: "b", avatar: { eyes: "x" }, avatarSource: { kind: "manual" } }),
+        ],
+      }),
+    );
+    const saved = toPageFormValues(
+      createSavedMainPage({
+        tts: [
+          createSavedTts({ id: "a", avatar: { eyes: "jitome" }, avatarSource: auto }),
+          createSavedTts({ id: "b", avatar: { eyes: "solid" }, avatarSource: auto }),
+        ],
+      }),
+    );
+
+    const merged = mergeSavedSpeechIntoPageForm(current, saved);
+    expect(merged.tts[0]).toMatchObject({ avatar: { eyes: "jitome" }, avatarSource: auto });
+    expect(merged.tts[1]).toBe(current.tts[1]);
+  });
+
+  it("applies polled expressions only to lines unchanged since the last save", () => {
+    const key = "k";
+    const previous = createSavedMainPage({
+      tts: [createSavedTts({ avatarSource: { kind: "pending", key } })],
+    });
+    const next = createSavedMainPage({
+      tts: [createSavedTts({ avatar: { eyes: "jitome" }, avatarSource: { kind: "auto", key } })],
+    });
+    const current = toPageFormValues(previous);
+
+    expect(mergeUneditedSavedSpeechIntoPageForm(current, previous, next).tts[0]).toMatchObject({
+      avatar: { eyes: "jitome" },
+      avatarSource: { kind: "auto", key },
+    });
+
+    const edited = {
+      ...current,
+      tts: [
+        { ...current.tts[0]!, avatar: { eyes: "x" }, avatarSource: { kind: "manual" as const } },
+      ],
+    };
+    expect(mergeUneditedSavedSpeechIntoPageForm(edited, previous, next)).toBe(edited);
+  });
 });

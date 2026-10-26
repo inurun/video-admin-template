@@ -1,6 +1,7 @@
 export {
   AVATAR_TYPES,
   DEFAULT_AVATAR_TYPE,
+  avatarExpressions,
   avatarOptions,
   getAvatarTypeByVoiceName,
   getAvatarTypeForVoice,
@@ -8,6 +9,7 @@ export {
   resolveAvatarSettings,
   voiceNameAvatarMap,
   type AvatarAppearance,
+  type AvatarExpressionCatalog,
   type AvatarType,
 } from "./avatar";
 export {

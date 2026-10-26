@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import { fetchProject } from "@/app/features/project/api/project-api";
 import { useProjectRoute } from "@/app/features/project/context/project-route-context";
-import { selectHasUnresolvedAudio } from "@/app/features/editor/store/saved-project-state";
+import { selectHasBackgroundWork } from "@/app/features/editor/store/saved-project-state";
 import {
   useSavedProject,
   useSavedProjectStoreApi,
@@ -16,7 +16,7 @@ export function useSyncProjectSynthesis() {
   const savedStore = useSavedProjectStoreApi();
   const editorStore = useEditorSessionStoreApi();
   const { projectPath } = useProjectRoute();
-  const hasUnresolved = useSavedProject(selectHasUnresolvedAudio);
+  const hasUnresolved = useSavedProject(selectHasBackgroundWork);
 
   useEffect(() => {
     if (!projectPath || !hasUnresolved) {
@@ -50,7 +50,7 @@ export function useSyncProjectSynthesis() {
       } catch {
         // keep polling while pending remains
       } finally {
-        if (!cancelled && selectHasUnresolvedAudio(savedStore.getState())) {
+        if (!cancelled && selectHasBackgroundWork(savedStore.getState())) {
           timer = setTimeout(() => {
             void poll();
           }, SYNTHESIS_POLL_INTERVAL_MS);

@@ -12,17 +12,16 @@ import { contextForChunk, type G2pPageContext } from "@/server/features/tts/g2p-
 import { normalizeLlmKana } from "@/server/features/tts/g2p-kana-normalize";
 import { selectDictionaryHints } from "@/server/features/tts/g2p-dictionary";
 import {
-  chunkItems,
-  hasOpenRouterApiKey,
-  LLM_G2P_PROFILE,
-} from "@/server/features/tts/llm-g2p-profile";
-import {
   addUsage,
-  requestOpenRouterG2p,
+  hasOpenRouterApiKey,
   ZERO_USAGE,
+  type OpenRouterUsage,
+} from "@/server/core/openrouter";
+import { chunkItems, LLM_G2P_PROFILE } from "@/server/features/tts/llm-g2p-profile";
+import {
+  requestOpenRouterG2p,
   type OpenRouterG2pResult,
   type OpenRouterRepairItem,
-  type OpenRouterUsage,
 } from "@/server/features/tts/openrouter";
 
 export type G2pSource = "llm" | "analyze";
