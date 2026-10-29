@@ -28,7 +28,7 @@ describe("G2P context", () => {
         id: "page-1",
         title: "Main",
         utterances: [
-          { id: "tts-1", text: "たいしょう", target: true },
+          { id: "tts-1", text: "たいしょう", target: true, provider: "voisona" },
           { id: "tts-2", text: "peak", target: false },
         ],
       },
@@ -67,7 +67,7 @@ describe("G2P context", () => {
 
     expect(contextForChunk(withDictionary, new Set(["tts-2"]))[0]?.utterances).toEqual([
       { id: "tts-1", text: "一", target: false },
-      { id: "tts-2", text: "二", target: true },
+      { id: "tts-2", text: "二", target: true, provider: "voisona" },
       { id: "tts-3", text: "三", target: false },
     ]);
   });
@@ -138,7 +138,7 @@ describe("G2P context", () => {
         title: "Comments",
         utterances: [
           { id: "r1", text: "うぽつ", target: false },
-          { id: "t1", text: "ありがとう", target: true },
+          { id: "t1", text: "ありがとう", target: true, provider: "voisona" },
         ],
       },
     ]);
@@ -146,14 +146,20 @@ describe("G2P context", () => {
 
   it("builds a one-sentence context from neighbors", () => {
     expect(
-      buildSingleG2pContext({ pageId: "page-1", id: "tts-1", text: "今日", previous: "前" }),
+      buildSingleG2pContext({
+        pageId: "page-1",
+        id: "tts-1",
+        text: "今日",
+        provider: "voicevox",
+        previous: "前",
+      }),
     ).toEqual([
       {
         id: "page-1",
         title: "",
         utterances: [
           { id: "tts-1:previous", text: "前", target: false },
-          { id: "tts-1", text: "今日", target: true },
+          { id: "tts-1", text: "今日", target: true, provider: "voicevox" },
         ],
       },
     ]);

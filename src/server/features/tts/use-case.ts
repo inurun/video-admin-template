@@ -64,7 +64,7 @@ export async function listTtsVoices(serverEnv: ServerEnv) {
 
 async function generateSingleG2p(
   serverEnv: ServerEnv,
-  input: { pageId: string; id: string; text: string; previous?: string; next?: string },
+  input: Parameters<typeof buildSingleG2pContext>[0],
 ) {
   const result = (
     await generateG2p(serverEnv, {
@@ -84,6 +84,7 @@ export async function generateTtsG2p(serverEnv: ServerEnv, input: unknown) {
     pageId,
     id: item.id,
     text: getEffectiveReadText(item),
+    provider: item.provider,
     previous: item.previous ? getEffectiveReadText(item.previous) : undefined,
     next: item.next ? getEffectiveReadText(item.next) : undefined,
   });
@@ -100,8 +101,14 @@ export async function synthesizeTts(serverEnv: ServerEnv, input: unknown) {
   const readText = getEffectiveReadText(parsed);
   const g2p = provider.usesG2p
     ? (getUsableG2p(parsed.g2p, readText) ??
-      (await generateSingleG2p(serverEnv, { pageId: "preview", id: "preview", text: readText }))
-        .g2p)
+      (
+        await generateSingleG2p(serverEnv, {
+          pageId: "preview",
+          id: "preview",
+          text: readText,
+          provider: parsed.provider,
+        })
+      ).g2p)
     : parsed.g2p;
   const synthesisInput = {
     ...parsed,

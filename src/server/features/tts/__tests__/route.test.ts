@@ -51,7 +51,7 @@ describe("tts routes", () => {
   it("generates G2P for one sentence", async () => {
     const g2p = createG2pItem("今日", "今日:キョ'ー");
     generateTtsG2pMock.mockResolvedValueOnce({ g2p, source: "llm" });
-    const body = { pageId: "page-1", item: { id: "tts-1", text: "今日" } };
+    const body = { pageId: "page-1", item: { id: "tts-1", text: "今日", provider: "voisona" } };
 
     const response = await ttsApp.request("/tts/g2p/generate", {
       method: "POST",
@@ -135,7 +135,10 @@ describe("tts routes", () => {
 
     const response = await ttsApp.request("/tts/g2p/generate", {
       method: "POST",
-      body: JSON.stringify({ pageId: "page-1", item: { id: "tts-1", text: "hello" } }),
+      body: JSON.stringify({
+        pageId: "page-1",
+        item: { id: "tts-1", text: "hello", provider: "voisona" },
+      }),
       headers: { "Content-Type": "application/json" },
     });
 

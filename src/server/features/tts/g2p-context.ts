@@ -7,6 +7,8 @@ export type G2pUtterance = {
   id: string;
   text: string;
   target: boolean;
+  /** 読み上げるエンジン。target だけが持ち、句の切り方をエンジンに合わせる。 */
+  provider?: SavedTts["provider"];
   dictionary?: G2pDictionaryHint[];
 };
 
@@ -22,7 +24,10 @@ export type G2pTarget = {
 };
 
 function toUtterance(item: SavedTts, target: boolean): G2pUtterance {
-  return { id: item.id, text: getEffectiveReadText(item), target };
+  const text = getEffectiveReadText(item);
+  return target
+    ? { id: item.id, text, target, provider: item.provider }
+    : { id: item.id, text, target };
 }
 
 export function contextForChunk(
@@ -90,6 +95,7 @@ export function buildSingleG2pContext(input: {
   pageId: string;
   id: string;
   text: string;
+  provider: SavedTts["provider"];
   previous?: string;
   next?: string;
 }): G2pPageContext[] {
@@ -101,7 +107,7 @@ export function buildSingleG2pContext(input: {
       title: "",
       utterances: [
         ...neighbor("previous", input.previous),
-        { id: input.id, text: input.text, target: true },
+        { id: input.id, text: input.text, target: true, provider: input.provider },
         ...neighbor("next", input.next),
       ],
     },

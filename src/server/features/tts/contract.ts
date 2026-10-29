@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   g2pItemSchema,
   voiceOptionSchema,
+  voiceProviderSchema,
   coeiroinkSynthesisSettingsSchema,
   voicepeakSynthesisSettingsSchema,
   voicevoxSynthesisSettingsSchema,
@@ -32,6 +33,7 @@ export const ttsG2pGenerateRequestSchema = z.object({
     id: z.string().min(1),
     text: z.string().min(1),
     readText: z.string().optional(),
+    provider: voiceProviderSchema,
     previous: ttsG2pNeighborSchema.optional(),
     next: ttsG2pNeighborSchema.optional(),
   }),

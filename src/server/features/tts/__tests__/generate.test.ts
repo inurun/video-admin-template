@@ -23,6 +23,7 @@ describe("generateTtsG2p", () => {
             id: "tts-1",
             text: "人気",
             readText: "にんき",
+            provider: "voisona",
             previous: { text: "前", readText: "" },
             next: { text: "次" },
           },
@@ -40,7 +41,7 @@ describe("generateTtsG2p", () => {
             title: "",
             utterances: [
               { id: "tts-1:previous", text: "前", target: false },
-              { id: "tts-1", text: "にんき", target: true },
+              { id: "tts-1", text: "にんき", target: true, provider: "voisona" },
               { id: "tts-1:next", text: "次", target: false },
             ],
           },

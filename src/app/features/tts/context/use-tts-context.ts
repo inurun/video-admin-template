@@ -67,6 +67,7 @@ function useTtsCommands() {
             id: item.id,
             text: item.text,
             ...(item.readText === undefined ? {} : { readText: item.readText }),
+            provider: item.provider,
             ...getAdjacentTtsContext(form.getValues("tts"), ttsId),
           },
         });
