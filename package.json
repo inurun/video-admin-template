@@ -14,6 +14,7 @@
     "fallow": "fallow",
     "migrate:project": "tsx scripts/migrate-project-json.ts",
     "avatar:eval": "tsx scripts/avatar-eval.ts",
+    "g2p:eval": "tsx scripts/g2p-eval.ts",
     "openapi:fetch": "tsx scripts/fetch-openapi-schemas.ts",
     "openapi:generate": "openapi-typescript --redocly ./redocly.yaml",
     "openapi:sync": "pnpm openapi:fetch && pnpm openapi:generate",
