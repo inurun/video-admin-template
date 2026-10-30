@@ -1,6 +1,7 @@
 export type ProjectRoute =
   | { type: "schedules" }
   | { type: "dictionary" }
+  | { type: "g2p-review" }
   | { type: "project"; projectPath: string }
   | { type: "page"; projectPath: string; pageId: string }
   | { type: "settings"; projectPath: string }
@@ -96,6 +97,14 @@ export function getDictionaryHref() {
   return "/dictionary";
 }
 
+export function getG2pReviewHref() {
+  return "/g2p-review";
+}
+
+export function isG2pReviewRoute(route: ProjectRoute) {
+  return route.type === "g2p-review";
+}
+
 export function isDictionaryRoute(route: ProjectRoute) {
   return route.type === "dictionary";
 }
@@ -111,6 +120,9 @@ export function parseProjectRoute(pathname: string): ProjectRoute {
   }
   if (normalized === "/dictionary") {
     return { type: "dictionary" };
+  }
+  if (normalized === "/g2p-review") {
+    return { type: "g2p-review" };
   }
 
   if (!normalized.startsWith(PROJECTS_PREFIX)) {
@@ -186,7 +198,8 @@ export function resolveProjectRouteRedirect(input: {
     !input.hasProjectData ||
     input.route.type === "unknown" ||
     input.route.type === "schedules" ||
-    input.route.type === "dictionary"
+    input.route.type === "dictionary" ||
+    input.route.type === "g2p-review"
   ) {
     return { action: "none" };
   }

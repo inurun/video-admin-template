@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { compareKana, formatKanaProsody, isExactMatch, parseKanaProsody } from "../g2p-eval";
+import {
+  compareKana,
+  compareKanaToAny,
+  formatKanaProsody,
+  isExactMatch,
+  parseKanaProsody,
+} from "../g2p-eval";
 
 describe("parseKanaProsody", () => {
   it("drops surfaces and keeps moras, phrase spans and nuclei", () => {
@@ -20,6 +26,13 @@ describe("parseKanaProsody", () => {
     expect(formatKanaProsody(parseKanaProsody("犬:イヌ'|が:ガ/水:ミズ|が:ガ'！"))).toBe(
       "イヌ'ガ/ミズガ'！",
     );
+  });
+});
+
+describe("compareKanaToAny", () => {
+  it("accepts a match with any truth and reports the first truth otherwise", () => {
+    expect(isExactMatch(compareKanaToAny(["犬:イ'ヌ", "犬:イヌ'"], "犬:イヌ'"))).toBe(true);
+    expect(compareKanaToAny(["犬:イ'ヌ", "犬:イヌ'"], "人気:ニンキ")).toEqual({ reading: false });
   });
 });
 

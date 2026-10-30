@@ -1,0 +1,172 @@
+{
+  "items": [
+    {
+      "id": "39db72db-0bc1-4c20-a0ff-e74b6ffb644a",
+      "text": "3人で1本ずつ、合計6本のペットボトルを買った。",
+      "next": "午後3時から5時まで、2回に分けて会議があります。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "3:サン|人:ニ'ン|で:デ/1:イッ|本:ポン|ずつ:ズ'ツ、合計:ゴーケー'/6:ロ'ッ|本:ポン|の:ノ/ペットボトル:ペットボ'トル|を:ヲ/買っ:カッ|た:タ'",
+      "reviewed": true
+    },
+    {
+      "id": "55ae944d-d804-46e8-98de-5a9a4bdaf4b6",
+      "text": "午後3時から5時まで、2回に分けて会議があります。",
+      "previous": "3人で1本ずつ、合計6本のペットボトルを買った。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "午後:ゴ'ゴ/3:サ'ン|時:ジ|から:カラ/5:ゴ'|時:ジ|まで:マデ、2:ニ|回:カ'イ|に:ニ/分け:ワ'ケ|て:テ/会議:カ'イギ|が:ガ/あり:アリ|ます:マ'ス",
+      "reviewed": true
+    },
+    {
+      "id": "e5d676ee-f1d4-43e7-a854-5d027e9d3134",
+      "text": "食べてみたら、思ってたより美味しくて驚いちゃった。",
+      "next": "雨が降ってきたから、急いで洗濯物を取り込んだ。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "食べ:タ'ベ|て:テ/み:ミ'|たら:タラ、思っ:オモ'ッ|て:テ|た:タ|より:ヨリ/美味しく:オイシ'ク|て:テ/驚い:オドロ'イ|ちゃっ:チャッ|た:タ",
+      "reviewed": true
+    },
+    {
+      "id": "3b3bed07-51cf-4394-b5f9-0edf53b178c7",
+      "text": "雨が降ってきたから、急いで洗濯物を取り込んだ。",
+      "previous": "食べてみたら、思ってたより美味しくて驚いちゃった。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "雨:ア'メ|が:ガ/降っ:フ'ッ|て:テ/き:キ'|た:タ|から:カラ、急い:イソ'イ|で:デ/洗濯物:センタクモノ|を:ヲ'/取り込ん:トリコ'ン|だ:ダ",
+      "reviewed": true
+    },
+    {
+      "id": "741f98af-0cf3-4fa6-a2fa-885f46faa27a",
+      "text": "期間限定のチョコレートケーキが半額セールになってた。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "期間:キ'カン/限定:ゲンテー|の:ノ'/チョコレートケーキ:チョコレートケ'ーキ|が:ガ/半額:ハンガク'/セール:セ'ール|に:ニ/なっ:ナ'ッ|て:テ|た:タ",
+      "reviewed": true
+    },
+    {
+      "id": "db87751b-1f68-4860-bdfc-7f7d106141b0",
+      "text": "一日中歩いて、一日の疲れが一気に出た。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "一日中:イチニチジュー'/歩い:アル'イ|て:テ、一日:イチニチ'|の:ノ/疲れ:ツカレ'|が:ガ/一気:イ'ッキ|に:ニ/出:デ'|た:タ",
+      "reviewed": true
+    },
+    {
+      "id": "1494869c-1332-4ef5-8f95-64e8a60406b4",
+      "text": "GitHubのPRをレビューしてから、AWSにデプロイした。",
+      "next": "今日のYouTubeの配信、見てくれた人ありがとう！",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "GitHub:ギットハ'ブ|の:ノ/PR:ピーア'ール|を:ヲ/レビュー:レ'ビュー|し:シ|て:テ|から:カラ、AWS:エーダブリューエ'ス|に:ニ/デプロイ:デプロ'イ|し:シ|た:タ",
+      "reviewed": true
+    },
+    {
+      "id": "16ef382e-196f-4320-a674-7b86fdde1220",
+      "text": "今日のYouTubeの配信、見てくれた人ありがとう！",
+      "previous": "GitHubのPRをレビューしてから、AWSにデプロイした。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "今日:キョ'ー|の:ノ/YouTube:ユーチュ'ーブ|の:ノ/配信:ハイシン'、見:ミ'|て:テ/くれ:クレ|た:タ'/人:ヒト'/ありがとう:アリ'ガトー！",
+      "reviewed": true
+    },
+    {
+      "id": "f129298f-9be3-4fcc-9348-cca2fc767796",
+      "text": "やっぱりそうなんじゃないかなって思ってたんだよね。",
+      "next": "新幹線の自由席は、平日でも結構混んでるらしいよ。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "やっぱり:ヤッパ'リ/そう:ソ'ー|な:ナ|ん:ン|じゃ:ジャ/ない:ナ'イ|か:カ|な:ナ|って:ッテ/思っ:オモ'ッ|て:テ|た:タ|ん:ン|だ:ダ|よ:ヨ|ね:ネ",
+      "reviewed": true
+    },
+    {
+      "id": "fb79f5c1-4a79-464e-8d89-cc4a5b18c5e7",
+      "text": "新幹線の自由席は、平日でも結構混んでるらしいよ。",
+      "previous": "やっぱりそうなんじゃないかなって思ってたんだよね。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "新幹線:シンカ'ンセン|の:ノ/自由席:ジユー'セキ|は:ワ、平日:ヘージツ|で:デ'|も:モ/結構:ケ'ッコー/混ん:コ'ン|でる:デル/らしい:ラシ'イ|よ:ヨ",
+      "reviewed": true
+    }
+  ]
+}

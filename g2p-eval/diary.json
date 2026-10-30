@@ -1,0 +1,859 @@
+{
+  "items": [
+    {
+      "id": "bfe90cc1-3859-4e24-aba1-bac83b04fbe7",
+      "text": "チキン南蛮カレー",
+      "previous": "あれえぐい",
+      "next": "握りこぶしくらいの\n唐揚げが3つ",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "14",
+        "voiceVersion": "0.16.1",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "intonationScale": 1,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "チキン:チキン'/南蛮:ナンバン'/カレー:カ'レー",
+      "alternatives": ["チキン:チキン'/南蛮:ナンバン'/カレー:カ'レー"],
+      "reviewed": true
+    },
+    {
+      "id": "966425c5-3fab-4483-a70b-6c854624dca7",
+      "text": "もうすでにタスクと\nMTG入りまくってるし",
+      "previous": "いやぁ……明日も\n多分時間ないよ",
+      "next": "明後日かな",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "3",
+        "synthesisSettings": {
+          "speedScale": 1.4,
+          "pitchScale": -0.01,
+          "intonationScale": 0.9,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "もう:モ'ー/すでに:ス'デニ/タスク:タ'スク|と:ト/MTG:エムティージー'/入り:ハイリ|まくっ:マ'クッ|てる:テル|し:シ",
+      "alternatives": [
+        "もう:モ'ー/すでに:ス'デニ/タスク:タ'スク|と:ト/MTG:エムティージー'/入りまくっ:ハイリマク'ッ|てる:テル|し:シ"
+      ],
+      "reviewed": true
+    },
+    {
+      "id": "85ef8068-fbea-4ce8-a4ee-2a6d0708b6b5",
+      "text": "寝る時間が遅いのが\n理由の大半じゃないですか",
+      "previous": "眠いなんて",
+      "next": "今日は朝の工事で\n強制起床なのだ",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "46",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "寝る:ネル'/時間:ジカン|が:ガ'/遅い:オソイ'|の:ノ|が:ガ/理由:リユー|の:ノ'/大半:タイハン|じゃ:ジャ'/ない:ナイ|です:デス'|か:カ",
+      "alternatives": [
+        "寝る:ネル'/時間:ジカン|が:ガ'/遅い:オソイ|の:ノ|が:ガ'/理由:リユー|の:ノ'/大半:タイハン|じゃ:ジャ'/ない:ナ'イ|です:デス|か:カ"
+      ],
+      "reviewed": true
+    },
+    {
+      "id": "dc3dd1fa-8c72-4186-8856-ba1480f06d73",
+      "text": "うーねいはボイボ寮\n幻の6人めだよ！",
+      "previous": "セイシュンワン",
+      "next": "誰だよ",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "うーねい:ウーネイ'|は:ワ/ボイボ:ボ'イボ|寮:リョー/幻:マボロシ|の:ノ'/6:ロク|人:ニン|め:メ'|だ:ダ|よ:ヨ！",
+      "alternatives": [
+        "うーねい:ウーネイ'|は:ワ/ボイボ:ボ'イボ|寮:リョー/幻:マボロシ|の:ノ'/6:ロク|人:ニン|め:メ'|だ:ダ|よ:ヨ！"
+      ],
+      "reviewed": true
+    },
+    {
+      "id": "8e2321d3-eb57-4207-811c-d5aaac970b08",
+      "text": "ニコる超簡単な方法見つけた！",
+      "previous": "どうしたー急に",
+      "next": "知りたいか？",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "43",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "intonationScale": 1.2,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "ニコる:ニコ'ル/超:チョ'ー/簡単:カンタン|な:ナ'/方法:ホーホー'/見つけ:ミツケ|た:タ'！",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "81f59606-c509-4502-bc42-96b23ab98c1f",
+      "text": "こうしてテトは上から、セイシュンは下から浮かぶようになった。",
+      "previous": "しかしあんこゾーンが生まれ、\n二つの世界は分断されてしまう。",
+      "next": "それからテトは原初の世界を懐かしみ、\nエゾアボカドの種を動画セクションに蒔いたため",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "こうして:コーシテ'/テト:テ'ト|は:ワ/上:ウエ|から:カラ'、セイシュン:セイシュン|は:ワ'/下:シタ|から:カラ'/浮かぶ:ウカブ'|よう:ヨー|に:ニ/なっ:ナ'ッ|た:タ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "73dbdb8b-cd01-44ba-b9b0-535ab337a128",
+      "text": "投稿者自ら\n倍速再生をおすすめしてる……",
+      "previous": "BGMも1.5倍速だと\nなんかノリノリになるよ",
+      "next": "ドパガキだからね",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "3",
+        "synthesisSettings": {
+          "speedScale": 1.4,
+          "pitchScale": -0.01,
+          "intonationScale": 0.9,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "投稿:トーコー|者:シャ'/自ら:ミズ'カラ/倍速:バイソク'/再生:サ'イセー|を:ヲ/おすすめ:オススメ|し:シ|てる:テル'",
+      "alternatives": [
+        "投稿者:トーコ'ーシャ/自ら:ミズ'カラ/倍速:バイソク'/再生:サイセー|を:ヲ'/おすすめ:オススメ|し:シ|てる:テル'",
+        "投稿:トーコー|者:シャ'/自ら:ミズ'カラ/倍速:バイソク'/再生:サイセー|を:ヲ'/お:オ|すすめ:ススメ|し:シ|てる:テル'"
+      ],
+      "reviewed": true
+    },
+    {
+      "id": "81a0e12c-dcc6-4633-9aec-1d6eeca927bd",
+      "text": "シリコンスプレー持ってきた",
+      "previous": "1日に行くくらいなら\n2日まで待った方が良いと",
+      "next": "ほんとに持ってきたよ……",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "14",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "intonationScale": 1,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "シリコンスプレー:シリコンスプレ'ー/持っ:モ'ッ|て:テ/き:キ'|た:タ",
+      "alternatives": ["シリコンスプレー:シリコンスプレ'ー/持っ:モ'ッ|て:テ/き:キ'|た:タ"],
+      "reviewed": true
+    },
+    {
+      "id": "e37fd2f4-d8f3-4220-a4f7-f7e27cca1ec2",
+      "text": "もらっても困惑する……",
+      "previous": "投稿おねがいしまーす",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "46",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "もらっ:モラッ|て:テ|も:モ'/困惑:コンワク|する:スル'",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "7235a78d-9bbf-4f3f-82d4-5d0828718987",
+      "text": "ここらへんはうい……",
+      "previous": "思考がダダ漏れしてんの\nかもしれない",
+      "next": "雨衣ちゃんでどうなるか",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "3",
+        "synthesisSettings": {
+          "speedScale": 1.4,
+          "pitchScale": -0.01,
+          "intonationScale": 0.9,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "ここらへん:ココラヘン|は:ワ'/うい:ウ'イ",
+      "alternatives": ["ここらへん:ココラヘン'|は:ワ/うい:ウ'イ"],
+      "reviewed": true
+    },
+    {
+      "id": "06368496-f917-4016-99d5-def006d64472",
+      "text": "なんとなくね……",
+      "previous": "でもちょっと品質良いイメージがあるよ！",
+      "next": "ぼくらの動画だって\nhaqumei様とAIのおかげで\n多少はマシになってるはず",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "3",
+        "synthesisSettings": {
+          "speedScale": 1.4,
+          "pitchScale": -0.01,
+          "intonationScale": 0.9,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "なんとなく:ナントナ'ク|ね:ネ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "a4370b26-539b-44d1-ba6f-a20cc8e6c400",
+      "text": "ラウンドガールでぇーす",
+      "previous": "うぉーうぉー",
+      "next": "カンカーン",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "14",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "intonationScale": 1,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "ラウンドガール:ラウンドガ'ール|でぇーす:デース",
+      "alternatives": [
+        "ラウンドガール:ラウンドガ'ール|でぇーす:デエース",
+        "ラウンドガール:ラウンドガ'ール|でぇーす:デェース"
+      ],
+      "reviewed": true
+    },
+    {
+      "id": "f0827c0e-7bf5-4a68-b898-c83fe2e373dc",
+      "text": "つってもなんもやらんけどな",
+      "previous": "リゾートバイト感覚で\n遠洋漁業やらないで",
+      "next": "5連休",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "14",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "intonationScale": 1,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "つっ:ツッ|て:テ|も:モ'/なん:ナ'ン|も:モ/やら:ヤラ|ん:ン'|けど:ケド|な:ナ",
+      "alternatives": [
+        "つっ:ツッ|て:テ|も:モ'/なんも:ナ'ンモ/やら:ヤラ'|ん:ン|けど:ケド|な:ナ",
+        "つっ:ツッ|ても:テ'モ/なん:ナ'ン|も:モ/やら:ヤラ|ん:ン'|けど:ケド|な:ナ"
+      ],
+      "reviewed": true
+    },
+    {
+      "id": "8378b74b-850c-4bdc-a992-f52622932285",
+      "text": "お絵かきをします",
+      "previous": "うーん",
+      "next": "ええやん",
+      "voice": {
+        "provider": "coeiroink",
+        "speakerUuid": "272c0178-a248-11f1-82fa-0242ac1c000c",
+        "styleId": 1295160681,
+        "modelVersion": "0.0.1",
+        "synthesisSettings": {
+          "speedScale": 1.2,
+          "volumeScale": 0.6,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0
+        }
+      },
+      "kana": "お絵かき:オエ'カキ|を:ヲ/し:シ|ます:マ'ス",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "fbfe9e9d-04bf-4b90-980c-8137856dd5f0",
+      "text": "ミコちゃんがこのように\nおっしゃっておりますので",
+      "previous": "えーアメリカにお住まいの皆様",
+      "next": "なにとぞよろしくおねがいします",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "3",
+        "synthesisSettings": {
+          "speedScale": 1.4,
+          "pitchScale": -0.01,
+          "intonationScale": 0.9,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "ミコ:ミ'コ|ちゃん:チャン|が:ガ/この:コノ'|よう:ヨー|に:ニ/おっしゃっ:オッシャ'ッ|て:テ/おり:オリ|ます:マ'ス|ので:ノデ",
+      "alternatives": [
+        "ミコ:ミ'コ|ちゃん:チャン|が:ガ/この:コノ'/よう:ヨ'ー|に:ニ/おっしゃっ:オッシャ'ッ|て:テ/おり:オリ|ます:マ'ス|ので:ノデ"
+      ],
+      "reviewed": true
+    },
+    {
+      "id": "f60dbc81-a71a-40fa-ab69-c74c6c466803",
+      "text": "さすがに140コメは多いな！",
+      "previous": "爆発しないで……",
+      "next": "おもろいんだけどサ",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "14",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "intonationScale": 1,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "さすが:サスガ|に:ニ'/百:ヒャク'/四十:ヨンジュー|コメ:コ'メ|は:ワ/多い:オ'オイ|な:ナ！",
+      "alternatives": [
+        "さすが:サスガ|に:ニ'/百:ヒャク'/四十:ヨンジュー|コメ:コ'メ|は:ワ/多い:オ'オイ|な:ナ！"
+      ],
+      "reviewed": true
+    },
+    {
+      "id": "48ab255a-fa76-4bce-8801-ce75f46e7196",
+      "text": "なぜなら遊び人研究会だから",
+      "previous": "ソロバスケマンが\n遊び人研究会に\n入ってなくても当然",
+      "next": "誰かと一緒に\nバスケしたいなーって人が\nいたときだけ",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "14",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "intonationScale": 1,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "なぜなら:ナ'ゼナラ/遊び人:アソビニン'/研究会:ケンキュー'カイ|だ:ダ|から:カラ",
+      "alternatives": [
+        "なぜなら:ナ'ゼナラ/遊び人:アソビニン|研究会:ケンキュー'カイ|だ:ダ|から:カラ"
+      ],
+      "reviewed": true
+    },
+    {
+      "id": "d3c84e3e-c55a-420c-a6cb-6c23f3b7ae65",
+      "text": "さすがに変過ぎでは？",
+      "previous": "ぼくらが一番好きだった先輩ね……",
+      "next": "それはそう",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "46",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "さすが:サスガ|に:ニ'/変:ヘン|過ぎ:スギ'|で:デ|は:ワ？",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "90ec3175-756d-4de0-8583-67e2252a6a34",
+      "text": "北の国からみたいに……",
+      "previous": "寝るって言ってるでしょうがッ！",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "3",
+        "synthesisSettings": {
+          "speedScale": 1.4,
+          "pitchScale": -0.01,
+          "intonationScale": 0.9,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "北:キタ|の:ノ'/国:クニ|から:カラ'/みたい:ミ'タイ|に:ニ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "7c3609ae-dad3-45ed-8ca3-5b561c68158a",
+      "text": "10月の経営対策会議は\n土曜日ですね",
+      "previous": "プライベートはわたしの\n誕生祭があることくらいでしょうか",
+      "next": "Discordは必要に応じて\n軽くメンテするくらい?",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "46",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "10:ジュー|月:ガツ'|の:ノ/経営:ケーエー'/対策:タイサク|会議:カ'イギ|は:ワ/土曜日:ドヨ'ービ|です:デス|ね:ネ",
+      "alternatives": [
+        "10:ジュー|月:ガツ'|の:ノ/経営:ケーエー'/対策:タイサク'/会議:カ'イギ|は:ワ/土曜日:ドヨ'ービ|です:デス|ね:ネ"
+      ],
+      "reviewed": true
+    },
+    {
+      "id": "2ebbea29-4a70-439f-8bfc-4dc792229156",
+      "text": "多少負荷軽くできた気がする",
+      "previous": "先週金曜日ほどじゃあないにしろ",
+      "next": "慢性的にねむいだけ",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "3",
+        "synthesisSettings": {
+          "speedScale": 1.4,
+          "pitchScale": -0.01,
+          "intonationScale": 0.9,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "多少:タショー'/負荷:フ'カ/軽く:カルク'/でき:デ'キ|た:タ/気:キ|が:ガ'/する:スル'",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "82d6328e-74ff-46d1-ac21-31d3067b04f0",
+      "text": "月末ということもあり\nいろいろごたついて\n短めに終わる",
+      "previous": "今日はジムに行きましたが",
+      "next": "のであまり眠くない",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "3",
+        "synthesisSettings": {
+          "speedScale": 1.4,
+          "pitchScale": -0.01,
+          "intonationScale": 0.9,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "月末:ゲツマツ|と:ト'/いう:イウ'/こと:コト'|も:モ/あり:ア'リ/いろいろ:イロイロ'/ごたつい:ゴタツイ|て:テ'/短め:ミジカメ|に:ニ'/終わる:オワル'",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "b8d4571a-d967-42ed-854c-ed7670d6f6dc",
+      "text": "セイシュンワン！",
+      "previous": "ポ///",
+      "next": "おれ色に染めてやるよー！染めてやる！染めてやるよー！何色がいいかだけ決めさせてやるよー！え、レインボー？それはちょっとムズカシイデスネー",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "セイシュン:セイシュン'/ワン:ワ'ン！",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "98000491-1e27-41ae-a162-f82074dd2668",
+      "text": "新発見を求めて出航だ",
+      "previous": "海にはまだまだ謎がいっぱい",
+      "voice": {
+        "provider": "coeiroink",
+        "speakerUuid": "272c0178-a248-11f1-82fa-0242ac1c000c",
+        "styleId": 1295160681,
+        "modelVersion": "0.0.1",
+        "synthesisSettings": {
+          "speedScale": 1.2,
+          "volumeScale": 0.6,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0
+        }
+      },
+      "kana": "新発見:シンハ'ッケン|を:ヲ/求め:モト'メ|て:テ/出航:シュッコー|だ:ダ'",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "8b386df0-4522-41be-bc9d-bec085718733",
+      "text": "外部ストレージマウントしてたら\nそっちにキャッシュ作るようにしたので",
+      "previous": "久々にパキ超えが\n見えました",
+      "next": "しばらくは大丈夫",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "14",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "intonationScale": 1,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "外部:ガ'イブ/ストレージ:スト'レージ/マウント:マウ'ント/し:シ|て:テ|たら:タ'ラ/そっち:ソッチ'|に:ニ/キャッシュ:キャ'ッシュ/作る:ツク'ル/よう:ヨ'ー|に:ニ/し:シ|た:タ'|ので:ノデ",
+      "alternatives": [
+        "外部:ガ'イブ/ストレージ:スト'レージ/マウント:マウ'ント/し:シ|て:テ|たら:タ'ラ/そっち:ソッチ'|に:ニ/キャッシュ:キャ'ッシュ/作る:ツク'ル/よう:ヨ'ー|に:ニ/し:シ|た:タ'|ので:ノデ"
+      ],
+      "reviewed": true
+    },
+    {
+      "id": "307fb897-099e-443d-8e8f-e1ebca5aa993",
+      "text": "でもわたしたちが\n作っているのは動画",
+      "previous": "ReactはWebアプリ作るために\n開発された道具",
+      "next": "いらない機能いっぱいで重い",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "14",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "intonationScale": 1,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "でも:デ'モ/わたしたち:ワタシ'タチ|が:ガ/作っ:ツク'ッ|て:テ|いる:イル|の:ノ|は:ワ/動画:ドーガ'",
+      "alternatives": [
+        "でも:デ'モ/わたし:ワタシ|たち:タ'チ|が:ガ/作っ:ツク'ッ|て:テ|いる:イル|の:ノ|は:ワ/動画:ドーガ'"
+      ],
+      "reviewed": true
+    },
+    {
+      "id": "f56d856c-c1aa-4dea-8661-9a1f4cacc432",
+      "text": "もう寒いのに……",
+      "previous": "久々にちゃんとビールですけど",
+      "next": "まだあったんだそれ",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "46",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "もう:モ'ー/寒い:サム'イ|のに:ノニ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "c7ffd6e3-c5ab-46e2-8bc3-7a77bd609a56",
+      "text": "明日は実際にコード見ていくぞー",
+      "previous": "ということだけ伝わればいいのだ",
+      "next": "おー！",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "14",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "intonationScale": 1,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "明日:アシタ'|は:ワ/実際:ジッサイ|に:ニ'/コード:コ'ード/見:ミ'|て:テ/いく:イク'|ぞー:ゾー",
+      "alternatives": [
+        "明日:アシタ'|は:ワ/実際:ジッサイ|に:ニ'/コード:コ'ード/見:ミ'|て:テ|いく:イク|ぞー:ゾー"
+      ],
+      "reviewed": true
+    },
+    {
+      "id": "b7e1fd46-9344-40eb-8f2c-702cc65e452a",
+      "text": "お好きなレイアウトを使ってください",
+      "previous": "グリッドじゃないんだなー",
+      "next": "13から14行めが\nHellowWorldの\nスタイリングなのだ",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "3",
+        "synthesisSettings": {
+          "speedScale": 1.4,
+          "pitchScale": -0.01,
+          "intonationScale": 0.9,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "お:オ|好き:スキ'|な:ナ/レイアウト:レイア'ウト|を:ヲ/使っ:ツカッ|て:テ'/ください:クダサ'イ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "888f04af-2723-4e28-8f0e-bb8107703514",
+      "text": "相当機能性削ってシンプルになった",
+      "previous": "ほぼ終わりー",
+      "next": "もう公開できそう",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "14",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "intonationScale": 1,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "相当:ソートー'/機能性:キノーセー'/削っ:ケズッ|て:テ'/シンプル:シ'ンプル|に:ニ/なっ:ナ'ッ|た:タ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "aa9959da-0072-4a22-bcb2-6fe38f2ca485",
+      "text": "それはぬぬぬさんとこのネタですよ",
+      "previous": "くさ。たすかる",
+      "next": "寝るのだ！",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "46",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "それ:ソレ|は:ワ'/ぬぬぬ:ヌ'ヌヌ|さん:サン/とこ:トコ'|の:ノ/ネタ:ネタ'|です:デス|よ:ヨ",
+      "alternatives": [
+        "それ:ソレ|は:ワ'/ぬぬぬ:ヌ'ヌヌ|さん:サン/とこ:トコ'|の:ノ/ネタ:ネタ'|です:デス|よ:ヨ",
+        "それ:ソレ|は:ワ'/ぬぬぬ:ヌ'ヌヌ|さん:サン|とこ:トコ|の:ノ/ネタ:ネタ'|です:デス|よ:ヨ"
+      ],
+      "reviewed": true
+    },
+    {
+      "id": "f5b9b472-b5c5-4150-bf10-7e92a217d975",
+      "text": "動画構成だけは完成させたいところ",
+      "previous": "土日はさすがに\n告知動画を進めるのだ",
+      "next": "いけますかね",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "3",
+        "synthesisSettings": {
+          "speedScale": 1.4,
+          "pitchScale": -0.02,
+          "intonationScale": 0.8,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "動画構成:ドーガコ'ーセー|だけ:ダケ|は:ワ/完成:カンセー|さ:サ|せ:セ|たい:タ'イ/ところ:トコロ'",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "79414e93-3c51-484b-8e32-b10f3298a74f",
+      "text": "濁音になるパターンのやつじゃん！",
+      "previous": "でも生くるみ問題で\nすごいのかすごくないのか\nわからんくなってきたぞ",
+      "next": "連濁？っていうのかな？めっちゃ濁ってるじゃん！",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "濁音:ダクオン|に:ニ'/なる:ナ'ル/パターン:パタ'ーン|の:ノ/やつ:ヤ'ツ|じゃん:ジャン！",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "125c5e96-4e12-404a-9ccd-63c7260ad6ab",
+      "text": "今日のビールでした",
+      "previous": "うめー",
+      "next": "明日はどんなビールに会えるかな？",
+      "voice": {
+        "provider": "coeiroink",
+        "speakerUuid": "272c0178-a248-11f1-82fa-0242ac1c000c",
+        "styleId": 1295160681,
+        "modelVersion": "0.0.1",
+        "synthesisSettings": {
+          "speedScale": 1.2,
+          "volumeScale": 0.6,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0
+        }
+      },
+      "kana": "今日:キョ'ー|の:ノ/ビール:ビ'ール|でし:デシ|た:タ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "f25e9b37-0907-425f-87ef-28de27332b07",
+      "text": "今度やってみようかな",
+      "previous": "作業中か休憩中か\nそれでわかるのか",
+      "next": "疲れてきた！",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "3",
+        "synthesisSettings": {
+          "speedScale": 1.4,
+          "pitchScale": -0.02,
+          "intonationScale": 0.8,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "今度:コ'ンド/やっ:ヤッ|て:テ'/みよう:ミヨ'ー|かな:カナ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "fbc61ddd-bf7e-47a4-9901-207199e13d4f",
+      "text": "AI前提で工数半分に\nするのやめてほしいのだ……",
+      "previous": "明日もまだ忙しくなりそうですね……",
+      "next": "ちゃんと品質担保しようとすると\n普通に時間かかるので",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "3",
+        "synthesisSettings": {
+          "speedScale": 1.4,
+          "pitchScale": -0.02,
+          "intonationScale": 0.8,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "AI:エーアイ'|前提:ゼンテー|で:デ/工数:コース'ー/半分:ハンブ'ン|に:ニ/する:スル|の:ノ'/やめ:ヤメ|て:テ'/ほしい:ホシ'イ|のだ:ノダ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "a954bd50-8446-4f4d-bd9c-6fe25f7daef2",
+      "text": "レイドバトル追加した",
+      "previous": "エンドカードなに変えたの？",
+      "next": "えぇ？",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "14",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "intonationScale": 0.8,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "レイドバトル:レイドバ'トル/追加:ツイカ|し:シ|た:タ'",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "e4764da1-667b-4a43-a9a2-5c000650124f",
+      "text": "ミコてゃが言うと淫夢語録\nにしか聞こえないな",
+      "previous": "メスガキのつもりなんだろうけど",
+      "next": "ミコちゃん",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "14",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "intonationScale": 0.8,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "ミコてゃ:ミコテヤ|が:ガ'/言う:イウ|と:ト'/淫夢:インム|語録:ゴ'ロク|に:ニ|しか:シカ/聞こえ:キコエ|ない:ナ'イ|な:ナ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "e07beecb-0c7d-42ff-8dd6-166f207bb415",
+      "text": "ユーロかなにか？",
+      "previous": "1ペロ176円か。買い時だな。",
+      "next": "1ペーロ",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "14",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "intonationScale": 0.8,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "ユーロ:ユ'ーロ|か:カ/なに:ナ'ニ|か:カ？",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "62f0960d-b2fe-4f7d-8fd7-3a6b697d4702",
+      "text": "ちゃんと粉雪見ろとのこと",
+      "previous": "粉雪",
+      "next": "見えねーよ",
+      "voice": {
+        "provider": "voicevox",
+        "voiceName": "14",
+        "synthesisSettings": {
+          "speedScale": 1.3,
+          "pitchScale": -0.02,
+          "intonationScale": 0.8,
+          "prePhonemeLength": 0,
+          "postPhonemeLength": 0,
+          "pauseLengthScale": 0.5
+        }
+      },
+      "kana": "ちゃんと:チャント'/粉雪:コナ'ユキ/見ろ:ミ'ロ|と:ト|の:ノ/こと:コト'",
+      "alternatives": [],
+      "reviewed": true
+    }
+  ]
+}

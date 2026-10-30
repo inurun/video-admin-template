@@ -1,5 +1,6 @@
 export * from "./g2p";
 export * from "./dictionary";
+export * from "./g2p-review";
 export {
   savedScheduleItemSchema,
   savedSchedulesSchema,

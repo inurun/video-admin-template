@@ -27,6 +27,7 @@ import { voicepeakApp } from "@/server/features/voicepeak";
 import { scheduleApp } from "@/server/features/schedule";
 import { weatherApp } from "@/server/features/weather";
 import { dictionaryApp } from "@/server/features/dictionary/route";
+import { g2pReviewApp } from "@/server/features/g2p-review/route";
 
 const CONTENT_TYPES = new Map([
   [".gif", "image/gif"],
@@ -63,7 +64,7 @@ async function resolveRootProjectPath() {
 
 async function assertProjectRouteExists(requestPath: string) {
   const route = parseProjectRoute(requestPath);
-  if (route.type === "schedules" || route.type === "dictionary") {
+  if (route.type === "schedules" || route.type === "dictionary" || route.type === "g2p-review") {
     return;
   }
 
@@ -89,7 +90,8 @@ function createApi() {
     .route("/", nicoadApp)
     .route("/", niconicoCommentsApp)
     .route("/", scheduleApp)
-    .route("/", dictionaryApp);
+    .route("/", dictionaryApp)
+    .route("/", g2pReviewApp);
 }
 
 export type ApiApp = ReturnType<typeof createApi>;

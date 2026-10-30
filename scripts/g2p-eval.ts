@@ -1,24 +1,21 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import { createHash } from "node:crypto";
 import { parseArgs } from "node:util";
 import { config } from "dotenv";
-import { readSavedProjectFile } from "@/server/_shared/storage";
-import { buildG2pContext, type G2pTarget } from "@/server/features/tts/g2p-context";
+import { readReviewSet, writeEvalReport } from "@/server/features/g2p-review/storage";
+import type { G2pEvalReport } from "@/server/features/g2p-review/contract";
+import { buildSingleG2pContext } from "@/server/features/tts/g2p-context";
 import {
-  compareKana,
+  compareKanaToAny,
   formatKanaProsody,
   isExactMatch,
   parseKanaProsody,
-  type G2pComparison,
 } from "@/server/features/tts/g2p-eval";
-import { generateG2p, type G2pSource } from "@/server/features/tts/llm-g2p";
+import { generateG2p } from "@/server/features/tts/llm-g2p";
 import { LLM_G2P_PROFILE } from "@/server/features/tts/llm-g2p-profile";
 import {
   OPENROUTER_G2P_REPAIR_PROMPT,
   OPENROUTER_G2P_SYSTEM_PROMPT,
 } from "@/server/features/tts/openrouter-prompt";
-import { getEffectiveReadText, getUsableG2p } from "@/server/features/tts/providers/comparison";
 
 config({ path: [".env.local", ".env"], quiet: true });
 
@@ -31,7 +28,7 @@ const { positionals, values } = parseArgs({
 });
 
 if (positionals.length === 0) {
-  console.error("usage: pnpm g2p:eval <projectPath…> [--runs 3] [--label baseline]");
+  console.error("usage: pnpm g2p:eval <set…> [--runs 3] [--label baseline]");
   process.exit(1);
 }
 
@@ -45,16 +42,8 @@ const promptHash = createHash("sha256")
   .digest("hex")
   .slice(0, 8);
 
-type RunResult = { kana: string; source: G2pSource | "missing"; comparison: G2pComparison };
-type EvalCase = {
-  projectPath: string;
-  pageId: string;
-  id: string;
-  provider: string;
-  text: string;
-  truth: string;
-  runs: RunResult[];
-};
+type EvalCase = G2pEvalReport["cases"][number];
+type RunResult = EvalCase["runs"][number];
 
 type Tally = {
   total: number;
@@ -80,20 +69,23 @@ const emptyTally = (): Tally => ({
 });
 
 function count(tally: Tally, result: RunResult) {
+  const { comparison } = result;
+  if (!comparison) return;
   tally.total += 1;
   if (result.source !== "llm") tally.analyze += 1;
-  if (isExactMatch(result.comparison)) tally.exact += 1;
-  if (!result.comparison.reading) return;
+  if (isExactMatch(comparison)) tally.exact += 1;
+  if (!comparison.reading) return;
   tally.reading += 1;
-  tally.boundaries += result.comparison.boundaries;
-  tally.missingBoundaries += result.comparison.missingBoundaries;
-  tally.extraBoundaries += result.comparison.extraBoundaries;
-  tally.alignedPhrases += result.comparison.alignedPhrases;
-  tally.wrongAccents += result.comparison.wrongAccents;
+  tally.boundaries += comparison.boundaries;
+  tally.missingBoundaries += comparison.missingBoundaries;
+  tally.extraBoundaries += comparison.extraBoundaries;
+  tally.alignedPhrases += comparison.alignedPhrases;
+  tally.wrongAccents += comparison.wrongAccents;
 }
 
 function describeComparison(result: RunResult) {
   const { comparison } = result;
+  if (!comparison) return "unreviewed";
   const parts: string[] = [];
   if (result.source !== "llm") parts.push(result.source);
   if (!comparison.reading) {
@@ -110,55 +102,56 @@ const percent = (value: number, total: number) =>
   `${((value / Math.max(total, 1)) * 100).toFixed(1)}%`;
 
 const cases: EvalCase[] = [];
-for (const projectPath of positionals) {
-  const project = await readSavedProjectFile(projectPath);
-  const targets: G2pTarget[] = [];
-  for (const page of project.pages) {
-    if (page.type === "transition") {
-      continue;
-    }
-    for (const tts of page.tts) {
-      const text = getEffectiveReadText(tts);
-      const truth = getUsableG2p(tts.speech?.g2p, text);
-      if (!truth) {
-        continue;
-      }
-      targets.push({ pageId: page.id, ttsId: tts.id });
-      cases.push({
-        projectPath,
-        pageId: page.id,
-        id: tts.id,
-        provider: tts.provider,
-        text,
-        truth: truth.kana,
-        runs: [],
-      });
-    }
-  }
-  const pages = buildG2pContext(project.pages, targets);
+for (const setName of positionals) {
+  const { items } = await readReviewSet(setName);
+  const setCases = items.map(
+    (item): EvalCase => ({
+      setName,
+      id: item.id,
+      provider: item.voice.provider,
+      text: item.text,
+      ...(item.reviewed && item.kana ? { truth: item.kana } : {}),
+      alternatives: item.alternatives,
+      runs: [],
+    }),
+  );
+  cases.push(...setCases);
+  const pages = items.flatMap((item) =>
+    buildSingleG2pContext({
+      pageId: item.id,
+      id: item.id,
+      text: item.text,
+      provider: item.voice.provider,
+      previous: item.previous,
+      next: item.next,
+    }),
+  );
   for (let run = 1; run <= runs; run += 1) {
     const results = await generateG2p(serverEnv, { mode: "page", pages });
-    for (const evalCase of cases.filter((item) => item.projectPath === projectPath)) {
+    for (const evalCase of setCases) {
       const result = results.get(evalCase.id);
       const kana = result?.g2p.kana ?? "";
       evalCase.runs.push({
         kana,
         source: result?.source ?? "missing",
-        comparison: compareKana(evalCase.truth, kana),
+        ...(evalCase.truth
+          ? { comparison: compareKanaToAny([evalCase.truth, ...evalCase.alternatives], kana) }
+          : {}),
       });
     }
-    console.log(`${projectPath} run ${run}/${runs}: ${targets.length} utterances`);
+    console.log(`${setName} run ${run}/${runs}: ${items.length} utterances`);
   }
 }
 
 const show = (kana: string) => formatKanaProsody(parseKanaProsody(kana));
 console.log("\nmismatches");
 for (const evalCase of cases) {
-  if (evalCase.runs.every((result) => isExactMatch(result.comparison))) {
+  const { truth } = evalCase;
+  if (!truth || evalCase.runs.every((run) => run.comparison && isExactMatch(run.comparison))) {
     continue;
   }
-  console.log(`\n${evalCase.projectPath} ${evalCase.text}`);
-  console.log(`  truth  ${show(evalCase.truth)}`);
+  console.log(`\n${evalCase.setName} ${evalCase.text}`);
+  console.log(`  truth  ${show(truth)}`);
   evalCase.runs.forEach((result, index) => {
     console.log(`  run ${index + 1}  ${show(result.kana)}  (${describeComparison(result)})`);
   });
@@ -166,7 +159,7 @@ for (const evalCase of cases) {
 
 const tallies = new Map<string, Tally>();
 for (const evalCase of cases) {
-  for (const key of [evalCase.projectPath, `provider ${evalCase.provider}`, "all"]) {
+  for (const key of [evalCase.setName, `provider ${evalCase.provider}`, "all"]) {
     const tally = tallies.get(key) ?? emptyTally();
     tallies.set(key, tally);
     for (const result of evalCase.runs) count(tally, result);
@@ -181,27 +174,15 @@ for (const [key, tally] of tallies) {
 }
 
 const startedAt = new Date().toISOString();
-const reportPath = path.join(
-  ".logs",
-  "g2p-eval",
+const reportPath = await writeEvalReport(
   `${startedAt.replaceAll(":", "-").replaceAll(".", "-")}-${values.label}-${promptHash}.json`,
-);
-await fs.mkdir(path.dirname(reportPath), { recursive: true });
-await fs.writeFile(
-  reportPath,
-  `${JSON.stringify(
-    {
-      startedAt,
-      label: values.label,
-      promptHash,
-      profile: LLM_G2P_PROFILE,
-      runs,
-      tallies: Object.fromEntries(tallies),
-      cases,
-    },
-    null,
-    2,
-  )}\n`,
-  "utf8",
+  {
+    startedAt,
+    label: values.label,
+    promptHash,
+    profileId: LLM_G2P_PROFILE.id,
+    runs,
+    cases,
+  },
 );
 console.log(`\nreport ${reportPath}`);

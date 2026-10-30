@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => {
   return {
     server: {
       watch: {
-        ignored: ["**/data/**", "**/public/uploads/**"],
+        ignored: ["**/data/**", "**/g2p-eval/**", "**/public/uploads/**"],
       },
     },
     build: {

@@ -18,7 +18,7 @@ import {
   useAppSidebarContent,
   useAppSidebarShell,
 } from "@/app/components/app-sidebar/use-app-sidebar";
-import { BookOpen, CalendarDays } from "lucide-react";
+import { AudioLines, BookOpen, CalendarDays } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 
 function AppSidebarContent() {
@@ -61,6 +61,18 @@ function AppSidebarContent() {
         </SidebarContent>
         <SidebarFooter className="gap-1 px-3 py-3 group-data-[collapsible=icon]:px-2">
           <div className="flex flex-row items-center justify-end gap-1 group-data-[collapsible=icon]:flex-col">
+            <Button
+              type="button"
+              size="icon-sm"
+              variant="ghost"
+              title="G2P review"
+              aria-label="G2P review"
+              render={
+                <a href="/g2p-review" target="_blank" rel="noreferrer">
+                  <AudioLines className="size-4" />
+                </a>
+              }
+            />
             <Button
               type="button"
               size="icon-sm"

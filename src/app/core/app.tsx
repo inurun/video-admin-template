@@ -12,8 +12,13 @@ import { SettingsContextProvider } from "@/app/features/settings";
 import { EditorSessionStoreProvider, SavedProjectStoreProvider } from "@/app/features/editor";
 import { useSelectedProjectQuery } from "@/app/features/project/swr/use-project-queries";
 import { useProjectRoute } from "@/app/features/project/context/project-route-context";
-import { isDictionaryRoute, isSchedulesRoute } from "@/app/features/project/lib/project-route";
+import {
+  isDictionaryRoute,
+  isG2pReviewRoute,
+  isSchedulesRoute,
+} from "@/app/features/project/lib/project-route";
 import { AppDictionary } from "@/app/components/app-dictionary/app-dictionary";
+import { AppG2pReview } from "@/app/components/app-g2p-review/app-g2p-review";
 import { AppHeader } from "../components/app-header/app-header";
 import { AppSchedule } from "../components/app-schedule/app-schedule";
 import { VideoPlayerControlProvider } from "@/app/features/video-player/context/video-player-control-context";
@@ -75,6 +80,13 @@ function AppMain() {
     return (
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <AppDictionary />
+      </div>
+    );
+  }
+  if (isG2pReviewRoute(route)) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <AppG2pReview />
       </div>
     );
   }

@@ -106,6 +106,12 @@ export function compareKana(truthKana: string, predictedKana: string): G2pCompar
   };
 }
 
+/** どれか1つと一致すれば正解。外れたときは先頭の正解との差を返す。 */
+export function compareKanaToAny(truths: readonly string[], predictedKana: string): G2pComparison {
+  const comparisons = truths.map((truth) => compareKana(truth, predictedKana));
+  return comparisons.find(isExactMatch) ?? comparisons[0] ?? { reading: false };
+}
+
 export function isExactMatch(comparison: G2pComparison) {
   return (
     comparison.reading &&

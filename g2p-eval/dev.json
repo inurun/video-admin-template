@@ -1,0 +1,451 @@
+{
+  "items": [
+    {
+      "id": "57b87d35-971b-4545-905d-7a9f47a2bdc7",
+      "text": "2026年10月29日の最高気温は18度でした。",
+      "next": "約1.5倍の速さで、20分くらいで着いたよ。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "二千:ニセン|二十:ニ'ジュー/六:ロク'|年:ネン/10:ジュー|月:ガツ'/二十:ニ'ジュー/九:ク'|日:ニチ|の:ノ/最高:サイコー|気温:キ'オン|は:ワ/18:ジューハチ'|度:ド|でした:デシタ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "eb680a1a-3a75-48f0-8bea-a39116692fc8",
+      "text": "約1.5倍の速さで、20分くらいで着いたよ。",
+      "previous": "2026年10月29日の最高気温は18度でした。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "約:ヤ'ク/1.5:イ'ッテンゴ/倍:バイ|の:ノ'/速:ハ'ヤ|さ:サ|で:デ、20:ニジュッ|分:プン'/くらい:ク'ライ|で:デ/着い:ツ'イ|た:タ|よ:ヨ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "a805ed8a-2c49-4cc8-ac1c-f6c6817148f5",
+      "text": "昨日は早く起きたのに、今日は全然起きられなかった。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "昨日:キノー'|は:ワ/早く:ハ'ヤク/起き:オ'キ|た:タ|のに:ノニ、今日:キョ'ー|は:ワ/全然:ゼンゼン'/起き:オキ|られ:ラレ'|なかった:ナカッタ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "2fa276cb-76d2-424d-80ab-bb6a6175fc6a",
+      "text": "天気予報によると、明日は台風一過の晴天らしい。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "天気:テンキ|予報:ヨ'ホー|に:ニ|よる:ヨル|と:ト、明日:アシタ'|は:ワ/台風:タイフー|一過:イ'ッカ|の:ノ/晴天:セーテン|らしい:ラシ'イ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "ea1faf0c-1de2-475f-a83a-8ed25cf5858a",
+      "text": "市場で買った野菜の値段が、株式市場の動きと関係あるなんてね。",
+      "next": "彼は将棋だと私より一枚上手だけど、料理は上手じゃない。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "市場:イ'チバ|で:デ/買っ:カッ|た:タ'/野菜:ヤサイ|の:ノ'/値段:ネダン|が:ガ'、株式:カブシキ|市場:シ'ジョー|の:ノ/動き:ウゴ'キ|と:ト/関係:カンケー'/ある:ア'ル|なんて:ナンテ|ね:ネ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "966b83a9-1103-4af9-a03f-b3e44738620f",
+      "text": "彼は将棋だと私より一枚上手だけど、料理は上手じゃない。",
+      "previous": "市場で買った野菜の値段が、株式市場の動きと関係あるなんてね。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "彼:カ'レ|は:ワ/将棋:ショーギ|だ:ダ'|と:ト/私:ワタシ|より:ヨ'リ/一:イチ|枚:マ'イ/上手:ウワテ|だ:ダ'|けど:ケド、料理:リョ'ーリ|は:ワ/上手:ジョーズ'|じゃ:ジャ/ない:ナ'イ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "4030943f-3a1d-40f5-87ff-527f114b9e6a",
+      "text": "iPhoneをアップデートしたら、Wi-Fiが繋がらなくなった。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "iPhone:アイフォーン'|を:ヲ/アップデート:アップデ'ート|し:シ|たら:タラ、Wi-Fi:ワイファイ|が:ガ'/繋がら:ツナガラ|なく:ナク'/なっ:ナ'ッ|た:タ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "3222b14b-d578-49dd-8691-a79309d18f65",
+      "text": "いや、それ絶対おかしいでしょ？なんでそうなるのさ。",
+      "next": "ちょっと待ってて、すぐ行くからさ！",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "いや:イ'ヤ、それ:ソレ'/絶対:ゼッタイ'/おかしい:オカシ'イ|でしょ:デショ？なんで:ナ'ンデ/そう:ソ'ー/なる:ナ'ル|の:ノ|さ:サ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "f08df37d-c0a1-4648-96b0-d5f0710d0c93",
+      "text": "ちょっと待ってて、すぐ行くからさ！",
+      "previous": "いや、それ絶対おかしいでしょ？なんでそうなるのさ。",
+      "next": "え、もう終わったの？早すぎない？",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "ちょっと:チョ'ット/待っ:マ'ッ|て:テ|て:テ、すぐ:ス'グ/行く:イク|から:カ'ラ|さ:サ！",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "3e23566e-8aa5-49c7-ae50-6dfa7530347a",
+      "text": "え、もう終わったの？早すぎない？",
+      "previous": "ちょっと待ってて、すぐ行くからさ！",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "え:エ'、もう:モ'ー/終わっ:オワッ|た:タ'|の:ノ？早:ハヤ|すぎ:スギ|ない:ナイ'？",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "7fdb21aa-2f57-4bf2-a620-cbc71a85d61d",
+      "text": "来週の月曜日から始まる新しいプロジェクトについて、まだ詳しいことは何も決まっていないけど、とりあえず準備だけは進めておこうと思う。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "来週:ライシュー|の:ノ'/月曜日:ゲツヨ'ービ|から:カラ/始まる:ハジマル'/新しい:アタラシ'イ/プロジェクト:プロジェ'クト|に:ニ|つい:ツイ|て:テ、まだ:マ'ダ/詳しい:クワシ'イ/こと:コト'|は:ワ/何:ナニ|も:モ'/決まっ:キマッ|て:テ'/い:イ|ない:ナ'イ|けど:ケド、とりあえず:トリア'エズ/準備:ジュ'ンビ|だけ:ダケ|は:ワ/進め:ススメ|て:テ'/おこう:オコ'ー|と:ト/思う:オモ'ウ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "8da2d0cd-d458-4895-920d-bfff22bcdad0",
+      "text": "本日はお忙しいところお集まりいただき、誠にありがとうございます。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "本日:ホ'ンジツ|は:ワ/お:オ|忙しい:イソガシ'イ/ところ:トコロ'/お:オ|集まり:アツマリ'/いただき:イタダキ'、誠:マコト|に:ニ'/ありがとう:アリ'ガトー/ござい:ゴザイ|ます:マ'ス",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "f589029f-2187-4387-8561-f1e593485e88",
+      "text": "札幌から那覇まで、日本列島を寒気が縦断しています。",
+      "next": "新宿と渋谷、どっちに行くかまだ決めかねてるんだ。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "札幌:サッポロ|から:カラ'/那覇:ナ'ハ|まで:マデ、日本列島:ニホンレ'ットー|を:ヲ/寒気:カ'ンキ|が:ガ/縦断:ジューダン|し:シ|て:テ|い:イ|ます:マ'ス",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "38cb0e61-ed74-402e-87b0-c3165d92074d",
+      "text": "新宿と渋谷、どっちに行くかまだ決めかねてるんだ。",
+      "previous": "札幌から那覇まで、日本列島を寒気が縦断しています。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "新宿:シンジュク|と:ト'/渋谷:シブヤ'、どっち:ド'ッチ|に:ニ/行く:イク|か:カ'/まだ:マ'ダ/決めかねてる:キメカ'ネテル|んだ:ンダ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "fa04650f-78ed-49f5-971f-e8a1f728f80b",
+      "text": "一人ずつ順番に、プリントを二枚ずつ配ってください。",
+      "next": "少しずつ慣れてきたけど、毎日三十分ずつ練習してる。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "一人:ヒトリ|ずつ:ズ'ツ/順番:ジュンバン|に:ニ'、プリント:プリ'ント|を:ヲ/二:ニ|枚:マイ|ずつ:ズ'ツ/配っ:クバ'ッ|て:テ/ください:クダサ'イ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "e1a5fb80-8d68-4c16-b176-73981e354629",
+      "text": "少しずつ慣れてきたけど、毎日三十分ずつ練習してる。",
+      "previous": "一人ずつ順番に、プリントを二枚ずつ配ってください。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "少し:スコシ|ずつ:ズ'ツ/慣れ:ナ'レ|て:テ/き:キ'|た:タ|けど:ケド、毎日:マ'イニチ/三十:サンジュッ|分:プン|ずつ:ズ'ツ/練習:レンシュー|し:シ|てる:テ'ル",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "a70a3822-38b5-47c9-a425-737560be315f",
+      "text": "友達が会社の近くで、新しい自転車を買ったらしい。",
+      "next": "机の引き出しを開けて、鉛筆と消しゴムを探した。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "友達:トモダチ|が:ガ'/会社:カイシャ|の:ノ'/近く:チ'カク|で:デ、新しい:アタラシ'イ/自転車:ジテンシャ|を:ヲ'/買っ:カッ|た:タ'/らしい:ラシ'イ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "2759bb75-86f1-43ab-89a1-28e865221f6e",
+      "text": "机の引き出しを開けて、鉛筆と消しゴムを探した。",
+      "previous": "友達が会社の近くで、新しい自転車を買ったらしい。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "机:ツクエ|の:ノ'/引き出し:ヒキダシ|を:ヲ'/開け:アケ|て:テ'、鉛筆:エンピツ|と:ト'/消しゴム:ケシゴム|を:ヲ'/探し:サガシ|た:タ'",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "7524ea84-c25e-4295-b40e-339b02204011",
+      "text": "季節限定の抹茶ラテが、全品半額キャンペーンの対象になった。",
+      "next": "年末年始の営業時間は、公式サイトで確認してください。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "季節:キセツ'/限定:ゲンテー|の:ノ'/抹茶ラテ:マッチャ'ラテ|が:ガ、全品:ゼ'ンピン/半額:ハンガク'/キャンペーン:キャンペー'ン|の:ノ/対象:タイショー|に:ニ'/なっ:ナ'ッ|た:タ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "372531d8-b1db-45c8-9b97-dc4f34c33b0c",
+      "text": "年末年始の営業時間は、公式サイトで確認してください。",
+      "previous": "季節限定の抹茶ラテが、全品半額キャンペーンの対象になった。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "年末年始:ネンマツネ'ンシ|の:ノ/営業時間:エーギョージ'カン|は:ワ、公式サイト:コーシキサ'イト|で:デ/確認:カクニン|し:シ|て:テ'/ください:クダサ'イ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "b8621f4e-fc33-4a5d-b5ae-0d73f04801cc",
+      "text": "世界中の人が、一年中ずっと楽しめるゲームだよ。",
+      "next": "午前中に連絡したけど、今日中には返事が来ないかも。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "世界中:セカイジュー|の:ノ'/人:ヒト'|が:ガ、一:イチ|年:ネン|中:ジュー'/ずっと:ズット'/楽しめる:タノシメ'ル/ゲーム:ゲ'ーム|だ:ダ|よ:ヨ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "a0a22a67-fbd5-4879-8ff4-e4988334f91d",
+      "text": "午前中に連絡したけど、今日中には返事が来ないかも。",
+      "previous": "世界中の人が、一年中ずっと楽しめるゲームだよ。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "午前中:ゴゼンチュー|に:ニ'/連絡:レンラク|し:シ|た:タ'|けど:ケド、今日中:キョージュー|に:ニ'|は:ワ/返事:ヘンジ'|が:ガ/来:コ'|ない:ナイ|かも:カモ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "f7cd977c-facc-45af-b91b-b5cc8f30fd6c",
+      "text": "だんだん寒くなってきたから、コートを出しておいた。",
+      "next": "友達が駅まで送ってくれて、すごく助かった。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "だんだん:ダンダン'/寒く:サ'ムク/なっ:ナ'ッ|て:テ/き:キ'|た:タ|から:カラ、コート:コ'ート|を:ヲ/出し:ダ'シ|て:テ/おい:オイ|た:タ'",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "08bcfa38-4229-4581-8ad7-b4bc39307492",
+      "text": "友達が駅まで送ってくれて、すごく助かった。",
+      "previous": "だんだん寒くなってきたから、コートを出しておいた。",
+      "next": "ちょっと試してみたけど、まだよく分からない。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "友達:トモダチ|が:ガ'/駅:エ'キ|まで:マデ/送っ:オクッ|て:テ'/くれ:クレ|て:テ'、すごく:スゴ'ク/助かっ:タスカ'ッ|た:タ",
+      "alternatives": [],
+      "reviewed": true
+    },
+    {
+      "id": "a4654a03-39f4-45ef-b0bc-62420d95240b",
+      "text": "ちょっと試してみたけど、まだよく分からない。",
+      "previous": "友達が駅まで送ってくれて、すごく助かった。",
+      "voice": {
+        "provider": "voisona",
+        "voiceName": "futaba-minato_ja_JP",
+        "voiceVersion": "2.0.2",
+        "synthesisSettings": {
+          "huskiness": 0.7,
+          "speed": 1.4,
+          "style_weights": [0, 1, 0, 0.2, 0, 1]
+        }
+      },
+      "kana": "ちょっと:チョ'ット/試し:タメ'シ|て:テ/み:ミ'|た:タ|けど:ケド、まだ:マ'ダ/よく:ヨ'ク/分から:ワカラ'|ない:ナイ",
+      "alternatives": [],
+      "reviewed": true
+    }
+  ]
+}
