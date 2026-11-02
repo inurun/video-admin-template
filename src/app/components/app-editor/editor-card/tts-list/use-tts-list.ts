@@ -103,7 +103,7 @@ export function useTtsList() {
       requestAnimationFrame(() => {
         document.querySelector(`[data-tts-id="${nextTts.id}"]`)?.scrollIntoView({
           behavior: "smooth",
-          block: "nearest",
+          block: "center",
         });
       });
     },

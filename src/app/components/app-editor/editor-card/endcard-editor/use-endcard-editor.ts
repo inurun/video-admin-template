@@ -1,11 +1,13 @@
 import type { PageFormValues } from "@/app/features/page/model/page-form-schema";
 import { useCallback, useState } from "react";
 import { useFormContext } from "react-hook-form";
+import type { EndcardAdvertiser } from "@/_schemas";
 import { fetchNicoad } from "@/app/features/nicoad";
 import {
   createBlankEndcardAdvertiser,
   createBlankEndcardCredit,
   createBlankEndcardMessage,
+  mergeFetchedAdvertisers,
 } from "@/app/features/page/lib/endcard";
 import {
   useEndcardAdvertisers,
@@ -32,7 +34,12 @@ export function useEndcardEditor() {
     setError(null);
     try {
       const result = await fetchNicoad(source.trim());
-      advertisers.replace(result.advertisers.map((item) => createBlankEndcardAdvertiser(item)));
+      advertisers.replace(
+        mergeFetchedAdvertisers(
+          (form.getValues("meta.advertisers" as never) ?? []) as unknown as EndcardAdvertiser[],
+          result.advertisers.map((item) => createBlankEndcardAdvertiser(item)),
+        ),
+      );
     } catch (fetchError) {
       setError(fetchError instanceof Error ? fetchError.message : "Failed to fetch nicoad");
     } finally {
