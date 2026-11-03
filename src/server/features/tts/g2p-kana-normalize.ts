@@ -1,4 +1,5 @@
 const DELIMITER = /([|/、？！])/u;
+const PHRASE_CLOSER = /([/、？！])/u;
 const REPEATED_PAUSE = /、{2,}/gu;
 const TRAILING_SLASH = /\/+$/u;
 
@@ -17,8 +18,16 @@ function moveSurfaceAccent(word: string) {
 }
 
 /**
- * LLM の kana のうち、読みやアクセントの判断が要らない書式崩れだけを直す。
- * 連続する 、（…… を 、、 と書く）、末尾の /、surface 側の ' が対象。
+ * ' の無い句は平板として句末に ' を足す。LLM は平板の ' を書き落としやすく、
+ * repair させても 9 割はこの直し方になっていた（diary の v3 ログ）。
+ */
+function markFlatPhrase(phrase: string) {
+  return phrase.includes(":") && !phrase.includes("'") ? `${phrase}'` : phrase;
+}
+
+/**
+ * LLM の kana のうち、repair に回すまでもない崩れを直す。
+ * 連続する 、（…… を 、、 と書く）、末尾の /、surface 側の '、平板の ' の書き落としが対象。
  */
 export function normalizeLlmKana(kana: string) {
   return kana
@@ -26,5 +35,8 @@ export function normalizeLlmKana(kana: string) {
     .replace(TRAILING_SLASH, "")
     .split(DELIMITER)
     .map((part, index) => (index % 2 === 0 ? moveSurfaceAccent(part) : part))
+    .join("")
+    .split(PHRASE_CLOSER)
+    .map((part, index) => (index % 2 === 0 ? markFlatPhrase(part) : part))
     .join("");
 }

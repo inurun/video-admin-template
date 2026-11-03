@@ -9,7 +9,7 @@ import { AUDIO_PADDING_SECONDS } from "@/constants";
 import { enqueueProjectMutation } from "./project-mutation-queue";
 import { startSynthesisBatch, type SynthesisJob } from "./tts-synthesis-jobs";
 import { buildG2pContext, type G2pTarget } from "@/server/features/tts/g2p-context";
-import { generateG2p } from "@/server/features/tts/llm-g2p";
+import { generateG2pWithCache } from "@/server/features/tts/llm-g2p";
 import { resolveTtsSynthesisSettings } from "@/server/features/tts/synthesis-settings";
 import {
   createPreviousTtsComparisonInput,
@@ -164,7 +164,7 @@ async function runAnalysisBatch(
     return;
   }
 
-  const generated = await generateG2p(serverEnv, {
+  const generated = await generateG2pWithCache(serverEnv, {
     mode: "page",
     pages: buildG2pContext(project.pages, targets),
   });

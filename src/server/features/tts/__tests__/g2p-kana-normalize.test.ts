@@ -15,10 +15,16 @@ describe("normalizeLlmKana", () => {
   });
 
   it("moves an accent mark written on the surface to the end of the reading", () => {
-    expect(normalizeLlmKana("検証:ケンショー/し:シ|て:テ|た':タ")).toBe(
-      "検証:ケンショー/し:シ|て:テ|た:タ'",
+    expect(normalizeLlmKana("検証:ケンショ'ー/し:シ|て:テ|た':タ")).toBe(
+      "検証:ケンショ'ー/し:シ|て:テ|た:タ'",
     );
     expect(normalizeLlmKana("AI:エーアイ|だ':ダ|し:シ")).toBe("AI:エーアイ|だ:ダ'|し:シ");
+  });
+
+  it("marks a phrase without an accent mark as flat", () => {
+    expect(normalizeLlmKana("コメント:コメント")).toBe("コメント:コメント'");
+    expect(normalizeLlmKana("他:ホカ|の:ノ/人:ヒト'")).toBe("他:ホカ|の:ノ'/人:ヒト'");
+    expect(normalizeLlmKana("し:シ|て:テ、いく:イク！")).toBe("し:シ|て:テ'、いく:イク'！");
   });
 
   it("leaves valid kana and accent errors it cannot judge unchanged", () => {

@@ -36,6 +36,7 @@ export const OUT_DIR = path.join(PROJECT_ROOT, "out");
 export const PUBLISH_STATE_PATH = path.join(DATA_DIR, "publish-state.json");
 export const SCHEDULES_PATH = path.join(DATA_DIR, "schedules.json");
 export const ADVERTISERS_PATH = path.join(DATA_DIR, "advertisers.json");
+export const G2P_CACHE_PATH = path.join(DATA_DIR, "g2p-cache.json");
 export const LATEST_VIDEO_PATH = path.join(OUT_DIR, "latest.mp4");
 export const LATEST_THUMBNAIL_PATH = path.join(OUT_DIR, "thumbnail.png");
 
@@ -46,6 +47,7 @@ const PROJECT_LIST_EXCLUDE = new Set([
   path.basename(PUBLISH_STATE_PATH),
   path.basename(SCHEDULES_PATH),
   path.basename(ADVERTISERS_PATH),
+  path.basename(G2P_CACHE_PATH),
   "render-state.json",
 ]);
 const INVALID_PROJECT_PATH_MESSAGE = "Invalid project path";

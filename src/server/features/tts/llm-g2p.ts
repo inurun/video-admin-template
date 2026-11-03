@@ -8,7 +8,11 @@ import { analyzeTexts } from "@/server/features/haqumei-api/analyze";
 import { HaqumeiApiError } from "@/server/features/haqumei-api/error";
 import { validateG2pItems } from "@/server/features/haqumei-api/validate";
 import { closerMismatchMessage } from "@/server/features/tts/g2p-closers";
-import { contextForChunk, type G2pPageContext } from "@/server/features/tts/g2p-context";
+import {
+  contextForChunk,
+  type G2pPageContext,
+  type G2pUtterance,
+} from "@/server/features/tts/g2p-context";
 import { normalizeLlmKana } from "@/server/features/tts/g2p-kana-normalize";
 import { selectDictionaryHints } from "@/server/features/tts/g2p-dictionary";
 import {
@@ -17,7 +21,18 @@ import {
   ZERO_USAGE,
   type OpenRouterUsage,
 } from "@/server/core/openrouter";
-import { chunkItems, LLM_G2P_PROFILE } from "@/server/features/tts/llm-g2p-profile";
+import {
+  chunkItems,
+  LLM_G2P_PROFILE,
+  LLM_G2P_REPAIR_PROFILE,
+} from "@/server/features/tts/llm-g2p-profile";
+import {
+  dictionaryHash,
+  findCachedG2p,
+  readG2pCache,
+  recordG2pCache,
+  type G2pCacheRecord,
+} from "@/server/features/tts/g2p-cache";
 import {
   requestOpenRouterG2p,
   type OpenRouterG2pResult,
@@ -29,6 +44,11 @@ export type G2pSource = "llm" | "analyze";
 export type GeneratedG2p = {
   g2p: G2pItem;
   source: G2pSource;
+};
+
+export type CachedG2p = {
+  g2p: G2pItem;
+  source: G2pSource | "cache";
 };
 
 /** page はチャンクに分けて並列に、single は1件をそのまま LLM に送る。 */
@@ -274,14 +294,13 @@ async function analyzeFallback(serverEnv: ServerEnv, ids: string[], textById: Ma
   return new Map(ids.map((id, index) => [id, items[index]!] as const));
 }
 
-/**
- * pages の target 発話から v3 の拡張かなを作る。LLM が出せなかった発話は haqumei の analyze で埋める。
- */
-export async function generateG2p(
+/** pages は辞書ヒントを付け終えたもの。 */
+async function runG2p(
   serverEnv: ServerEnv,
-  input: { mode: G2pGenerationMode; pages: G2pPageContext[] },
+  mode: G2pGenerationMode,
+  pages: G2pPageContext[],
 ): Promise<Map<string, GeneratedG2p>> {
-  const textById = listTargets(input.pages);
+  const textById = listTargets(pages);
   const ids = [...textById.keys()];
   const results = new Map<string, GeneratedG2p>();
   if (ids.length === 0) {
@@ -297,8 +316,7 @@ export async function generateG2p(
 
   const runStartedAt = performance.now();
   const startedAt = new Date().toISOString();
-  const pages = withDictionary(input.pages, await loadDictionaryEntries(serverEnv));
-  const chunks = input.mode === "single" ? [ids] : chunkItems(ids, LLM_G2P_PROFILE.chunkSize);
+  const chunks = mode === "single" ? [ids] : chunkItems(ids, LLM_G2P_PROFILE.chunkSize);
   const outcomes = await runPool(chunks, LLM_G2P_PROFILE.concurrency, (chunk) =>
     runChunk(serverEnv, pages, chunk, textById),
   );
@@ -320,10 +338,11 @@ export async function generateG2p(
     fallbackError = errorMessage(error);
     throw error;
   } finally {
-    await writeRunLog(input.mode, startedAt, {
+    await writeRunLog(mode, startedAt, {
       startedAt,
-      mode: input.mode,
+      mode,
       profile: LLM_G2P_PROFILE,
+      repairProfile: LLM_G2P_REPAIR_PROFILE,
       pages,
       chunks: outcomes.map(({ valid, ...outcome }) => ({
         ...outcome,
@@ -338,5 +357,95 @@ export async function generateG2p(
     });
   }
 
+  return results;
+}
+
+/**
+ * pages の target 発話から v3 の拡張かなを作る。LLM が出せなかった発話は haqumei の analyze で埋める。
+ */
+export async function generateG2p(
+  serverEnv: ServerEnv,
+  input: { mode: G2pGenerationMode; pages: G2pPageContext[] },
+): Promise<Map<string, GeneratedG2p>> {
+  const pages = hasOpenRouterApiKey(serverEnv)
+    ? withDictionary(input.pages, await loadDictionaryEntries(serverEnv))
+    : input.pages;
+  return runG2p(serverEnv, input.mode, pages);
+}
+
+function asContext({ id, text }: G2pUtterance): G2pUtterance {
+  return { id, text, target: false };
+}
+
+/**
+ * generateG2p の前に読みキャッシュを引く。完全一致した発話と、同じ読みの2件目以降は文脈に回して LLM に送らない。
+ * LLM の結果はキャッシュに残す。作り直しや評価は generateG2p を直接使う。
+ */
+export async function generateG2pWithCache(
+  serverEnv: ServerEnv,
+  input: { mode: G2pGenerationMode; pages: G2pPageContext[] },
+): Promise<Map<string, CachedG2p>> {
+  const pages = withDictionary(input.pages, await loadDictionaryEntries(serverEnv));
+  const cache = await readG2pCache();
+  const results = new Map<string, CachedG2p>();
+  const sentIdByKey = new Map<string, string>();
+  const sentIdById = new Map<string, string>();
+  const utteranceById = new Map<string, G2pUtterance>();
+
+  for (const utterance of pages.flatMap((page) => page.utterances)) {
+    if (!utterance.target) {
+      continue;
+    }
+    utteranceById.set(utterance.id, utterance);
+    const cached = findCachedG2p(cache, utterance);
+    if (cached) {
+      results.set(utterance.id, { g2p: cached, source: "cache" });
+      continue;
+    }
+    const key = `${utterance.provider ?? ""}\0${utterance.text}\0${dictionaryHash(utterance.dictionary)}`;
+    const sentId = sentIdByKey.get(key) ?? utterance.id;
+    sentIdByKey.set(key, sentId);
+    sentIdById.set(utterance.id, sentId);
+  }
+
+  const sentIds = new Set(sentIdByKey.values());
+  if (sentIds.size === 0) {
+    return results;
+  }
+
+  const generated = await runG2p(
+    serverEnv,
+    input.mode,
+    pages.map((page) => ({
+      ...page,
+      utterances: page.utterances.map((utterance) =>
+        utterance.target && !sentIds.has(utterance.id) ? asContext(utterance) : utterance,
+      ),
+    })),
+  );
+  for (const [id, sentId] of sentIdById) {
+    const result = generated.get(sentId);
+    if (result) {
+      results.set(id, result);
+    }
+  }
+
+  const records: G2pCacheRecord[] = [...generated].flatMap(([id, result]) => {
+    const utterance = utteranceById.get(id);
+    return utterance && result.source === "llm"
+      ? [
+          {
+            provider: utterance.provider ?? "",
+            text: utterance.text,
+            entry: {
+              source: "llm" as const,
+              g2p: result.g2p,
+              dictionaryHash: dictionaryHash(utterance.dictionary),
+            },
+          },
+        ]
+      : [];
+  });
+  await recordG2pCache(records);
   return results;
 }

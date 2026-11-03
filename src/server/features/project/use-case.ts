@@ -50,6 +50,7 @@ import {
 import { stableStringify } from "@/server/_shared/stable-stringify";
 import type { PlannedSynthesis, TtsComparisonInput } from "@/server/features/tts/providers/types";
 import { readCachedWav } from "@/server/features/tts/wav-cache";
+import { recordG2pCache, type G2pCacheRecord } from "@/server/features/tts/g2p-cache";
 import type { SynthesizeResponse } from "@/server/features/tts/contract";
 import { AUDIO_PADDING_SECONDS } from "@/constants";
 import { enqueueProjectMutation } from "@/server/features/project/project-mutation-queue";
@@ -281,6 +282,22 @@ function computeNeedsG2pAnalyze(
   }
 
   return !getUsableG2p(nextInput.g2p, nextInput.readText);
+}
+
+/** エディタで書き換わった読みは、読みキャッシュに saved として残す。 */
+function savedG2pRecords(plans: PlannedTts[]): G2pCacheRecord[] {
+  return plans.flatMap(({ item, previous }) => {
+    if (!getTtsProvider(item.provider).usesG2p) {
+      return [];
+    }
+    const text = getEffectiveReadText(item);
+    const g2p = getUsableG2p(item.speech?.g2p, text);
+    const previousG2p = previous?.speech.g2p;
+    if (!g2p || (g2p.text === previousG2p?.text && g2p.kana === previousG2p.kana)) {
+      return [];
+    }
+    return [{ provider: item.provider, text, entry: { source: "saved" as const, g2p } }];
+  });
 }
 
 /** LLM が使えないときだけ、保存時に analyze で g2p を埋める。使えるときは analyzing にして後で生成する。 */
@@ -924,6 +941,7 @@ async function saveProjectChangesLocked(
     saved,
     previousDocument.timeline,
   );
+  void recordG2pCache(savedG2pRecords(plannedPages.flatMap((planned) => planned.tts)));
   startAnalysisBatch(serverEnv, projectPath, analysisJobs);
   startSynthesisBatch(projectPath, jobs);
   startExpressionJobs(serverEnv, projectPath, expressionJobs);

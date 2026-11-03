@@ -21,7 +21,7 @@ import { enqueueProjectMutation } from "@/server/features/project/project-mutati
 import { TtsCacheClearConflictError } from "@/server/features/tts/errors";
 
 import { buildSingleG2pContext } from "./g2p-context";
-import { generateG2p } from "./llm-g2p";
+import { generateG2p, generateG2pWithCache } from "./llm-g2p";
 
 async function loadProviderVoices<T>(label: string, baseUrl: string, task: Promise<T>): Promise<T> {
   try {
@@ -78,6 +78,24 @@ async function generateSingleG2p(
   return result;
 }
 
+/** 試聴は読みキャッシュを使う。作り直し（generateTtsG2p）は常に LLM に聞く。 */
+async function generatePreviewG2p(
+  serverEnv: ServerEnv,
+  text: string,
+  provider: Parameters<typeof buildSingleG2pContext>[0]["provider"],
+) {
+  const result = (
+    await generateG2pWithCache(serverEnv, {
+      mode: "single",
+      pages: buildSingleG2pContext({ pageId: "preview", id: "preview", text, provider }),
+    })
+  ).get("preview");
+  if (!result) {
+    throw new Error("G2P generation returned no item for preview");
+  }
+  return result.g2p;
+}
+
 export async function generateTtsG2p(serverEnv: ServerEnv, input: unknown) {
   const { pageId, item } = ttsG2pGenerateRequestSchema.parse(input);
   return generateSingleG2p(serverEnv, {
@@ -101,14 +119,7 @@ export async function synthesizeTts(serverEnv: ServerEnv, input: unknown) {
   const readText = getEffectiveReadText(parsed);
   const g2p = provider.usesG2p
     ? (getUsableG2p(parsed.g2p, readText) ??
-      (
-        await generateSingleG2p(serverEnv, {
-          pageId: "preview",
-          id: "preview",
-          text: readText,
-          provider: parsed.provider,
-        })
-      ).g2p)
+      (await generatePreviewG2p(serverEnv, readText, parsed.provider)))
     : parsed.g2p;
   const synthesisInput = {
     ...parsed,

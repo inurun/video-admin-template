@@ -42,6 +42,7 @@ const planVoicevoxSynthesisMock = vi.fn();
 const planVoicepeakSynthesisMock = vi.fn();
 const readCachedWavMock = vi.fn();
 const generateG2pMock = vi.fn();
+const recordG2pCacheMock = vi.fn();
 const validateG2pItemsMock = vi.fn();
 
 vi.mock("node:fs/promises", () => ({
@@ -95,6 +96,11 @@ vi.mock("@/server/features/tts/wav-cache", async () => {
 
 vi.mock("@/server/features/tts/llm-g2p", () => ({
   generateG2p: (...args: unknown[]) => generateG2pMock(...args),
+  generateG2pWithCache: (...args: unknown[]) => generateG2pMock(...args),
+}));
+
+vi.mock("@/server/features/tts/g2p-cache", () => ({
+  recordG2pCache: (...args: unknown[]) => recordG2pCacheMock(...args),
 }));
 
 function llmG2p(entries: Record<string, G2pItem>) {
@@ -2981,6 +2987,62 @@ describe("project use-case", () => {
     expect(synthesizeVoisonaMock).not.toHaveBeenCalledWith(
       expect.objectContaining({ g2p: helloG2p }),
     );
+    await flushJobs();
+  });
+
+  it("records a G2P changed in the editor in the reading cache", async () => {
+    const edited = createG2pItem("Hello", "Hello:ヘ'ロー");
+    const tts = (g2p: G2pItem) => ({
+      id: "tts-1",
+      provider: "voisona",
+      text: "Hello",
+      voiceName: "voice",
+      padBeforeSec: 0,
+      padAfterSec: 0,
+      volume: 1,
+      speech: { g2p },
+    });
+    const page = (g2p: G2pItem) => ({
+      id: "page-1",
+      title: "Page 1",
+      type: "main",
+      meta: { tags: [] },
+      padBeforeSec: 0,
+      padAfterSec: 0,
+      richText: "<p>Hello</p>",
+      tts: [tts(g2p)],
+    });
+    const previous = {
+      pages: [
+        {
+          ...page(helloG2p),
+          durationSec: 1.2,
+          tts: [
+            {
+              ...tts(helloG2p),
+              audio: { status: "ready", src: "/tts/project/old.wav", durationSec: 1.2 },
+            },
+          ],
+        },
+      ],
+    };
+
+    readSavedProjectMock.mockResolvedValueOnce(previous);
+    await saveProject({ OPENROUTER_API_KEY: "secret" }, "project", {
+      meta: defaultMeta,
+      pages: [page(helloG2p)],
+    });
+    expect(recordG2pCacheMock).toHaveBeenLastCalledWith([]);
+
+    readSavedProjectMock.mockResolvedValueOnce(previous);
+    synthesizeVoisonaMock.mockResolvedValueOnce(audio("/tts/project/voisona-1.wav"));
+    await saveProject({ OPENROUTER_API_KEY: "secret" }, "project", {
+      meta: defaultMeta,
+      pages: [page(edited)],
+    });
+    expect(recordG2pCacheMock).toHaveBeenLastCalledWith([
+      { provider: "voisona", text: "Hello", entry: { source: "saved", g2p: edited } },
+    ]);
     await flushJobs();
   });
 

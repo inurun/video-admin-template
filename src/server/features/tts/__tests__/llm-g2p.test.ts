@@ -9,6 +9,8 @@ const {
   analyzeTextsMock,
   listDictionaryMock,
   mkdirMock,
+  readG2pCacheMock,
+  recordG2pCacheMock,
   requestG2pMock,
   validateG2pItemsMock,
   writeFileMock,
@@ -16,6 +18,8 @@ const {
   analyzeTextsMock: vi.fn(),
   listDictionaryMock: vi.fn(),
   mkdirMock: vi.fn(),
+  readG2pCacheMock: vi.fn(),
+  recordG2pCacheMock: vi.fn(),
   requestG2pMock: vi.fn(),
   validateG2pItemsMock: vi.fn(),
   writeFileMock: vi.fn(),
@@ -29,12 +33,17 @@ vi.mock("@/server/features/haqumei-api/validate", () => ({
   validateG2pItems: validateG2pItemsMock,
 }));
 vi.mock("@/server/features/dictionary/use-case", () => ({ listDictionary: listDictionaryMock }));
+vi.mock("../g2p-cache", async (importOriginal) => {
+  const original = await importOriginal<typeof import("../g2p-cache")>();
+  return { ...original, readG2pCache: readG2pCacheMock, recordG2pCache: recordG2pCacheMock };
+});
 vi.mock("../openrouter", async (importOriginal) => {
   const original = await importOriginal<typeof import("../openrouter")>();
   return { ...original, requestOpenRouterG2p: requestG2pMock };
 });
 
-import { generateG2p } from "../llm-g2p";
+import { generateG2p, generateG2pWithCache } from "../llm-g2p";
+import { dictionaryHash } from "../g2p-cache";
 
 const env = { OPENROUTER_API_KEY: "key" };
 
@@ -239,5 +248,96 @@ describe("generateG2p", () => {
       },
       { id: "b", text: "雨衣", target: false },
     ]);
+  });
+});
+
+describe("generateG2pWithCache", () => {
+  function voicevoxPage(texts: Record<string, string>) {
+    return [
+      {
+        id: "page-1",
+        title: "Main",
+        utterances: Object.entries(texts).map(([id, text]) => ({
+          id,
+          text,
+          target: true,
+          provider: "voicevox" as const,
+        })),
+      },
+    ] satisfies G2pPageContext[];
+  }
+
+  it("serves cached readings and sends one of each repeated text", async () => {
+    readG2pCacheMock.mockResolvedValueOnce({
+      entries: { voicevox: { ポ: { source: "saved", g2p: createG2pItem("ポ", "ポ:ポ'") } } },
+    });
+    requestG2pMock.mockResolvedValueOnce(llmResult({ b: "はい:ハ'イ" }));
+    echoValidate();
+
+    const result = await generateG2pWithCache(env, {
+      mode: "page",
+      pages: voicevoxPage({ a: "ポ", b: "はい", c: "はい" }),
+    });
+
+    expect(requestG2pMock.mock.calls[0]?.[1].pages[0].utterances).toEqual([
+      { id: "a", text: "ポ", target: false },
+      { id: "b", text: "はい", target: true, provider: "voicevox" },
+      { id: "c", text: "はい", target: false },
+    ]);
+    expect(result.get("a")).toEqual({ g2p: createG2pItem("ポ", "ポ:ポ'"), source: "cache" });
+    expect(result.get("b")?.source).toBe("llm");
+    expect(result.get("c")).toEqual(result.get("b"));
+    expect(recordG2pCacheMock).toHaveBeenCalledWith([
+      {
+        provider: "voicevox",
+        text: "はい",
+        entry: {
+          source: "llm",
+          g2p: createG2pItem("はい", "はい:ハ'イ"),
+          dictionaryHash: dictionaryHash(undefined),
+        },
+      },
+    ]);
+  });
+
+  it("skips the LLM when every target is cached", async () => {
+    readG2pCacheMock.mockResolvedValueOnce({
+      entries: {
+        voicevox: {
+          はい: {
+            source: "llm",
+            g2p: createG2pItem("はい", "はい:ハ'イ"),
+            dictionaryHash: dictionaryHash(undefined),
+          },
+        },
+      },
+    });
+
+    const result = await generateG2pWithCache(env, {
+      mode: "single",
+      pages: voicevoxPage({ a: "はい" }),
+    });
+
+    expect(result.get("a")?.source).toBe("cache");
+    expect(requestG2pMock).not.toHaveBeenCalled();
+  });
+
+  it("does not trust an LLM reading made with other dictionary hints", async () => {
+    readG2pCacheMock.mockResolvedValueOnce({
+      entries: {
+        voicevox: {
+          はい: { source: "llm", g2p: createG2pItem("はい", "はい:ハイ'"), dictionaryHash: "old" },
+        },
+      },
+    });
+    requestG2pMock.mockResolvedValueOnce(llmResult({ a: "はい:ハ'イ" }));
+    echoValidate();
+
+    const result = await generateG2pWithCache(env, {
+      mode: "single",
+      pages: voicevoxPage({ a: "はい" }),
+    });
+
+    expect(result.get("a")).toEqual({ g2p: createG2pItem("はい", "はい:ハ'イ"), source: "llm" });
   });
 });

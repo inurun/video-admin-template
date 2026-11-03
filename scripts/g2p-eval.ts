@@ -11,9 +11,9 @@ import {
   parseKanaProsody,
 } from "@/server/features/tts/g2p-eval";
 import { generateG2p } from "@/server/features/tts/llm-g2p";
-import { LLM_G2P_PROFILE } from "@/server/features/tts/llm-g2p-profile";
+import { LLM_G2P_PROFILE, LLM_G2P_REPAIR_PROFILE } from "@/server/features/tts/llm-g2p-profile";
 import {
-  OPENROUTER_G2P_REPAIR_PROMPT,
+  getOpenRouterG2pSystemPrompt,
   OPENROUTER_G2P_SYSTEM_PROMPT,
 } from "@/server/features/tts/openrouter-prompt";
 
@@ -38,7 +38,7 @@ const serverEnv = {
   HAQUMEI_API_URL: process.env.HAQUMEI_API_URL,
 };
 const promptHash = createHash("sha256")
-  .update(`${OPENROUTER_G2P_SYSTEM_PROMPT}\n${OPENROUTER_G2P_REPAIR_PROMPT}`)
+  .update(`${OPENROUTER_G2P_SYSTEM_PROMPT}\n${getOpenRouterG2pSystemPrompt({ repair: true })}`)
   .digest("hex")
   .slice(0, 8);
 
@@ -166,7 +166,8 @@ for (const evalCase of cases) {
   }
 }
 
-console.log(`\nprofile ${LLM_G2P_PROFILE.id} / prompt ${promptHash} / runs ${runs}`);
+const profileId = `${LLM_G2P_PROFILE.id}+${LLM_G2P_REPAIR_PROFILE.id}`;
+console.log(`\nprofile ${profileId} / prompt ${promptHash} / runs ${runs}`);
 for (const [key, tally] of tallies) {
   console.log(
     `${key}: n=${tally.total} exact ${percent(tally.exact, tally.total)} / reading ${percent(tally.reading, tally.total)} / boundary missed ${percent(tally.missingBoundaries, tally.boundaries)} extra ${tally.extraBoundaries} / accent wrong ${percent(tally.wrongAccents, tally.alignedPhrases)} / analyze ${tally.analyze}`,
@@ -180,7 +181,7 @@ const reportPath = await writeEvalReport(
     startedAt,
     label: values.label,
     promptHash,
-    profileId: LLM_G2P_PROFILE.id,
+    profileId,
     runs,
     cases,
   },
