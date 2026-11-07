@@ -1,5 +1,5 @@
 [tools]
-node = "24.15.0"
+node = "26.13.0"
 "npm:pnpm" = { version = "11.0.3", depends = "node" }
 
 [env]

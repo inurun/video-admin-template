@@ -234,13 +234,11 @@ describe("startRender hyperframes", () => {
       detached: true,
       env: expect.objectContaining({
         HYPERFRAMES_NO_TELEMETRY: "1",
-        HF_CAPTURE_PARALLEL_STREAM: "true",
       }),
     });
     expect(snapshotCall?.[2]).toMatchObject({
       env: expect.objectContaining({
         HYPERFRAMES_NO_TELEMETRY: "1",
-        HF_CAPTURE_PARALLEL_STREAM: "true",
       }),
     });
     expect(snapshotCall?.[1]).toEqual(expect.arrayContaining(["snapshot", "--at", "1.0003"]));

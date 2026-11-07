@@ -22,6 +22,7 @@ describe("hfSnapshotArgs", () => {
   it("captures only the requested time", () => {
     const args = hfSnapshotArgs("/tmp/hf", 65.5003, "/tmp/hf/snapshots");
     expect(args.slice(0, 5)).toEqual(["snapshot", "/tmp/hf", "--at", "65.5003", "--no-end"]);
+    expect(args).not.toContain("--describe");
     expect(args.slice(-2)).toEqual(["-o", "/tmp/hf/snapshots"]);
   });
 });

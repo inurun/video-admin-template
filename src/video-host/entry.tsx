@@ -23,9 +23,14 @@ declare global {
   }
 }
 
-/** `mountComposition` reads the rest of the root's `data-*`; the host needs fps and mode. */
+/**
+ * `mountComposition` reads the rest of the root's `data-*`; the host needs fps and mode.
+ * No template-literal selector: HF lint flags it (`template_literal_selector`).
+ */
 function getStage() {
-  const stage = document.querySelector<HTMLElement>(`[data-composition-id="${HF_COMPOSITION_ID}"]`);
+  const stage = [...document.querySelectorAll<HTMLElement>("[data-composition-id]")].find(
+    (element) => element.dataset["compositionId"] === HF_COMPOSITION_ID,
+  );
   if (!stage) {
     throw new Error("composition root missing");
   }

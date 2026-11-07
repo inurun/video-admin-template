@@ -19,7 +19,7 @@ export function toAudioAttributes(clip: AudioClip, index: number): [string, stri
     ...(clip.mediaStartSec === undefined
       ? []
       : ([["data-media-start", String(clip.mediaStartSec)]] as [string, string][])),
-    // A volume lane replaces `data-volume` instead of scaling it, so only one is written.
+    // HF multiplies `data-volume` into a volume lane; a lane already holds the full gain, so only one is written.
     typeof clip.volume === "number"
       ? ["data-volume", String(clip.volume)]
       : [

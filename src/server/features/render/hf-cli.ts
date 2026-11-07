@@ -4,13 +4,9 @@ import { PROJECT_ROOT } from "@/server/_shared/storage";
 /** Pinned `hyperframes` CLI (same version as `@hyperframes/core`). */
 export const HF_BIN = path.join(PROJECT_ROOT, "node_modules", ".bin", "hyperframes");
 
-/**
- * CLI env: telemetry (and its feedback prompt) off — the CLI's own opt-out variable.
- * Parallel streaming capture: multi-worker screenshot capture otherwise stores every frame on
- * disk first (~20 GB for a 10-minute video).
- */
+/** CLI env: telemetry (and its feedback prompt) off — the CLI's own opt-out variable. */
 export function hfEnv(): NodeJS.ProcessEnv {
-  return { ...process.env, HYPERFRAMES_NO_TELEMETRY: "1", HF_CAPTURE_PARALLEL_STREAM: "true" };
+  return { ...process.env, HYPERFRAMES_NO_TELEMETRY: "1" };
 }
 
 /**
@@ -42,8 +38,6 @@ export function hfSnapshotArgs(projectDir: string, seconds: number, outputDir: s
     "--at",
     seconds.toFixed(4),
     "--no-end",
-    "--describe",
-    "false",
     "--timeout",
     "120000",
     "-o",
