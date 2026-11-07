@@ -1337,6 +1337,75 @@ describe("project use-case", () => {
     });
   });
 
+  it("keeps the saved G2P when only line breaks in the text change", async () => {
+    const g2p = createG2pItem("こんにちは世界");
+    readSavedProjectMock.mockResolvedValueOnce({
+      pages: [
+        {
+          id: "page-1",
+          title: "Page 1",
+          type: "main",
+          meta: { tags: [] },
+          padBeforeSec: 0,
+          padAfterSec: 0,
+          durationSec: 1.2,
+          richText: "<p>Hello</p>",
+          tts: [
+            {
+              id: "tts-1",
+              provider: "voisona",
+              text: "こんにちは世界",
+              readText: "こんにちは世界",
+              voiceName: "voice",
+              voiceVersion: "1",
+              audio: { status: "ready", src: "/tts/project/old.wav", durationSec: 1.2 },
+              speech: { g2p },
+            },
+          ],
+        },
+      ],
+    });
+
+    const saved = await saveProject({ OPENROUTER_API_KEY: "secret" }, "project", {
+      meta: defaultMeta,
+      bgm: [],
+      pages: [
+        {
+          id: "page-1",
+          title: "Page 1",
+          type: "main",
+          meta: { tags: [] },
+          padBeforeSec: 0,
+          padAfterSec: 0,
+          richText: "<p>Hello</p>",
+          tts: [
+            {
+              id: "tts-1",
+              provider: "voisona",
+              text: "こんにちは\n世界",
+              readText: "こんにちは\n世界",
+              voiceName: "voice",
+              voiceVersion: "1",
+              padBeforeSec: 0,
+              padAfterSec: 0,
+              volume: 1,
+              speech: {},
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(analyzeTextsMock).not.toHaveBeenCalled();
+    expect(generateG2pMock).not.toHaveBeenCalled();
+    expect(contentPage(saved.project.pages).tts[0]).toMatchObject({
+      text: "こんにちは\n世界",
+      readText: "こんにちは世界",
+      speech: { g2p },
+    });
+    expect(contentPage(saved.project.pages).tts[0]?.audio.status).not.toBe("analyzing");
+  });
+
   it("reuses G2P and resynthesizes when provider changes between VOICEVOX and VoiSona", async () => {
     readSavedProjectMock.mockResolvedValueOnce({
       pages: [

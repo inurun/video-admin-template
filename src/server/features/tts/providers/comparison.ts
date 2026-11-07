@@ -7,8 +7,9 @@ import type {
   TtsProvider,
 } from "@/server/features/tts/providers/types";
 
+/** 改行は表示のためだけにあるので、読みには含めない。 */
 export function getEffectiveReadText(item: { text: string; readText?: string }) {
-  return item.readText?.trim() || item.text;
+  return (item.readText?.trim() || item.text).replace(/\r?\n/g, "");
 }
 
 export function getOptionalVoiceVersion(value: string) {
