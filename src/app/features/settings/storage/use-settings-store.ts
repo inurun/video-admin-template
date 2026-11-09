@@ -28,6 +28,7 @@ export type SettingsSnapshot = {
   voiceOrder: string[];
   voiceSettings: Record<string, VoiceSettings>;
   hotkeys: AppHotkeys;
+  autoSubmitPublish: boolean;
 };
 
 type SettingsState = SettingsSnapshot & {
@@ -42,6 +43,7 @@ export function getDefaultSettings(): SettingsSnapshot {
     voiceOrder: getDefaultVoiceOrder(),
     voiceSettings: getDefaultVoiceSettings(),
     hotkeys: { ...DEFAULT_HOTKEYS },
+    autoSubmitPublish: false,
   };
 }
 
@@ -51,6 +53,7 @@ function resolvePersistedSettings(persisted: Partial<SettingsSnapshot>): Setting
     ...DEFAULT_HOTKEYS,
     ...persisted.hotkeys,
   };
+  const autoSubmitPublish = persisted.autoSubmitPublish ?? defaults.autoSubmitPublish;
 
   if (persisted.voiceOrder?.length) {
     return {
@@ -58,6 +61,7 @@ function resolvePersistedSettings(persisted: Partial<SettingsSnapshot>): Setting
       voiceOrder: persisted.voiceOrder,
       voiceSettings: persisted.voiceSettings ?? {},
       hotkeys,
+      autoSubmitPublish,
     };
   }
 
@@ -70,10 +74,11 @@ function resolvePersistedSettings(persisted: Partial<SettingsSnapshot>): Setting
         voiceSettings: defaults.voiceSettings,
       }),
       hotkeys,
+      autoSubmitPublish,
     };
   }
 
-  return { ...defaults, hotkeys };
+  return { ...defaults, hotkeys, autoSubmitPublish };
 }
 
 function normalizeHotkeys(hotkeys: AppHotkeys): AppHotkeys {
@@ -100,6 +105,7 @@ export function normalizeSettings(settings: SettingsSnapshot): SettingsSnapshot 
       ]),
     ),
     hotkeys: normalizeHotkeys(settings.hotkeys),
+    autoSubmitPublish: settings.autoSubmitPublish,
   };
 }
 
@@ -141,6 +147,7 @@ export const useSettingsStore = create<SettingsState>()(
         voiceOrder: state.voiceOrder,
         voiceSettings: state.voiceSettings,
         hotkeys: state.hotkeys,
+        autoSubmitPublish: state.autoSubmitPublish,
       }),
       merge: (persisted, current) => {
         const persistedState = persisted as Partial<SettingsSnapshot>;

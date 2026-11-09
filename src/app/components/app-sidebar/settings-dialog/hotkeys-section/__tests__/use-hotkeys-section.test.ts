@@ -28,6 +28,7 @@ describe("useHotkeysSection helpers", () => {
         addPage: "ctrl+t",
         commentsQaDone: "ctrl+shift+enter",
       },
+      autoSubmitPublish: false,
     });
 
     expect(createResetHotkeysValues(current)).toEqual({

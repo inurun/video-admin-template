@@ -17,6 +17,7 @@ export function useSettingsProviderValue(): SettingsContextValue {
   const voiceOrder = useSettingsStore((state) => state.voiceOrder);
   const voiceSettings = useSettingsStore((state) => state.voiceSettings);
   const hotkeys = useSettingsStore((state) => state.hotkeys);
+  const autoSubmitPublish = useSettingsStore((state) => state.autoSubmitPublish);
   const mergeFetchedVoices = useSettingsStore((state) => state.mergeFetchedVoices);
   const saveSettings = useSettingsStore((state) => state.saveSettings);
   const resetHotkeys = useSettingsStore((state) => state.resetHotkeys);
@@ -37,6 +38,7 @@ export function useSettingsProviderValue(): SettingsContextValue {
     voiceOrder,
     voiceSettings,
     hotkeys,
+    autoSubmitPublish,
     options,
     defaultVoice,
     loadVoices,

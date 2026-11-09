@@ -27,6 +27,7 @@ export type SettingsFormValues = {
   voiceOrder: string[];
   voiceSettings: VoiceSettingFormValue[];
   hotkeys: SettingsSnapshot["hotkeys"];
+  autoSubmitPublish: boolean;
 };
 
 const voiceSettingFormSchema = z.object({
@@ -49,6 +50,7 @@ const settingsFormSchema = z
       addPage: z.string(),
       commentsQaDone: z.string(),
     }),
+    autoSubmitPublish: z.boolean(),
   })
   .superRefine((values, context) => {
     const appHotkeys = (Object.keys(APP_HOTKEY_LABELS) as AppHotkeyAction[]).map((action) => ({
@@ -93,6 +95,7 @@ export function createFormValues(settings: SettingsSnapshot): SettingsFormValues
     voiceOrder: mergeVoiceOrder(settings.voiceOrder, settings.voices),
     voiceSettings: [...existing, ...missing],
     hotkeys: settings.hotkeys,
+    autoSubmitPublish: settings.autoSubmitPublish,
   };
 }
 
@@ -111,6 +114,7 @@ export function toSettingsSnapshot(values: SettingsFormValues): SettingsSnapshot
       ]),
     ),
     hotkeys: values.hotkeys,
+    autoSubmitPublish: values.autoSubmitPublish,
   };
 }
 

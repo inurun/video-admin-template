@@ -134,7 +134,7 @@ async function resolveRenderedVideoPath(projectPath: string) {
   );
 }
 
-export async function startPublish(projectPath: string) {
+export async function startPublish(projectPath: string, autoSubmit: boolean) {
   if (state.status === "running" || getActivePublishJob()) {
     return {
       started: false as const,
@@ -166,7 +166,14 @@ export async function startPublish(projectPath: string) {
   state.jobId = job.id;
   syncFromJob(job);
 
-  void runPublishPrep(job, videoPath, LATEST_THUMBNAIL_PATH, niconico, niconico.parentWorkIds)
+  void runPublishPrep(
+    job,
+    videoPath,
+    LATEST_THUMBNAIL_PATH,
+    niconico,
+    niconico.parentWorkIds,
+    autoSubmit,
+  )
     .catch((error: unknown) => {
       markPublishPrepFailed(job, error);
     })

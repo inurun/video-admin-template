@@ -25,6 +25,7 @@ function snapshot(partial: Partial<SettingsSnapshot> = {}): SettingsSnapshot {
     voiceOrder: [],
     voiceSettings: {},
     hotkeys: { ...DEFAULT_HOTKEYS },
+    autoSubmitPublish: false,
     ...partial,
   };
 }

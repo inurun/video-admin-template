@@ -1,5 +1,6 @@
 import { useProject } from "@/app/features/project";
 import { useRender } from "@/app/features/render";
+import { useSettings } from "@/app/features/settings";
 import {
   getJobStatusLabel,
   getStatusChipClass,
@@ -16,6 +17,7 @@ function getVideoFileName(projectPath: string | null) {
 
 export function useRenderDialog() {
   const { projectPath } = useProject();
+  const { autoSubmitPublish } = useSettings();
   const {
     alsoPublish,
     cancelDisabled,
@@ -40,6 +42,7 @@ export function useRenderDialog() {
 
   return {
     alsoPublish,
+    alsoPublishLabel: autoSubmitPublish ? "Also post after render" : "Also publish after render",
     cancelDisabled,
     dialogJobPhase,
     handleCancel,

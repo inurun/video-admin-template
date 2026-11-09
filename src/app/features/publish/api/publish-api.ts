@@ -20,9 +20,9 @@ export async function fetchPublishState() {
   return parseApiJson<PublishState>(await api.publish.$get());
 }
 
-export async function startPublish(projectPath: string) {
+export async function startPublish(projectPath: string, autoSubmit: boolean) {
   const response = await api.publish.$post({
-    json: { projectPath },
+    json: { projectPath, autoSubmit },
   });
   const data = (await response.json()) as { error?: string; started?: boolean };
 

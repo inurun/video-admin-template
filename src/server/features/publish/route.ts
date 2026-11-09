@@ -43,7 +43,9 @@ export const publishApp = new Hono()
   .post("/publish", async (c) => {
     try {
       const payload = publishStartRequestSchema.parse(await c.req.json());
-      const result = publishStartResponseSchema.parse(await startPublish(payload.projectPath));
+      const result = publishStartResponseSchema.parse(
+        await startPublish(payload.projectPath, payload.autoSubmit),
+      );
       if (isPublishConflict(result)) {
         return c.json({ error: "Publish is already running.", ...result }, 409);
       }

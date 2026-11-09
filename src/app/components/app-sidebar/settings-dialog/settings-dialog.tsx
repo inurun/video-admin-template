@@ -12,6 +12,7 @@ import {
 } from "@/app/components/ui/dialog";
 import { Separator } from "@/app/components/ui/separator";
 import { AppearanceSection } from "@/app/components/app-sidebar/settings-dialog/appearance-section/appearance-section";
+import { PublishSection } from "@/app/components/app-sidebar/settings-dialog/publish-section/publish-section";
 import { HotkeysSection } from "@/app/components/app-sidebar/settings-dialog/hotkeys-section/hotkeys-section";
 import { useSettingsDialog } from "@/app/components/app-sidebar/settings-dialog/use-settings-dialog";
 import { VoicesSection } from "@/app/components/app-sidebar/settings-dialog/voices-section/voices-section";
@@ -44,6 +45,8 @@ export function SettingsDialog() {
           <VoicesSection form={dialog.form} settingsOpen={dialog.open} />
           <Separator />
           <HotkeysSection form={dialog.form} />
+          <Separator />
+          <PublishSection form={dialog.form} />
         </DialogMain>
         <DialogFooter>
           <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>

@@ -46,7 +46,7 @@ export function RenderDialog() {
               disabled={dialog.renderExecuteDisabled}
               onChange={(event) => dialog.setAlsoPublish(event.target.checked)}
             />
-            Also publish after render
+            {dialog.alsoPublishLabel}
           </label>
           <RenderVideoLink videoFileName={dialog.videoFileName} videoHref={dialog.videoHref} />
           {dialog.publishResultUrl && (

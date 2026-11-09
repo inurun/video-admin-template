@@ -11,6 +11,7 @@ export const publishSnapshotSchema = z.object({
 
 export const publishStartRequestSchema = z.object({
   projectPath: z.string().min(1),
+  autoSubmit: z.boolean(),
 });
 
 export const publishStartResponseSchema = z.object({

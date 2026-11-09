@@ -24,21 +24,22 @@ export type PublishContextValue = {
 function getPublishExecuteLabel(
   saving: boolean,
   status: ReturnType<typeof usePublishStateQuery>["publishState"]["status"],
+  autoSubmit: boolean,
 ) {
   if (saving) {
     return "Saving";
   }
 
   if (status === "running") {
-    return "Publishing";
+    return autoSubmit ? "Posting" : "Publishing";
   }
 
-  return "Publish";
+  return autoSubmit ? "Post" : "Publish";
 }
 
 export function usePublishProviderValue(): PublishContextValue {
   const { isPending: saving, save } = useEditor();
-  const { options } = useSettings();
+  const { autoSubmitPublish, options } = useSettings();
   const pageCount = useEditorSession((state) => state.sequenceOrder.length);
   const { projectPath } = useProject();
   const { publishState, reloadPublishState } = usePublishStateQuery();
@@ -53,9 +54,9 @@ export function usePublishProviderValue(): PublishContextValue {
       throw new Error("Project path is required");
     }
 
-    await startPublish(projectPath);
+    await startPublish(projectPath, autoSubmitPublish);
     void reloadPublishState();
-  }, [projectPath, reloadPublishState]);
+  }, [autoSubmitPublish, projectPath, reloadPublishState]);
 
   const resetPublishWatch = useCallback(() => {
     intendPublishRef.current = false;
@@ -114,7 +115,11 @@ export function usePublishProviderValue(): PublishContextValue {
 
   const canSave = options.length > 0 && !saving && pageCount > 0;
   const publishExecuteDisabled = !canSave || publishState.status === "running";
-  const publishExecuteLabel = getPublishExecuteLabel(saving, publishState.status);
+  const publishExecuteLabel = getPublishExecuteLabel(
+    saving,
+    publishState.status,
+    autoSubmitPublish,
+  );
 
   const handlePublishExecute = useCallback(() => {
     setPublishError(null);

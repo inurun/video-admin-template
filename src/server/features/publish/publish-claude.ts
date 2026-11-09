@@ -1,16 +1,21 @@
-import { execFile, spawn } from "node:child_process";
+import { spawn } from "node:child_process";
 import { appendFileSync, mkdirSync } from "node:fs";
 import fs from "node:fs/promises";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
-import { promisify } from "node:util";
 import { type Options, query, type SDKMessage } from "@anthropic-ai/claude-agent-sdk";
 import { z } from "zod";
 import { nowIso, toIso } from "@/_shared/lib/date/date";
 import { PROJECT_ROOT } from "@/server/_shared/storage";
+import {
+  getAgentBrowserArgs,
+  NICONICO_CHROME_CDP_PORT,
+  runAgentBrowser,
+} from "./agent-browser-cli";
 import { toNiconicoDescriptionHtml } from "./niconico-description-html";
 import { niconicoGarageFormFields } from "./niconico-form-defaults";
+import { submitNiconicoPost } from "./niconico-submit";
 import {
   normalizeLogMessage,
   type VerifiedPublishPrepResult,
@@ -72,8 +77,6 @@ const STORE_KEY = "__niconicoPublishPrepJobs";
 const RUNTIME_STORE_KEY = "__niconicoPublishPrepJobRuntimes";
 const JOB_LISTENERS_KEY = "__niconicoPublishPrepJobListeners";
 const NICONICO_UPLOAD_URL = "https://garage.nicovideo.jp/niconico-garage/video/videos/upload";
-const AGENT_BROWSER_SESSION = "niconico-publish";
-const NICONICO_CHROME_CDP_PORT = 9222;
 const NICONICO_CHROME_READY_TIMEOUT_MS = 15_000;
 const DEFAULT_HARD_TIMEOUT_MS = 1_200_000;
 const DEFAULT_INACTIVITY_TIMEOUT_MS = 180_000;
@@ -109,7 +112,6 @@ const AGENT_BROWSER_ENABLED_TOOLS = [
   "agent_browser_is_enabled",
   "agent_browser_find",
 ];
-const execFileAsync = promisify(execFile);
 const DEFAULT_CHROME_EXECUTABLE_PATHS = [
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
   "/Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta",
@@ -327,22 +329,7 @@ async function ensureNiconicoChrome() {
 }
 
 async function attachAgentBrowserToNiconicoChrome() {
-  await execFileAsync(
-    "pnpm",
-    [
-      "--dir",
-      PROJECT_ROOT,
-      "exec",
-      "agent-browser",
-      "--session",
-      AGENT_BROWSER_SESSION,
-      "--cdp",
-      String(NICONICO_CHROME_CDP_PORT),
-      "get",
-      "url",
-    ],
-    { cwd: PROJECT_ROOT, timeout: 15_000 },
-  );
+  await runAgentBrowser(["get", "url"]);
 }
 
 function assertVideoMeta(value: unknown): VideoMeta {
@@ -433,19 +420,7 @@ export function createPublishQueryOptions(
       [AGENT_BROWSER_MCP_SERVER]: {
         type: "stdio",
         command: "pnpm",
-        args: [
-          "--dir",
-          rootDir,
-          "exec",
-          "agent-browser",
-          "--session",
-          AGENT_BROWSER_SESSION,
-          "--cdp",
-          String(NICONICO_CHROME_CDP_PORT),
-          "mcp",
-          "--tools",
-          "all",
-        ],
+        args: getAgentBrowserArgs(rootDir, ["mcp", "--tools", "all"]),
         timeout: 180_000,
         alwaysLoad: true,
       },
@@ -775,9 +750,10 @@ export async function runPublishPrep(
   thumbnailPath: string,
   videoMeta: VideoMeta,
   parentWorkIds: string[],
+  autoSubmit: boolean,
 ): Promise<PublishPrepJobResult> {
   updateJob(job, { status: "running" });
-  pushLog(job, "Starting Niconico publish prep");
+  pushLog(job, `Starting Niconico publish prep: autoSubmit=${autoSubmit}`);
   pushLog(job, `Resolved rendered video: ${videoPath}`);
   pushLog(job, `Resolved rendered thumbnail: ${thumbnailPath}`);
   const parentWorks = toParentWorks(parentWorkIds);
@@ -791,11 +767,17 @@ export async function runPublishPrep(
   const startedAt = Date.now();
   const result = await runClaudePublishPrep(job, videoPath, thumbnailPath, videoMeta, parentWorks);
   pushLog(job, `Niconico browser phase completed in ${Date.now() - startedAt}ms`);
-  if (getJobRuntimeStore().get(job.id)?.controller.signal.aborted) {
+  const signal = getJobRuntimeStore().get(job.id)?.controller.signal;
+  if (signal?.aborted) {
     throw new Error("Job was canceled");
   }
+  if (autoSubmit) {
+    await submitNiconicoPost(signal ?? new AbortController().signal, (message) =>
+      pushLog(job, message),
+    );
+  }
   updateJob(job, { status: "succeeded", result });
-  pushLog(job, "Niconico publish prep succeeded");
+  pushLog(job, autoSubmit ? "Niconico post submitted" : "Niconico publish prep succeeded");
   return result;
 }
 
