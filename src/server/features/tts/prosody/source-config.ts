@@ -1,46 +1,43 @@
 import { getVoiceId, type VoiceIdentity } from "@/_schemas";
 import { speechVoiceConfig } from "@/video/config";
-import type { VideoSpeechVoiceConfig } from "@/video-host/contract";
+import type { ProsodySourceVoice, VideoSpeechVoiceConfig } from "@/video-host/contract";
 import { PROSODY_SOURCE } from "./profiles";
 
 /** Everything that decides the reference audio; part of the source and extract cache keys. */
 export type ProsodySource = {
   id: string;
   model: string;
-  voice: string;
-  instructions: string;
+  voice: ProsodySourceVoice;
   sampleRate: number;
 };
 
 const voiceConfig: VideoSpeechVoiceConfig = speechVoiceConfig;
 
 /** A TTS item's voice; one without a voice name cannot be looked up and reads with the default. */
-export type ProsodySourceVoice =
+export type ProsodySpeaker =
   | VoiceIdentity
   | { provider: "voisona" | "voicevox" | "voicepeak"; voiceName?: string; voiceVersion?: string };
 
-function voiceIdOf(voice: ProsodySourceVoice) {
-  if (voice.provider === "coeiroink") {
-    return getVoiceId(voice);
+function voiceIdOf(speaker: ProsodySpeaker) {
+  if (speaker.provider === "coeiroink") {
+    return getVoiceId(speaker);
   }
-  return voice.voiceName
+  return speaker.voiceName
     ? getVoiceId({
-        provider: voice.provider,
-        voiceName: voice.voiceName,
-        voiceVersion: voice.voiceVersion,
+        provider: speaker.provider,
+        voiceName: speaker.voiceName,
+        voiceVersion: speaker.voiceVersion,
       })
     : undefined;
 }
 
-/** The reference TTS for a character: the shared settings with its own instruction, if any. */
-export function prosodySourceFor(voice: ProsodySourceVoice): ProsodySource {
-  const voiceId = voiceIdOf(voice);
-  const instructions = voiceId ? voiceConfig[voiceId]?.sourceInstructions : undefined;
+/** The reference TTS for a character: the shared settings with its own voice, if any. */
+export function prosodySourceFor(speaker: ProsodySpeaker): ProsodySource {
+  const voiceId = voiceIdOf(speaker);
   return {
     id: PROSODY_SOURCE.id,
     model: PROSODY_SOURCE.model,
-    voice: PROSODY_SOURCE.voice,
-    instructions: instructions ?? PROSODY_SOURCE.instructions,
+    voice: (voiceId ? voiceConfig[voiceId] : undefined) ?? PROSODY_SOURCE.voice,
     sampleRate: PROSODY_SOURCE.sampleRate,
   };
 }

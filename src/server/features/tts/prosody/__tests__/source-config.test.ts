@@ -4,7 +4,7 @@ import { createG2pItem } from "@/_schemas/__tests__/g2p-fixture";
 vi.mock("@/video/config", async () => ({
   ...(await vi.importActual<typeof import("@/video/config")>("@/video/config")),
   speechVoiceConfig: {
-    "voicevox::113::": { sourceInstructions: "明るく元気に読む。" },
+    "voicevox::113::": "lily",
   },
 }));
 vi.mock("@/server/_shared/storage", () => ({
@@ -16,22 +16,18 @@ import { prosodySourcePath } from "../cache";
 import { prosodySourceFor } from "../source-config";
 
 describe("prosodySourceFor", () => {
-  it("uses a character's own instruction", () => {
-    expect(prosodySourceFor({ provider: "voicevox", voiceName: "113" }).instructions).toBe(
-      "明るく元気に読む。",
-    );
+  it("uses a character's own voice", () => {
+    expect(prosodySourceFor({ provider: "voicevox", voiceName: "113" }).voice).toBe("lily");
   });
 
-  it("falls back to the shared instruction", () => {
-    expect(prosodySourceFor({ provider: "voicevox", voiceName: "3" }).instructions).toBe(
-      PROSODY_SOURCE.instructions,
+  it("falls back to the shared voice", () => {
+    expect(prosodySourceFor({ provider: "voicevox", voiceName: "3" }).voice).toBe(
+      PROSODY_SOURCE.voice,
     );
-    expect(prosodySourceFor({ provider: "voicevox" }).instructions).toBe(
-      PROSODY_SOURCE.instructions,
-    );
+    expect(prosodySourceFor({ provider: "voicevox" }).voice).toBe(PROSODY_SOURCE.voice);
   });
 
-  it("gives each instruction its own reference audio", () => {
+  it("gives each voice its own reference audio", () => {
     const g2p = createG2pItem("日本語でOK", "日本語:ニホンゴ|で:デ'/ＯＫ:オ'ーケー");
     const anko = prosodySourceFor({ provider: "voicevox", voiceName: "113" });
     const shared = prosodySourceFor({ provider: "voicevox", voiceName: "3" });

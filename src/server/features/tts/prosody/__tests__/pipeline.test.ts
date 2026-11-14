@@ -35,12 +35,12 @@ import { prosodyExtractPath, prosodySourcePath, readCachedProsody } from "../cac
 const env = { OPENROUTER_API_KEY: "secret" };
 const source: ProsodySource = {
   id: "test-source",
-  model: "google/gemini-3.8-flash-tts",
-  voice: "Zephyr",
-  instructions: "ふつうに読む。",
+  model: "elevenlabs/eleven-v4",
+  voice: "sarah",
   sampleRate: 24_000,
 };
 const text = "早急に相殺した";
+const context = { previous: "前の文。", next: "次の文。" };
 const analyzed = createG2pItem(text, "早急:ソーキュー'|に:ニ/相殺:ソーサイ'|した:シタ");
 const extract = {
   schema_version: "3",
@@ -125,9 +125,38 @@ describe("analyzeProsody", () => {
       env,
       "早急にソーサイした",
       source,
+      undefined,
     );
     expect(mocks.extractProsody).toHaveBeenCalledWith(env, analyzed, wav("早急にソーサイした"));
     expect(result).toEqual({ g2p: analyzed, prosody: extract });
+  });
+
+  it("passes the context to the first reading and to the respelled one", async () => {
+    mocks.checkReadings
+      .mockResolvedValueOnce(
+        checked([{ index: 2, surface: "相殺", heard: "ソーサツ", correct: "ソーサイ" }]),
+      )
+      .mockResolvedValueOnce(checked([]));
+
+    await analyzeProsody(env, "project", [{ readText: text, source, context }]);
+
+    expect(mocks.synthesizeProsodySource.mock.calls).toEqual([
+      [env, text, source, context],
+      [env, "早急にソーサイした", source, context],
+    ]);
+  });
+
+  it("passes the context when reading an edited kana", async () => {
+    const edited = createG2pItem(text, "早急:サッキュー'|に:ニ/相殺:ソーサイ'|した:シタ");
+
+    await analyzeProsody(env, "project", [{ readText: text, g2p: edited, source, context }]);
+
+    expect(mocks.synthesizeProsodySource).toHaveBeenCalledWith(
+      env,
+      "サッキューに相殺した",
+      source,
+      context,
+    );
   });
 
   it("drops the prosody but keeps the correct reading when the retry still misreads", async () => {
@@ -219,7 +248,12 @@ describe("analyzeProsody", () => {
     await expect(
       analyzeProsody(env, "project", [{ readText: text, g2p: edited, source }]),
     ).resolves.toEqual([{ g2p: edited, prosody: extract }]);
-    expect(mocks.synthesizeProsodySource).toHaveBeenCalledWith(env, "サッキューに相殺した", source);
+    expect(mocks.synthesizeProsodySource).toHaveBeenCalledWith(
+      env,
+      "サッキューに相殺した",
+      source,
+      undefined,
+    );
     expect(mocks.checkReadings).not.toHaveBeenCalled();
     expect(mocks.extractProsody).toHaveBeenCalledWith(env, edited, wav("サッキューに相殺した"));
 

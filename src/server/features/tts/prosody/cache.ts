@@ -7,7 +7,7 @@ import { stableStringify } from "@/server/_shared/stable-stringify";
 import { getSpeechPipeline, toSynthesisProsody } from "@/server/features/tts/speech-pipeline";
 import type { SynthesisProsody, TtsProvider } from "@/server/features/tts/providers/types";
 import { wordsOf } from "./reading-check";
-import { prosodySourceFor, type ProsodySource, type ProsodySourceVoice } from "./source-config";
+import { prosodySourceFor, type ProsodySource, type ProsodySpeaker } from "./source-config";
 
 function hash(value: unknown) {
   return crypto.createHash("md5").update(stableStringify(value)).digest("hex");
@@ -102,7 +102,7 @@ export function writeCachedProsody(
 /** Synthesis prosody for this kana when the engine runs the prosody pipeline and it is cached. */
 export async function findSynthesisProsody(
   projectPath: string,
-  voice: ProsodySourceVoice & { provider: TtsProvider },
+  voice: ProsodySpeaker & { provider: TtsProvider },
   g2p: G2pItem | undefined,
 ): Promise<SynthesisProsody | undefined> {
   if (!g2p || getSpeechPipeline(voice.provider).pipeline !== "prosody") {

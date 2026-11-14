@@ -68,15 +68,22 @@ export type VideoSpeechConfig = {
 
 export type SpeechPipeline = NonNullable<VideoSpeechConfig[SavedTts["provider"]]>["pipeline"];
 
+/** Reference TTS voices (ElevenLabs v4, female) the prosody pipeline may read with. */
+export type ProsodySourceVoice =
+  | "sarah"
+  | "alice"
+  | "bella"
+  | "jessica"
+  | "laura"
+  | "lily"
+  | "matilda";
+
 /**
- * Per-character settings of the prosody pipeline, keyed by voice id
+ * Per-character reference TTS voice of the prosody pipeline, keyed by voice id
  * (`provider::voiceName::voiceVersion`, e.g. `voicevox::113::`).
  */
 export type VideoSpeechVoiceConfig = {
-  [voiceId: string]: {
-    /** Delivery instruction for the reference TTS; omitted = the shared default. */
-    sourceInstructions?: string;
-  };
+  [voiceId: string]: ProsodySourceVoice;
 };
 
 export type VideoDefinition = VideoAudioConfig & {

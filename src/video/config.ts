@@ -32,9 +32,9 @@ export const speechConfig = {
 } satisfies VideoSpeechConfig;
 
 /**
- * Data only: per-character reference TTS instruction for the prosody pipeline, keyed by voice id.
- * A voice left out reads with the shared instruction.
+ * Data only: per-character reference TTS voice for the prosody pipeline, keyed by voice id.
+ * A voice left out reads with the shared voice.
  */
 export const speechVoiceConfig = {
-  // e.g. "voicevox::113::": { sourceInstructions: "明るく元気な10代。テンポよく、語尾ははっきり下げる。" },
+  // "voicevox::113::": "lily",
 } satisfies VideoSpeechVoiceConfig;
