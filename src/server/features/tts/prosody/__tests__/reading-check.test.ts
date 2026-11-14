@@ -76,16 +76,23 @@ describe("checkReadings", () => {
     vi.unstubAllGlobals();
   });
 
-  it("sends the text, words and the wav as an audio part", async () => {
+  it("checks a chunk in one request with short ids and one recording per item", async () => {
     const fetchMock = vi.fn(async () =>
       Response.json({
         choices: [
           {
             message: {
               content: JSON.stringify({
-                corrections: [
-                  { index: 4, surface: "早急", heard: "サッキュー", correct: "サッキュー" },
-                  { index: 99, surface: "?", heard: "ア", correct: "ア" },
+                items: [
+                  {
+                    id: "1",
+                    corrections: [
+                      { index: 4, surface: "早急", heard: "サッキュー", correct: "サッキュー" },
+                      { index: 99, surface: "?", heard: "ア", correct: "ア" },
+                    ],
+                  },
+                  { id: "2", corrections: [] },
+                  { id: "9", corrections: [] },
                 ],
               }),
             },
@@ -95,14 +102,20 @@ describe("checkReadings", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
     const words = wordsOf(kana);
+    const other = wordsOf("境内:ケ'イダイ");
 
-    await expect(
-      checkReadings(
-        { OPENROUTER_API_KEY: "secret" },
-        { text: "出納係が、差額を早急に", words, wav: Buffer.from("RIFF") },
-      ),
-    ).resolves.toEqual([{ index: 4, surface: "早急", heard: "サッキュー", correct: "サッキュー" }]);
+    const result = await checkReadings({ OPENROUTER_API_KEY: "secret" }, [
+      { id: "a", text: "出納係が、差額を早急に", words, wav: Buffer.from("RIFF-a") },
+      { id: "b", text: "境内", words: other, wav: Buffer.from("RIFF-b") },
+      { id: "c", text: "抜けた", words: other, wav: Buffer.from("RIFF-c") },
+    ]);
 
+    expect(result).toEqual(
+      new Map([
+        ["a", [{ index: 4, surface: "早急", heard: "サッキュー", correct: "サッキュー" }]],
+        ["b", []],
+      ]),
+    );
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe("https://openrouter.ai/api/v1/chat/completions");
     const body = JSON.parse(String(init.body));
@@ -111,12 +124,27 @@ describe("checkReadings", () => {
       reasoning: { effort: "low" },
       response_format: { json_schema: { name: "readings", strict: true } },
     });
+    const audio = (data: string) => ({
+      type: "input_audio",
+      input_audio: { data: Buffer.from(data).toString("base64"), format: "wav" },
+    });
     expect(body.messages[1].content).toEqual([
-      { type: "text", text: JSON.stringify({ text: "出納係が、差額を早急に", words }) },
       {
-        type: "input_audio",
-        input_audio: { data: Buffer.from("RIFF").toString("base64"), format: "wav" },
+        type: "text",
+        text: JSON.stringify({
+          items: [
+            { id: "1", text: "出納係が、差額を早急に", words },
+            { id: "2", text: "境内", words: other },
+            { id: "3", text: "抜けた", words: other },
+          ],
+        }),
       },
+      { type: "text", text: "recording 1" },
+      audio("RIFF-a"),
+      { type: "text", text: "recording 2" },
+      audio("RIFF-b"),
+      { type: "text", text: "recording 3" },
+      audio("RIFF-c"),
     ]);
   });
 });

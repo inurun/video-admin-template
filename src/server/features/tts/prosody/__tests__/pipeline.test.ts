@@ -46,6 +46,11 @@ function wav(label: string) {
   return Buffer.from(`RIFF-${label}`);
 }
 
+/** Result of one batched check for the single target (item id "0"). */
+function checked(corrections: unknown[]) {
+  return new Map([["0", corrections]]);
+}
+
 describe("analyzeProsody", () => {
   let warn: ReturnType<typeof vi.spyOn>;
 
@@ -67,7 +72,7 @@ describe("analyzeProsody", () => {
   });
 
   it("keeps the analyzer kana when the recording matches and caches the source and extract", async () => {
-    mocks.checkReadings.mockResolvedValueOnce([]);
+    mocks.checkReadings.mockResolvedValueOnce(checked([]));
 
     await expect(analyzeProsody(env, "project", [{ readText: text }])).resolves.toEqual([
       { g2p: analyzed, prosody: extract },
@@ -84,9 +89,9 @@ describe("analyzeProsody", () => {
   });
 
   it("takes the heard reading where the analyzer was wrong", async () => {
-    mocks.checkReadings.mockResolvedValueOnce([
-      { index: 0, surface: "早急", heard: "サッキュー", correct: "サッキュー" },
-    ]);
+    mocks.checkReadings.mockResolvedValueOnce(
+      checked([{ index: 0, surface: "早急", heard: "サッキュー", correct: "サッキュー" }]),
+    );
     const kana = "早急:サッキュー'|に:ニ/相殺:ソーサイ'|した:シタ";
 
     const [result] = await analyzeProsody(env, "project", [{ readText: text }]);
@@ -98,10 +103,10 @@ describe("analyzeProsody", () => {
 
   it("respells a word the recording misread and checks once more", async () => {
     mocks.checkReadings
-      .mockResolvedValueOnce([
-        { index: 2, surface: "相殺", heard: "ソーサツ", correct: "ソーサイ" },
-      ])
-      .mockResolvedValueOnce([]);
+      .mockResolvedValueOnce(
+        checked([{ index: 2, surface: "相殺", heard: "ソーサツ", correct: "ソーサイ" }]),
+      )
+      .mockResolvedValueOnce(checked([]));
 
     const [result] = await analyzeProsody(env, "project", [{ readText: text }]);
 
@@ -112,7 +117,9 @@ describe("analyzeProsody", () => {
 
   it("drops the prosody but keeps the correct reading when the retry still misreads", async () => {
     const misread = { index: 2, surface: "相殺", heard: "ソーサツ", correct: "ソーサイ" };
-    mocks.checkReadings.mockResolvedValueOnce([misread]).mockResolvedValueOnce([misread]);
+    mocks.checkReadings
+      .mockResolvedValueOnce(checked([misread]))
+      .mockResolvedValueOnce(checked([misread]));
 
     const [result] = await analyzeProsody(env, "project", [{ readText: text }]);
 
@@ -123,7 +130,7 @@ describe("analyzeProsody", () => {
   });
 
   it("drops the prosody when the extract fails", async () => {
-    mocks.checkReadings.mockResolvedValueOnce([]);
+    mocks.checkReadings.mockResolvedValueOnce(checked([]));
     mocks.extractProsody.mockRejectedValueOnce(
       HaqumeiApiError.fromUnknown({ code: "alignment_failed", detail: "too short" }, 422),
     );
@@ -141,6 +148,54 @@ describe("analyzeProsody", () => {
       { g2p: analyzed },
     ]);
     expect(mocks.checkReadings).not.toHaveBeenCalled();
+  });
+
+  it("checks the recordings of several utterances in one request", async () => {
+    const texts = ["早急に相殺した", "出納係", "境内"];
+    const items = texts.map((t) => createG2pItem(t, `${t}:ア'`));
+    mocks.analyzeTexts.mockResolvedValueOnce(items);
+    mocks.checkReadings.mockImplementationOnce(
+      async (_env, chunk: { id: string }[]) => new Map(chunk.map((item) => [item.id, []])),
+    );
+
+    const results = await analyzeProsody(
+      env,
+      "project",
+      texts.map((readText) => ({ readText })),
+    );
+
+    expect(mocks.checkReadings).toHaveBeenCalledTimes(1);
+    const [, chunk] = mocks.checkReadings.mock.calls[0]!;
+    expect(chunk.map((item: { text: string; wav: Buffer }) => [item.text, item.wav])).toEqual(
+      texts.map((t) => [t, wav(t)]),
+    );
+    expect(results).toEqual(items.map((g2p) => ({ g2p, prosody: extract })));
+  });
+
+  it("drops the prosody of every item in a chunk whose check fails", async () => {
+    const texts = ["早急に相殺した", "出納係"];
+    const items = texts.map((t) => createG2pItem(t, `${t}:ア'`));
+    mocks.analyzeTexts.mockResolvedValueOnce(items);
+    mocks.checkReadings.mockRejectedValueOnce(new Error("HTTP 500"));
+
+    await expect(
+      analyzeProsody(
+        env,
+        "project",
+        texts.map((readText) => ({ readText })),
+      ),
+    ).resolves.toEqual(items.map((g2p) => ({ g2p })));
+    expect(mocks.extractProsody).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledTimes(2);
+  });
+
+  it("drops the prosody of an item the check left out", async () => {
+    mocks.checkReadings.mockResolvedValueOnce(new Map());
+
+    await expect(analyzeProsody(env, "project", [{ readText: text }])).resolves.toEqual([
+      { g2p: analyzed },
+    ]);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("no result"));
   });
 
   it("respells edited readings for a saved kana without a reading check", async () => {

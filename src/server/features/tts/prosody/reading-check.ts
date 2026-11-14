@@ -11,8 +11,9 @@ export type ReadingCorrection = { index: number; surface: string; heard: string;
 
 const KANA_WORD = /[^/、？！|]+/gu;
 
-const SYSTEM = `You check how a Japanese utterance was actually pronounced in a recording.
-Input: the text, and words = an analyzer's split of the text, each with index, surface and its reading in katakana.
+const SYSTEM = `You check how Japanese utterances were actually pronounced in recordings.
+Input: items, each with id, text, and words = an analyzer's split of the text, each with index, surface and its reading in katakana.
+After the items, one recording per item follows, each introduced by "recording <id>". Judge each item only by its own recording.
 For each word decide two readings:
 - heard: the reading as spoken in the recording.
 - correct: the reading a native speaker would use for this word in this context.
@@ -20,40 +21,54 @@ Report only the words where heard differs from the analyzer's reading, or heard 
 - Readings are katakana as pronounced. Particle は→ワ, へ→エ, を→ヲ. Long vowels as ー.
 - Judge the sounds (moras) only. Ignore pitch accent, pauses, speed and emotion.
 - Same sounds written differently (オオ vs オー) are not a difference.
-- Return an empty list when everything matches.`;
+- Return every item, with an empty corrections list when everything matches.`;
 
-const correctionsSchema = z.object({
-  corrections: z.array(
-    z.object({
-      index: z.number().int(),
-      surface: z.string(),
-      heard: z.string(),
-      correct: z.string(),
-    }),
-  ),
+const correctionSchema = z.object({
+  index: z.number().int(),
+  surface: z.string(),
+  heard: z.string(),
+  correct: z.string(),
 });
 
-const correctionsJsonSchema = {
+const outputSchema = z.object({
+  items: z.array(z.object({ id: z.string(), corrections: z.array(correctionSchema) })),
+});
+
+const outputJsonSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["corrections"],
+  required: ["items"],
   properties: {
-    corrections: {
+    items: {
       type: "array",
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["index", "surface", "heard", "correct"],
+        required: ["id", "corrections"],
         properties: {
-          index: { type: "integer" },
-          surface: { type: "string" },
-          heard: { type: "string" },
-          correct: { type: "string" },
+          id: { type: "string" },
+          corrections: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              required: ["index", "surface", "heard", "correct"],
+              properties: {
+                index: { type: "integer" },
+                surface: { type: "string" },
+                heard: { type: "string" },
+                correct: { type: "string" },
+              },
+            },
+          },
         },
       },
     },
   },
 } as const;
+
+/** One utterance to check: its text, the analyzer's words, and the reference recording. */
+export type ReadingCheckItem = { id: string; text: string; words: KanaWord[]; wav: Buffer };
 
 function splitWord(word: string) {
   const colon = word.indexOf(":");
@@ -133,22 +148,57 @@ export function changedReadings(words: KanaWord[], baseWords: KanaWord[]) {
   return changed;
 }
 
-/** Asks the LLM which words the recording reads differently from the analyzer, and how they should be read. */
+/**
+ * Asks the LLM, for a chunk of utterances in one request, which words each recording reads
+ * differently from the analyzer, and how they should be read.
+ *
+ * Ids are sent as "1", "2"…, like the LLM G2P. The result has an entry only for the items the
+ * LLM returned; a missing item counts as unchecked.
+ */
 export async function checkReadings(
   serverEnv: ServerEnv,
-  input: { text: string; words: KanaWord[]; wav: Buffer },
-): Promise<ReadingCorrection[]> {
+  items: readonly ReadingCheckItem[],
+): Promise<Map<string, ReadingCorrection[]>> {
+  const aliases = items.map((_, index) => String(index + 1));
   const result = await requestOpenRouterJson(serverEnv, {
     profile: LLM_READING_CHECK_PROFILE,
     system: SYSTEM,
     user: [
-      { type: "text", text: JSON.stringify({ text: input.text, words: input.words }) },
-      { type: "input_audio", input_audio: { data: input.wav.toString("base64"), format: "wav" } },
+      {
+        type: "text",
+        text: JSON.stringify({
+          items: items.map((item, index) => ({
+            id: aliases[index],
+            text: item.text,
+            words: item.words,
+          })),
+        }),
+      },
+      ...items.flatMap((item, index) => [
+        { type: "text" as const, text: `recording ${aliases[index]}` },
+        {
+          type: "input_audio" as const,
+          input_audio: { data: item.wav.toString("base64"), format: "wav" as const },
+        },
+      ]),
     ],
     schemaName: "readings",
-    jsonSchema: correctionsJsonSchema,
-    output: correctionsSchema,
+    jsonSchema: outputJsonSchema,
+    output: outputSchema,
   });
-  const indexes = new Set(input.words.map((word) => word.index));
-  return result.output.corrections.filter((correction) => indexes.has(correction.index));
+
+  const byAlias = new Map(items.map((item, index) => [aliases[index]!, item]));
+  const corrections = new Map<string, ReadingCorrection[]>();
+  for (const entry of result.output.items) {
+    const item = byAlias.get(entry.id);
+    if (!item || corrections.has(item.id)) {
+      continue;
+    }
+    const indexes = new Set(item.words.map((word) => word.index));
+    corrections.set(
+      item.id,
+      entry.corrections.filter((correction) => indexes.has(correction.index)),
+    );
+  }
+  return corrections;
 }
