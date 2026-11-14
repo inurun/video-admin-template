@@ -10,7 +10,7 @@ import type { TtsInputForProvider, SavedTtsForProvider, TtsProviderAdapter } fro
 
 export const voicevoxProvider = {
   provider: "voicevox",
-  pipelines: { "llm-g2p": true, prosody: { pitchWeight: 1 } },
+  pipelines: { "llm-g2p": true, prosody: { pitch: { defaultWeight: 1 } } },
   createComparisonInput(item: TtsInputForProvider<"voicevox">) {
     return createDraftComparisonInput("voicevox", item, getEffectiveReadText(item));
   },

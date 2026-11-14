@@ -16,6 +16,13 @@ export type ResolvedSpeechPipeline =
   | { pipeline: "llm-g2p" }
   | { pipeline: "prosody"; pitchWeight: number; timingWeight: number };
 
+function checkWeight(provider: string, name: string, weight: number) {
+  if (!(weight >= 0 && weight <= 1)) {
+    throw new Error(`speechConfig.${provider}.${name} must be within 0 to 1: ${weight}`);
+  }
+  return weight;
+}
+
 function resolveOne(
   provider: string,
   choice: VideoSpeechConfig[TtsProvider],
@@ -34,11 +41,21 @@ function resolveOne(
   if (!supported.prosody) {
     throw new Error(`speechConfig.${provider}: ${provider} does not take prosody`);
   }
-  const timingWeight = choice.timingWeight ?? DEFAULT_PROSODY_TIMING_WEIGHT;
-  if (!(timingWeight >= 0 && timingWeight <= 1)) {
-    throw new Error(`speechConfig.${provider}.timingWeight must be within 0 to 1: ${timingWeight}`);
+  const { pitch } = supported.prosody;
+  if (choice.pitchWeight !== undefined && !pitch) {
+    throw new Error(`speechConfig.${provider}: ${provider} does not take pitch`);
   }
-  return { pipeline: "prosody", pitchWeight: supported.prosody.pitchWeight, timingWeight };
+  const pitchWeight = checkWeight(
+    provider,
+    "pitchWeight",
+    choice.pitchWeight ?? pitch?.defaultWeight ?? 0,
+  );
+  const timingWeight = checkWeight(
+    provider,
+    "timingWeight",
+    choice.timingWeight ?? DEFAULT_PROSODY_TIMING_WEIGHT,
+  );
+  return { pipeline: "prosody", pitchWeight, timingWeight };
 }
 
 export function resolveSpeechPipelines(

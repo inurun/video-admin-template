@@ -56,13 +56,15 @@ export type SoundCue = { clip: string; src: string; volume: number };
 /**
  * How each TTS engine gets its readings and prosody. Server data, read once at startup.
  * - `prosody`: haqumei analyze + a reference TTS checked by an LLM; the reference audio's
- *   pitch and timing are mixed into the engine (`timingWeight` defaults to 0.5).
+ *   pitch and timing are mixed into the engine. `pitchWeight` defaults to the engine's own
+ *   (VOICEVOX 1) and only engines that take pitch accept it; `timingWeight` (tempo and pauses)
+ *   defaults to 0.5. Both are 0 to 1.
  * - `llm-g2p`: one LLM G2P pass per page.
  * An engine left out uses `llm-g2p` when it can, otherwise no G2P.
  */
 export type VideoSpeechConfig = {
   [TProvider in SavedTts["provider"]]?:
-    | { pipeline: "prosody"; timingWeight?: number }
+    | { pipeline: "prosody"; pitchWeight?: number; timingWeight?: number }
     | { pipeline: "llm-g2p" };
 };
 

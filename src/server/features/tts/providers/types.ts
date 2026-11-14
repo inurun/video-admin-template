@@ -44,12 +44,13 @@ export type TtsSynthesisInput<TProvider extends TtsProvider> = TtsComparisonInpu
 };
 
 /**
- * Reading pipelines the engine can take. `prosody` carries the engine's fixed pitch weight
- * (an engine that only takes H/L, like VoiSona, mixes timing alone).
+ * Reading pipelines the engine can take. `prosody.pitch` is there when the engine takes
+ * per-mora pitch, with the weight used when the template sets none (an engine that only takes
+ * H/L, like VoiSona, has no `pitch` and mixes timing alone).
  */
 export type ProviderPipelines = {
   "llm-g2p"?: true;
-  prosody?: { pitchWeight: number };
+  prosody?: { pitch?: { defaultWeight: number } };
 };
 
 export type PlannedSynthesis = {

@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { getSpeechPipeline, resolveSpeechPipelines, toSynthesisProsody } from "../speech-pipeline";
 
 const providers = {
-  voicevox: { pipelines: { "llm-g2p": true, prosody: { pitchWeight: 1 } } },
-  voisona: { pipelines: { "llm-g2p": true, prosody: { pitchWeight: 0 } } },
+  voicevox: { pipelines: { "llm-g2p": true, prosody: { pitch: { defaultWeight: 1 } } } },
+  voisona: { pipelines: { "llm-g2p": true, prosody: {} } },
   coeiroink: { pipelines: { "llm-g2p": true } },
   voicepeak: { pipelines: {} },
 } as const;
@@ -51,10 +51,25 @@ describe("resolveSpeechPipelines", () => {
     );
   });
 
-  it("rejects a timing weight outside 0 to 1", () => {
+  it("takes the template's pitch weight over the engine's default", () => {
+    expect(
+      resolveSpeechPipelines({ voicevox: { pipeline: "prosody", pitchWeight: 0.6 } }, providers),
+    ).toMatchObject({ voicevox: { pipeline: "prosody", pitchWeight: 0.6, timingWeight: 0.5 } });
+  });
+
+  it("rejects a pitch weight on an engine that takes no pitch", () => {
+    expect(() =>
+      resolveSpeechPipelines({ voisona: { pipeline: "prosody", pitchWeight: 0.5 } }, providers),
+    ).toThrow("voisona does not take pitch");
+  });
+
+  it("rejects a weight outside 0 to 1", () => {
     expect(() =>
       resolveSpeechPipelines({ voicevox: { pipeline: "prosody", timingWeight: 1.5 } }, providers),
     ).toThrow("timingWeight");
+    expect(() =>
+      resolveSpeechPipelines({ voicevox: { pipeline: "prosody", pitchWeight: -0.1 } }, providers),
+    ).toThrow("pitchWeight");
   });
 });
 

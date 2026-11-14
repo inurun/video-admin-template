@@ -25,7 +25,8 @@ export const audioConfig = {
 
 /** Data only: the server reads which reading pipeline each TTS engine uses. */
 export const speechConfig = {
-  // timingWeight omitted = 0.5
+  // pitchWeight omitted = the engine's own (VOICEVOX 1; VoiSona takes no pitch)
+  // timingWeight (tempo and pauses) omitted = 0.5
   voicevox: { pipeline: "prosody" },
   voisona: { pipeline: "prosody" },
   coeiroink: { pipeline: "llm-g2p" },
