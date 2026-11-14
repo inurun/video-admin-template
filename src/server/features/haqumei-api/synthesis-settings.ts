@@ -40,12 +40,14 @@ export function buildVoicevoxSynthesisRequest(input: {
   item: components["schemas"]["G2pItem"];
   speaker: number;
   synthesisSettings?: VoicevoxSynthesisSettings;
+  prosody?: components["schemas"]["SynthesisProsody"];
 }): components["schemas"]["VoicevoxSynthesisRequest"] {
   return {
     schema_version: SYNTHESIS_SCHEMA_VERSION,
     item: toG2pItem(input.item),
     speaker: input.speaker,
     synthesis_settings: buildVoicevoxSynthesisSettings(input.synthesisSettings),
+    ...(input.prosody ? { prosody: input.prosody } : {}),
   };
 }
 
@@ -62,6 +64,7 @@ export function buildVoisonaSynthesisRequest(input: {
   voiceName: string;
   voiceVersion?: string;
   synthesisSettings?: VoisonaSynthesisSettings;
+  prosody?: components["schemas"]["SynthesisProsody"];
 }): components["schemas"]["VoisonaSynthesisRequest"] {
   const synthesisSettings = isEmptyVoisonaSettings(input.synthesisSettings)
     ? undefined
@@ -78,6 +81,7 @@ export function buildVoisonaSynthesisRequest(input: {
             synthesisSettings as components["schemas"]["VoisonaSynthesisSettings"],
         }
       : {}),
+    ...(input.prosody ? { prosody: input.prosody } : {}),
   };
 }
 

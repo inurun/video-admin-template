@@ -40,3 +40,22 @@ describe("haqumei-api coeiroink contract snapshot", () => {
     expect(isBinaryWav(wav?.schema)).toBe(true);
   });
 });
+
+describe("haqumei-api prosody contract snapshot", () => {
+  const schemas = (
+    JSON.parse(
+      readFileSync(path.join(process.cwd(), "openapi/haqumei-api/openapi.json"), "utf8"),
+    ) as { components: { schemas: Record<string, { properties?: Record<string, unknown> }> } }
+  ).components.schemas;
+
+  it("includes the extract path and prosody on VOICEVOX and VoiSona synthesis", () => {
+    expect(openapi.paths["/v1/prosody/extract"]?.post).toBeDefined();
+    expect(schemas.VoicevoxSynthesisRequest?.properties?.prosody).toEqual({
+      $ref: "#/components/schemas/SynthesisProsody",
+    });
+    expect(schemas.VoisonaSynthesisRequest?.properties?.prosody).toEqual({
+      $ref: "#/components/schemas/SynthesisProsody",
+    });
+    expect(schemas.CoeiroinkSynthesisRequest?.properties).not.toHaveProperty("prosody");
+  });
+});

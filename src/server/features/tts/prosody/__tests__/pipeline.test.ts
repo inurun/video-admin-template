@@ -1,0 +1,181 @@
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createG2pItem } from "@/_schemas/__tests__/g2p-fixture";
+import { HaqumeiApiError } from "@/server/features/haqumei-api/error";
+
+const mocks = vi.hoisted(() => ({
+  ttsDir: "",
+  analyzeTexts: vi.fn(),
+  validateG2pItem: vi.fn(),
+  extractProsody: vi.fn(),
+  synthesizeProsodySource: vi.fn(),
+  checkReadings: vi.fn(),
+}));
+
+vi.mock("@/server/_shared/storage", () => ({
+  getProjectTtsDir: (projectPath: string) => path.join(mocks.ttsDir, projectPath),
+}));
+vi.mock("@/server/features/haqumei-api/analyze", () => ({ analyzeTexts: mocks.analyzeTexts }));
+vi.mock("@/server/features/haqumei-api/validate", () => ({
+  validateG2pItem: mocks.validateG2pItem,
+}));
+vi.mock("@/server/features/haqumei-api/prosody", () => ({ extractProsody: mocks.extractProsody }));
+vi.mock("../source", () => ({ synthesizeProsodySource: mocks.synthesizeProsodySource }));
+vi.mock("../reading-check", async () => ({
+  ...(await vi.importActual<typeof import("../reading-check")>("../reading-check")),
+  checkReadings: mocks.checkReadings,
+}));
+
+import { analyzeProsody } from "../pipeline";
+import { prosodyExtractPath, prosodySourcePath, readCachedProsody } from "../cache";
+
+const env = { OPENROUTER_API_KEY: "secret" };
+const text = "早急に相殺した";
+const analyzed = createG2pItem(text, "早急:ソーキュー'|に:ニ/相殺:ソーサイ'|した:シタ");
+const extract = {
+  schema_version: "3",
+  aligner_version: "mms-fa-1",
+  score: 0.7,
+  moras: [{ start: 0, vowel_start: 0.05, end: 0.1, log_f0: 5.4 }],
+  pauses: [],
+};
+
+function wav(label: string) {
+  return Buffer.from(`RIFF-${label}`);
+}
+
+describe("analyzeProsody", () => {
+  let warn: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    mocks.ttsDir = await fs.mkdtemp(path.join(os.tmpdir(), "prosody-"));
+    mocks.analyzeTexts.mockResolvedValue([analyzed]);
+    mocks.validateG2pItem.mockImplementation(async (_env, item) =>
+      createG2pItem(item.text, item.kana),
+    );
+    mocks.extractProsody.mockResolvedValue(extract);
+    mocks.synthesizeProsodySource.mockImplementation(async (_env, input: string) => wav(input));
+    warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+  });
+
+  afterEach(async () => {
+    warn.mockRestore();
+    await fs.rm(mocks.ttsDir, { recursive: true, force: true });
+  });
+
+  it("keeps the analyzer kana when the recording matches and caches the source and extract", async () => {
+    mocks.checkReadings.mockResolvedValueOnce([]);
+
+    await expect(analyzeProsody(env, "project", [{ readText: text }])).resolves.toEqual([
+      { g2p: analyzed, prosody: extract },
+    ]);
+    expect(mocks.extractProsody).toHaveBeenCalledWith(env, analyzed, wav(text));
+    expect(mocks.validateG2pItem).not.toHaveBeenCalled();
+    await expect(fs.readFile(prosodySourcePath("project", analyzed))).resolves.toEqual(wav(text));
+    await expect(readCachedProsody("project", analyzed)).resolves.toEqual(extract);
+
+    // A second run reuses the checked source: no TTS and no LLM.
+    await analyzeProsody(env, "project", [{ readText: text }]);
+    expect(mocks.synthesizeProsodySource).toHaveBeenCalledTimes(1);
+    expect(mocks.checkReadings).toHaveBeenCalledTimes(1);
+  });
+
+  it("takes the heard reading where the analyzer was wrong", async () => {
+    mocks.checkReadings.mockResolvedValueOnce([
+      { index: 0, surface: "早急", heard: "サッキュー", correct: "サッキュー" },
+    ]);
+    const kana = "早急:サッキュー'|に:ニ/相殺:ソーサイ'|した:シタ";
+
+    const [result] = await analyzeProsody(env, "project", [{ readText: text }]);
+
+    expect(result).toEqual({ g2p: createG2pItem(text, kana), prosody: extract });
+    expect(mocks.validateG2pItem).toHaveBeenCalledWith(env, { text, kana });
+    expect(mocks.synthesizeProsodySource).toHaveBeenCalledTimes(1);
+  });
+
+  it("respells a word the recording misread and checks once more", async () => {
+    mocks.checkReadings
+      .mockResolvedValueOnce([
+        { index: 2, surface: "相殺", heard: "ソーサツ", correct: "ソーサイ" },
+      ])
+      .mockResolvedValueOnce([]);
+
+    const [result] = await analyzeProsody(env, "project", [{ readText: text }]);
+
+    expect(mocks.synthesizeProsodySource).toHaveBeenNthCalledWith(2, env, "早急にソーサイした");
+    expect(mocks.extractProsody).toHaveBeenCalledWith(env, analyzed, wav("早急にソーサイした"));
+    expect(result).toEqual({ g2p: analyzed, prosody: extract });
+  });
+
+  it("drops the prosody but keeps the correct reading when the retry still misreads", async () => {
+    const misread = { index: 2, surface: "相殺", heard: "ソーサツ", correct: "ソーサイ" };
+    mocks.checkReadings.mockResolvedValueOnce([misread]).mockResolvedValueOnce([misread]);
+
+    const [result] = await analyzeProsody(env, "project", [{ readText: text }]);
+
+    expect(result).toEqual({ g2p: analyzed });
+    expect(mocks.extractProsody).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("still misreads"));
+    await expect(fs.access(prosodySourcePath("project", analyzed))).rejects.toThrow();
+  });
+
+  it("drops the prosody when the extract fails", async () => {
+    mocks.checkReadings.mockResolvedValueOnce([]);
+    mocks.extractProsody.mockRejectedValueOnce(
+      HaqumeiApiError.fromUnknown({ code: "alignment_failed", detail: "too short" }, 422),
+    );
+
+    await expect(analyzeProsody(env, "project", [{ readText: text }])).resolves.toEqual([
+      { g2p: analyzed },
+    ]);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("extract failed"));
+  });
+
+  it("drops the prosody when the reference TTS fails", async () => {
+    mocks.synthesizeProsodySource.mockRejectedValueOnce(new Error("HTTP 500"));
+
+    await expect(analyzeProsody(env, "project", [{ readText: text }])).resolves.toEqual([
+      { g2p: analyzed },
+    ]);
+    expect(mocks.checkReadings).not.toHaveBeenCalled();
+  });
+
+  it("respells edited readings for a saved kana without a reading check", async () => {
+    const edited = createG2pItem(text, "早急:サッキュー'|に:ニ/相殺:ソーサイ'|した:シタ");
+
+    await expect(
+      analyzeProsody(env, "project", [{ readText: text, g2p: edited }]),
+    ).resolves.toEqual([{ g2p: edited, prosody: extract }]);
+    expect(mocks.synthesizeProsodySource).toHaveBeenCalledWith(env, "サッキューに相殺した");
+    expect(mocks.checkReadings).not.toHaveBeenCalled();
+    expect(mocks.extractProsody).toHaveBeenCalledWith(env, edited, wav("サッキューに相殺した"));
+
+    // An accent-only edit reuses the source and only extracts again.
+    const accent = createG2pItem(text, "早急:サッキュー'|に:ニ/相殺:ソ'ーサイ|した:シタ");
+    await analyzeProsody(env, "project", [{ readText: text, g2p: accent }]);
+    expect(mocks.synthesizeProsodySource).toHaveBeenCalledTimes(1);
+    expect(mocks.extractProsody).toHaveBeenLastCalledWith(env, accent, wav("サッキューに相殺した"));
+  });
+});
+
+describe("prosody cache keys", () => {
+  const base = createG2pItem(text, "早急:ソーキュー'|に:ニ/相殺:ソーサイ'|した:シタ");
+  const accent = createG2pItem(text, "早急:ソ'ーキュー|に:ニ、相殺:ソーサイ'|した:シタ");
+  const reading = createG2pItem(text, "早急:サッキュー'|に:ニ/相殺:ソーサイ'|した:シタ");
+
+  it("shares the source across accent and phrase edits but not reading edits", () => {
+    expect(prosodySourcePath("p", accent)).toBe(prosodySourcePath("p", base));
+    expect(prosodySourcePath("p", reading)).not.toBe(prosodySourcePath("p", base));
+    expect(prosodySourcePath("q", base)).not.toBe(prosodySourcePath("p", base));
+  });
+
+  it("keys the extract by the whole kana", () => {
+    expect(prosodyExtractPath("p", accent)).not.toBe(prosodyExtractPath("p", base));
+    expect(prosodyExtractPath("p", base)).toBe(
+      prosodyExtractPath("p", createG2pItem(text, base.kana)),
+    );
+  });
+});

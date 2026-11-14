@@ -1,4 +1,10 @@
-import { savedProjectSchema, type SavedProject, type SavedTts, type G2pItem } from "@/_schemas";
+import {
+  savedProjectSchema,
+  type G2pItem,
+  type ProsodyExtract,
+  type SavedProject,
+  type SavedTts,
+} from "@/_schemas";
 import {
   readSavedProject,
   readSavedProjectDocument,
@@ -16,6 +22,11 @@ import {
   getTtsProvider,
 } from "@/server/features/tts/providers/registry";
 import { readCachedWav } from "@/server/features/tts/wav-cache";
+import { stableStringify } from "@/server/_shared/stable-stringify";
+import type { SpeechPipeline } from "@/video-host/contract";
+import { getEffectiveReadText, getUsableG2p } from "@/server/features/tts/providers/comparison";
+import { getSpeechPipeline, toSynthesisProsody } from "@/server/features/tts/speech-pipeline";
+import { analyzeProsody, type ProsodyTarget } from "@/server/features/tts/prosody/pipeline";
 
 const inFlightJobs = new Map<string, Promise<void>>();
 const pendingBatches = new Set<Promise<void>>();
@@ -34,23 +45,33 @@ export function hasInFlightAnalysisJob(projectPath: string, analysisKey: string)
   return inFlightJobs.has(jobKey(projectPath, analysisKey));
 }
 
+/** The kana to save, and the reference prosody when the engine runs the prosody pipeline. */
+type AnalysisResult = { g2p: G2pItem; prosody?: ProsodyExtract };
+
+type AnalyzeTarget = G2pTarget & { item: SavedTts };
+
 function planTtsWav(
   serverEnv: ServerEnv,
   projectPath: string,
   item: SavedTts,
-  g2p: G2pItem,
+  result: AnalysisResult,
   presets: SavedProject["voicePresets"],
 ) {
   const provider = getTtsProvider(item.provider);
   const resolved = resolveTtsSynthesisSettings(item, presets);
+  const prosody = toSynthesisProsody(item.provider, result.prosody);
   return provider.plan(serverEnv, {
     ...createPreviousTtsComparisonInput(resolved),
-    g2p,
+    g2p: result.g2p,
     projectPath,
+    ...(prosody ? { prosody } : {}),
   } as never);
 }
 
-function collectAnalyzeTargets(project: SavedProject, requested: AnalysisJobTarget[]): G2pTarget[] {
+function collectAnalyzeTargets(
+  project: SavedProject,
+  requested: AnalysisJobTarget[],
+): AnalyzeTarget[] {
   const pagesById = new Map(
     project.pages.filter((page) => page.type !== "transition").map((page) => [page.id, page]),
   );
@@ -65,7 +86,7 @@ function collectAnalyzeTargets(project: SavedProject, requested: AnalysisJobTarg
     ) {
       return [];
     }
-    return [{ pageId: request.pageId, ttsId: item.id }];
+    return [{ pageId: request.pageId, ttsId: item.id, item }];
   });
 }
 
@@ -73,7 +94,7 @@ async function applyAnalysisResults(
   serverEnv: ServerEnv,
   projectPath: string,
   requested: AnalysisJobTarget[],
-  g2pByTtsId: Map<string, G2pItem>,
+  resultByTtsId: Map<string, AnalysisResult>,
 ) {
   const project = await readSavedProject(projectPath);
   const requestedByTtsId = new Map(requested.map((target) => [target.ttsId, target]));
@@ -91,10 +112,10 @@ async function applyAnalysisResults(
     const tts: SavedTts[] = [];
     for (const item of page.tts) {
       const request = requestedByTtsId.get(item.id);
-      const g2p = g2pByTtsId.get(item.id);
+      const result = resultByTtsId.get(item.id);
       if (
         !request ||
-        !g2p ||
+        !result ||
         request.pageId !== page.id ||
         item.audio.status !== "analyzing" ||
         item.audio.analysisKey !== request.analysisKey
@@ -103,7 +124,8 @@ async function applyAnalysisResults(
         continue;
       }
 
-      const planned = planTtsWav(serverEnv, projectPath, item, g2p, project.voicePresets);
+      const { g2p } = result;
+      const planned = planTtsWav(serverEnv, projectPath, item, result, project.voicePresets);
       const cached = await readCachedWav(planned.wav);
       changed = true;
       affectedPageIds.add(page.id);
@@ -164,15 +186,68 @@ async function runAnalysisBatch(
     return;
   }
 
+  const withPipeline = (pipeline: SpeechPipeline) =>
+    targets.filter((target) => getSpeechPipeline(target.item.provider).pipeline === pipeline);
+  // One pipeline failing leaves its items analyzing; the other still goes on to synthesis.
+  const settled = await Promise.allSettled([
+    runLlmG2p(serverEnv, project, withPipeline("llm-g2p")),
+    runProsody(serverEnv, projectPath, withPipeline("prosody")),
+  ]);
+  const results = new Map<string, AnalysisResult>();
+  for (const outcome of settled) {
+    if (outcome.status === "rejected") {
+      console.error("[tts-analysis]", outcome.reason);
+      continue;
+    }
+    for (const [ttsId, result] of outcome.value) {
+      results.set(ttsId, result);
+    }
+  }
+
+  await enqueueProjectMutation(projectPath, () =>
+    applyAnalysisResults(serverEnv, projectPath, requested, results),
+  );
+}
+
+async function runLlmG2p(
+  serverEnv: ServerEnv,
+  project: SavedProject,
+  targets: AnalyzeTarget[],
+): Promise<Map<string, AnalysisResult>> {
+  if (targets.length === 0) {
+    return new Map();
+  }
   const generated = await generateG2pWithCache(serverEnv, {
     mode: "page",
     pages: buildG2pContext(project.pages, targets),
   });
-  const g2pByTtsId = new Map([...generated].map(([ttsId, result]) => [ttsId, result.g2p]));
+  return new Map([...generated].map(([ttsId, result]) => [ttsId, { g2p: result.g2p }]));
+}
 
-  await enqueueProjectMutation(projectPath, () =>
-    applyAnalysisResults(serverEnv, projectPath, requested, g2pByTtsId),
-  );
+/** Same read text and saved kana run once. */
+async function runProsody(
+  serverEnv: ServerEnv,
+  projectPath: string,
+  targets: AnalyzeTarget[],
+): Promise<Map<string, AnalysisResult>> {
+  if (targets.length === 0) {
+    return new Map();
+  }
+  const prosodyTargets = new Map<string, ProsodyTarget>();
+  const keyByTtsId = new Map<string, string>();
+  for (const { item } of targets) {
+    const readText = getEffectiveReadText(item);
+    const g2p = getUsableG2p(item.speech.g2p, readText);
+    const key = stableStringify({ readText, kana: g2p?.kana ?? null });
+    keyByTtsId.set(item.id, key);
+    if (!prosodyTargets.has(key)) {
+      prosodyTargets.set(key, { readText, ...(g2p ? { g2p } : {}) });
+    }
+  }
+  const keys = [...prosodyTargets.keys()];
+  const analyses = await analyzeProsody(serverEnv, projectPath, [...prosodyTargets.values()]);
+  const byKey = new Map(keys.map((key, index) => [key, analyses[index]!]));
+  return new Map([...keyByTtsId].map(([ttsId, key]) => [ttsId, byKey.get(key)!] as const));
 }
 
 export function startAnalysisBatch(

@@ -10,7 +10,7 @@ import type { TtsInputForProvider, SavedTtsForProvider, TtsProviderAdapter } fro
 
 export const voicevoxProvider = {
   provider: "voicevox",
-  usesG2p: true,
+  pipelines: { "llm-g2p": true, prosody: { pitchWeight: 1 } },
   createComparisonInput(item: TtsInputForProvider<"voicevox">) {
     return createDraftComparisonInput("voicevox", item, getEffectiveReadText(item));
   },
@@ -30,6 +30,7 @@ export const voicevoxProvider = {
       voiceName: input.voiceName,
       ...(voiceVersion ? { voiceVersion } : {}),
       ...(input.synthesisSettings ? { synthesisSettings: input.synthesisSettings } : {}),
+      ...(input.prosody ? { prosody: input.prosody } : {}),
     });
   },
   synthesize(serverEnv: ServerEnv, input) {

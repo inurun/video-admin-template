@@ -68,6 +68,16 @@ vi.mock("@/server/_shared/storage", async () => {
   };
 });
 
+// These cases cover the LLM G2P pipeline; prosody routing is in tts-analysis-prosody.test.ts.
+vi.mock("@/video/config", async () => ({
+  ...(await vi.importActual<typeof import("@/video/config")>("@/video/config")),
+  speechConfig: {
+    voicevox: { pipeline: "llm-g2p" },
+    voisona: { pipeline: "llm-g2p" },
+    coeiroink: { pipeline: "llm-g2p" },
+  },
+}));
+
 vi.mock("@/server/features/haqumei-api/analyze", () => ({
   analyzeTexts: analyzeTextsMock,
 }));

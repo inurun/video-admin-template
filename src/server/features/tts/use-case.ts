@@ -1,6 +1,7 @@
-import type { VoiceOption } from "@/_schemas";
+import type { G2pItem, VoiceOption } from "@/_schemas";
 import type { ServerEnv } from "@/server/core/env";
 import { clearProjectTtsCache, readSavedProject } from "@/server/_shared/storage";
+import { analyzeText } from "@/server/features/haqumei-api/analyze";
 import { validateG2pItem } from "@/server/features/haqumei-api/validate";
 import {
   listOptionalCoeiroinkVoices,
@@ -17,6 +18,9 @@ import {
 } from "./contract";
 import { getEffectiveReadText, getUsableG2p } from "./providers/comparison";
 import { getTtsProvider } from "./providers/registry";
+import type { TtsProvider } from "./providers/types";
+import { findSynthesisProsody } from "./prosody/cache";
+import { getSpeechPipeline } from "./speech-pipeline";
 import { enqueueProjectMutation } from "@/server/features/project/project-mutation-queue";
 import { TtsCacheClearConflictError } from "@/server/features/tts/errors";
 
@@ -96,6 +100,26 @@ async function generatePreviewG2p(
   return result.g2p;
 }
 
+/** 試聴の読み: 渡された g2p、無ければ方式ごとの土台（prosody は analyze、llm-g2p は LLM）。 */
+async function resolvePreviewG2p(
+  serverEnv: ServerEnv,
+  provider: TtsProvider,
+  readText: string,
+  g2p: unknown,
+): Promise<G2pItem | undefined> {
+  const { pipeline } = getSpeechPipeline(provider);
+  if (pipeline === "none") {
+    return undefined;
+  }
+  const usable = getUsableG2p(g2p, readText);
+  if (usable) {
+    return usable;
+  }
+  return pipeline === "prosody"
+    ? analyzeText(serverEnv, readText)
+    : generatePreviewG2p(serverEnv, readText, provider);
+}
+
 export async function generateTtsG2p(serverEnv: ServerEnv, input: unknown) {
   const { pageId, item } = ttsG2pGenerateRequestSchema.parse(input);
   return generateSingleG2p(serverEnv, {
@@ -117,14 +141,13 @@ export async function synthesizeTts(serverEnv: ServerEnv, input: unknown) {
   const parsed = ttsSynthesizeRequestSchema.parse(input);
   const provider = getTtsProvider(parsed.provider);
   const readText = getEffectiveReadText(parsed);
-  const g2p = provider.usesG2p
-    ? (getUsableG2p(parsed.g2p, readText) ??
-      (await generatePreviewG2p(serverEnv, readText, parsed.provider)))
-    : parsed.g2p;
+  const g2p = await resolvePreviewG2p(serverEnv, parsed.provider, readText, parsed.g2p);
+  const prosody = await findSynthesisProsody(parsed.projectPath, parsed.provider, g2p);
   const synthesisInput = {
     ...parsed,
     readText,
     ...(g2p ? { g2p } : {}),
+    ...(prosody ? { prosody } : {}),
     synthesisSettings: parsed.synthesisSettings ?? undefined,
     ...(parsed.provider === "coeiroink" ? {} : { voiceVersion: parsed.voiceVersion ?? "" }),
   };

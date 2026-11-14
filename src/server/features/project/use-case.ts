@@ -48,7 +48,13 @@ import {
   g2pAudioIdentity,
 } from "@/server/features/tts/providers/comparison";
 import { stableStringify } from "@/server/_shared/stable-stringify";
-import type { PlannedSynthesis, TtsComparisonInput } from "@/server/features/tts/providers/types";
+import type {
+  PlannedSynthesis,
+  SynthesisProsody,
+  TtsComparisonInput,
+} from "@/server/features/tts/providers/types";
+import { getSpeechPipeline } from "@/server/features/tts/speech-pipeline";
+import { findSynthesisProsody } from "@/server/features/tts/prosody/cache";
 import { readCachedWav } from "@/server/features/tts/wav-cache";
 import { recordG2pCache, type G2pCacheRecord } from "@/server/features/tts/g2p-cache";
 import type { SynthesizeResponse } from "@/server/features/tts/contract";
@@ -202,7 +208,8 @@ function canKeepAnalyzing(item: SaveTtsItem, previous: SavedTts) {
   if (item.provider === "voicepeak" || previous.provider === "voicepeak") {
     return false;
   }
-  if (!getTtsProvider(item.provider).usesG2p) {
+  const { pipeline } = getSpeechPipeline(item.provider);
+  if (pipeline === "none") {
     return false;
   }
 
@@ -213,7 +220,12 @@ function canKeepAnalyzing(item: SaveTtsItem, previous: SavedTts) {
   }
 
   // 生成中に手で書いた g2p が届いたら、生成を待たずにそれで合成する。
-  return !getUsableG2p(item.speech?.g2p, nextReadText);
+  const g2p = getUsableG2p(item.speech?.g2p, nextReadText);
+  if (!g2p) {
+    return true;
+  }
+  // prosody は保存済みの kana の韻律も解析中に作る。同じ kana が届いたらそのまま待つ。
+  return pipeline === "prosody" && previous.speech.g2p?.kana === g2p.kana;
 }
 
 async function classifyTtsReuse(
@@ -266,6 +278,9 @@ type PlannedTts = {
   reuse: TtsReuseKind;
   spoken: boolean;
   needsG2pAnalyze: boolean;
+  /** prosody の方式で、保存する kana の韻律がまだキャッシュに無い。 */
+  needsProsody: boolean;
+  prosody?: SynthesisProsody;
 };
 
 function computeNeedsG2pAnalyze(
@@ -277,7 +292,7 @@ function computeNeedsG2pAnalyze(
     return false;
   }
 
-  if (!getTtsProvider(nextInput.provider).usesG2p) {
+  if (getSpeechPipeline(nextInput.provider).pipeline === "none") {
     return false;
   }
 
@@ -287,7 +302,7 @@ function computeNeedsG2pAnalyze(
 /** エディタで書き換わった読みは、読みキャッシュに saved として残す。 */
 function savedG2pRecords(plans: PlannedTts[]): G2pCacheRecord[] {
   return plans.flatMap(({ item, previous }) => {
-    if (!getTtsProvider(item.provider).usesG2p) {
+    if (getSpeechPipeline(item.provider).pipeline === "none") {
       return [];
     }
     const text = getEffectiveReadText(item);
@@ -439,7 +454,7 @@ function createAnalyzingReuseTts(
  * 読みが同じなら保存済みの g2p を使う。再生成は /tts/g2p/generate だけが行う。
  */
 function withSavedG2p(item: SaveTtsItem, previous: SavedTts | undefined): SaveTtsItem {
-  if (!previous || !getTtsProvider(item.provider).usesG2p) {
+  if (!previous || getSpeechPipeline(item.provider).pipeline === "none") {
     return item;
   }
   const readText = getEffectiveReadText(item);
@@ -470,13 +485,24 @@ async function planSavedTts(
     previousPresets,
     forceResynthesis,
   );
+  const needsG2pAnalyze = computeNeedsG2pAnalyze(reuse, spoken, nextInput);
+  const prosodyG2p =
+    reuse === "none" && spoken && !needsG2pAnalyze
+      ? getUsableG2p(nextInput.g2p, nextInput.readText)
+      : undefined;
+  const prosody = await findSynthesisProsody(projectPath, nextInput.provider, prosodyG2p);
   return {
     item,
     previous,
     nextInput,
     reuse,
     spoken,
-    needsG2pAnalyze: computeNeedsG2pAnalyze(reuse, spoken, nextInput),
+    needsG2pAnalyze,
+    needsProsody:
+      Boolean(prosodyG2p) &&
+      !prosody &&
+      getSpeechPipeline(nextInput.provider).pipeline === "prosody",
+    ...(prosody ? { prosody } : {}),
   };
 }
 
@@ -485,15 +511,17 @@ function planProviderSynthesis(
   projectPath: string,
   itemId: string,
   nextInput: TtsComparisonInput<SaveTtsItem["provider"]>,
+  prosody: SynthesisProsody | undefined,
 ): PlannedSynthesis {
   const provider = getTtsProvider(nextInput.provider);
-  if (provider.usesG2p) {
+  if (getSpeechPipeline(nextInput.provider).pipeline !== "none") {
     assertHaqumeiTextLength(nextInput.readText, itemId);
   }
 
   return provider.plan(serverEnv, {
     ...nextInput,
     projectPath,
+    ...(prosody ? { prosody } : {}),
   } as never);
 }
 
@@ -538,7 +566,9 @@ async function buildSavedTts(
     return { tts: createIdleSavedTts(plan.item, plan.nextInput) as SavedTts };
   }
 
-  if (plan.needsG2pAnalyze && hasOpenRouterApiKey(serverEnv)) {
+  if ((plan.needsG2pAnalyze || plan.needsProsody) && hasOpenRouterApiKey(serverEnv)) {
+    // 韻律だけを作るときは保存する kana を残し、kana ごとに別の解析にする。
+    const kana = plan.needsG2pAnalyze ? undefined : plan.nextInput.g2p?.kana;
     const analysisKey = createTtsAnalysisKey({
       projectPath,
       pageId,
@@ -546,11 +576,12 @@ async function buildSavedTts(
       provider: plan.nextInput.provider,
       text: plan.item.text,
       effectiveReadText: plan.nextInput.readText,
+      ...(kana ? { kana } : {}),
     });
     return {
       tts: createAnalyzingSavedTts(
         plan.item,
-        { ...plan.nextInput, g2p: undefined },
+        kana ? plan.nextInput : { ...plan.nextInput, g2p: undefined },
         analysisKey,
       ) as SavedTts,
       analysis: {
@@ -561,7 +592,13 @@ async function buildSavedTts(
     };
   }
 
-  const planned = planProviderSynthesis(serverEnv, projectPath, plan.item.id, plan.nextInput);
+  const planned = planProviderSynthesis(
+    serverEnv,
+    projectPath,
+    plan.item.id,
+    plan.nextInput,
+    plan.prosody,
+  );
   const cached = await readCachedWav(planned.wav);
   if (cached) {
     return {

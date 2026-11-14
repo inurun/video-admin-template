@@ -3,6 +3,10 @@ import type { SaveTtsItem } from "@/server/features/project/contract";
 import type { ServerEnv } from "@/server/core/env";
 import type { SynthesizeResponse } from "@/server/features/tts/contract";
 import type { PlannedWav } from "@/server/features/tts/wav-cache";
+import type { components } from "@/server/generated/haqumei-api/schema";
+
+/** Reference prosody with the weights to mix it in, as haqumei synthesis takes it. */
+export type SynthesisProsody = components["schemas"]["SynthesisProsody"];
 
 export type TtsProvider = SaveTtsItem["provider"];
 export type TtsInputForProvider<TProvider extends TtsProvider> = Extract<
@@ -36,6 +40,16 @@ export type TtsComparisonInput<TProvider extends TtsProvider = TtsProvider> = Ex
 
 export type TtsSynthesisInput<TProvider extends TtsProvider> = TtsComparisonInput<TProvider> & {
   projectPath: string;
+  prosody?: SynthesisProsody;
+};
+
+/**
+ * Reading pipelines the engine can take. `prosody` carries the engine's fixed pitch weight
+ * (an engine that only takes H/L, like VoiSona, mixes timing alone).
+ */
+export type ProviderPipelines = {
+  "llm-g2p"?: true;
+  prosody?: { pitchWeight: number };
 };
 
 export type PlannedSynthesis = {
@@ -45,7 +59,7 @@ export type PlannedSynthesis = {
 
 export type TtsProviderAdapter<TProvider extends TtsProvider> = {
   provider: TProvider;
-  usesG2p: boolean;
+  pipelines: ProviderPipelines;
   createComparisonInput: (item: TtsInputForProvider<TProvider>) => TtsComparisonInput<TProvider>;
   createPreviousComparisonInput: (
     item: SavedTtsForProvider<TProvider>,

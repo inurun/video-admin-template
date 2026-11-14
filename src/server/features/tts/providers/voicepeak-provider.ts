@@ -10,7 +10,7 @@ import type { TtsInputForProvider, SavedTtsForProvider, TtsProviderAdapter } fro
 
 export const voicepeakProvider = {
   provider: "voicepeak",
-  usesG2p: false,
+  pipelines: {},
   createComparisonInput(item: TtsInputForProvider<"voicepeak">) {
     return createDraftComparisonInput("voicepeak", item, getEffectiveReadText(item));
   },

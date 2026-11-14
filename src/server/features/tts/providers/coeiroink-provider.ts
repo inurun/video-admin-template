@@ -9,7 +9,7 @@ import type { TtsInputForProvider, SavedTtsForProvider, TtsProviderAdapter } fro
 
 export const coeiroinkProvider = {
   provider: "coeiroink",
-  usesG2p: true,
+  pipelines: { "llm-g2p": true },
   createComparisonInput(item: TtsInputForProvider<"coeiroink">) {
     return createDraftComparisonInput("coeiroink", item, getEffectiveReadText(item));
   },

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { ServerEnv } from "@/server/core/env";
 
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+const OPENROUTER_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions";
 const DEFAULT_RETRY_AFTER_SEC = 10;
 const MAX_RETRY_AFTER_SEC = 30;
 
@@ -61,10 +61,15 @@ export type OpenRouterProfile = {
   retryLimit: number;
 };
 
+/** A user message part; audio goes in as base64 WAV. */
+export type OpenRouterContentPart =
+  | { type: "text"; text: string }
+  | { type: "input_audio"; input_audio: { data: string; format: "wav" } };
+
 export type OpenRouterJsonRequest<T> = {
   profile: OpenRouterProfile;
   system: string;
-  user: string;
+  user: string | OpenRouterContentPart[];
   schemaName: string;
   jsonSchema: Record<string, unknown>;
   output: z.ZodType<T>;
@@ -135,9 +140,15 @@ function retryDelayMs(response: Response) {
   return Math.min(seconds, MAX_RETRY_AFTER_SEC) * 1000;
 }
 
-async function postChatCompletion(apiKey: string, profile: OpenRouterProfile, body: string) {
+/** POSTs to OpenRouter, retrying 429 and 5xx up to `retryLimit` times. */
+export async function postOpenRouter(
+  url: string,
+  apiKey: string,
+  profile: Pick<OpenRouterProfile, "timeoutMs" | "retryLimit">,
+  body: string,
+) {
   for (let attempt = 0; ; attempt += 1) {
-    const response = await fetch(OPENROUTER_URL, {
+    const response = await fetch(url, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -167,7 +178,8 @@ export async function requestOpenRouterJson<T>(
   }
 
   const { profile } = request;
-  const response = await postChatCompletion(
+  const response = await postOpenRouter(
+    OPENROUTER_CHAT_URL,
     apiKey,
     profile,
     JSON.stringify({

@@ -1,4 +1,10 @@
-import type { BgmRest, BgmScene, SoundCue, VideoAudioConfig } from "@/video-host/contract";
+import type {
+  BgmRest,
+  BgmScene,
+  SoundCue,
+  VideoAudioConfig,
+  VideoSpeechConfig,
+} from "@/video-host/contract";
 
 /** Data only: the server imports this to write the static audio manifest. */
 export const audioConfig = {
@@ -15,3 +21,11 @@ export const audioConfig = {
   // e.g. { clip: "hit", src: "hit.mp3", volume: 0.3 }
   cues: [] as readonly SoundCue[],
 } satisfies VideoAudioConfig;
+
+/** Data only: the server reads which reading pipeline each TTS engine uses. */
+export const speechConfig = {
+  // timingWeight omitted = 0.5
+  voicevox: { pipeline: "prosody" },
+  voisona: { pipeline: "prosody" },
+  coeiroink: { pipeline: "llm-g2p" },
+} satisfies VideoSpeechConfig;

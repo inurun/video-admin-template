@@ -7,6 +7,7 @@ import {
   savedSchedulesSchema,
   savedTimelineSchema,
   type PageType,
+  type SavedTts,
 } from "@/_schemas";
 import type { HfMode } from "./constants";
 
@@ -51,6 +52,21 @@ export type BgmScene = { clip: string; src: string; volume: number };
 export type BgmRest = { clip: string; fadeOutSec: number; fadeInSec: number };
 
 export type SoundCue = { clip: string; src: string; volume: number };
+
+/**
+ * How each TTS engine gets its readings and prosody. Server data, read once at startup.
+ * - `prosody`: haqumei analyze + a reference TTS checked by an LLM; the reference audio's
+ *   pitch and timing are mixed into the engine (`timingWeight` defaults to 0.5).
+ * - `llm-g2p`: one LLM G2P pass per page.
+ * An engine left out uses `llm-g2p` when it can, otherwise no G2P.
+ */
+export type VideoSpeechConfig = {
+  [TProvider in SavedTts["provider"]]?:
+    | { pipeline: "prosody"; timingWeight?: number }
+    | { pipeline: "llm-g2p" };
+};
+
+export type SpeechPipeline = NonNullable<VideoSpeechConfig[SavedTts["provider"]]>["pipeline"];
 
 export type VideoDefinition = VideoAudioConfig & {
   Composition: (props: HfData) => HfNode;

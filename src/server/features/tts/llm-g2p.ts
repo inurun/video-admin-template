@@ -3,6 +3,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { dictionaryListResponseSchema, type DictionaryEntry, type G2pItem } from "@/_schemas";
 import type { ServerEnv } from "@/server/core/env";
+import { runPool } from "@/server/_shared/run-pool";
 import { listDictionary } from "@/server/features/dictionary/use-case";
 import { analyzeTexts } from "@/server/features/haqumei-api/analyze";
 import { HaqumeiApiError } from "@/server/features/haqumei-api/error";
@@ -259,20 +260,6 @@ async function runChunk(
   } catch (error) {
     return { ids, valid, attempts, error: errorMessage(error) };
   }
-}
-
-async function runPool<T, R>(items: T[], concurrency: number, task: (item: T) => Promise<R>) {
-  const results: R[] = Array.from({ length: items.length });
-  let next = 0;
-  const worker = async () => {
-    while (next < items.length) {
-      const index = next;
-      next += 1;
-      results[index] = await task(items[index]!);
-    }
-  };
-  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, worker));
-  return results;
 }
 
 async function writeRunLog(mode: G2pGenerationMode, startedAt: string, value: unknown) {

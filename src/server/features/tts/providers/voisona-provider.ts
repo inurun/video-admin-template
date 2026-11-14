@@ -10,7 +10,8 @@ import type { TtsInputForProvider, SavedTtsForProvider, TtsProviderAdapter } fro
 
 export const voisonaProvider = {
   provider: "voisona",
-  usesG2p: true,
+  // VoiSona takes only H/L from the kana, so the reference pitch is not mixed in.
+  pipelines: { "llm-g2p": true, prosody: { pitchWeight: 0 } },
   createComparisonInput(item: TtsInputForProvider<"voisona">) {
     return createDraftComparisonInput("voisona", item, getEffectiveReadText(item));
   },
@@ -30,6 +31,7 @@ export const voisonaProvider = {
       voiceName: input.voiceName,
       ...(voiceVersion ? { voiceVersion } : {}),
       ...(input.synthesisSettings ? { synthesisSettings: input.synthesisSettings } : {}),
+      ...(input.prosody ? { prosody: input.prosody } : {}),
     });
   },
   synthesize(serverEnv: ServerEnv, input) {

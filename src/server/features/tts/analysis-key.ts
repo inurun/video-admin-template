@@ -11,6 +11,8 @@ export function createTtsAnalysisKey(input: {
   provider: string;
   text: string;
   effectiveReadText: string;
+  /** The saved kana, when only its prosody is being made. */
+  kana?: string;
 }) {
   return crypto
     .createHash("md5")
@@ -23,6 +25,7 @@ export function createTtsAnalysisKey(input: {
         provider: input.provider,
         text: input.text,
         effectiveReadText: input.effectiveReadText,
+        ...(input.kana ? { kana: input.kana } : {}),
         profileId: LLM_G2P_PROFILE.id,
       }),
     )

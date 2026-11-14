@@ -6,7 +6,7 @@ import { voicepeakProvider } from "./voicepeak-provider";
 import { voicevoxProvider } from "./voicevox-provider";
 import { coeiroinkProvider } from "./coeiroink-provider";
 
-const providers = {
+export const ttsProviders = {
   voisona: voisonaProvider,
   voicevox: voicevoxProvider,
   voicepeak: voicepeakProvider,
@@ -14,7 +14,7 @@ const providers = {
 } satisfies { [TProvider in TtsProvider]: TtsProviderAdapter<TProvider> };
 
 export function getTtsProvider<TProvider extends TtsProvider>(provider: TProvider) {
-  return providers[provider];
+  return ttsProviders[provider];
 }
 
 export function createTtsComparisonInput(item: SaveTtsItem) {

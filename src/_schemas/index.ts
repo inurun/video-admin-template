@@ -2,6 +2,7 @@ export * from "./g2p";
 export * from "./dictionary";
 export * from "./g2p-review";
 export * from "./g2p-cache";
+export * from "./prosody-cache";
 export {
   savedScheduleItemSchema,
   savedSchedulesSchema,

@@ -1,0 +1,87 @@
+import { describe, expect, it } from "vitest";
+import { getSpeechPipeline, resolveSpeechPipelines, toSynthesisProsody } from "../speech-pipeline";
+
+const providers = {
+  voicevox: { pipelines: { "llm-g2p": true, prosody: { pitchWeight: 1 } } },
+  voisona: { pipelines: { "llm-g2p": true, prosody: { pitchWeight: 0 } } },
+  coeiroink: { pipelines: { "llm-g2p": true } },
+  voicepeak: { pipelines: {} },
+} as const;
+
+const extract = {
+  schema_version: "3",
+  aligner_version: "mms-fa-1",
+  score: 0.7,
+  moras: [{ start: 0, vowel_start: 0.05, end: 0.1, log_f0: 5.4 }],
+  pauses: [],
+};
+
+describe("resolveSpeechPipelines", () => {
+  it("combines the template choice with the engine's pitch weight", () => {
+    expect(
+      resolveSpeechPipelines(
+        {
+          voicevox: { pipeline: "prosody" },
+          voisona: { pipeline: "prosody", timingWeight: 0.3 },
+          coeiroink: { pipeline: "llm-g2p" },
+        },
+        providers,
+      ),
+    ).toEqual({
+      voicevox: { pipeline: "prosody", pitchWeight: 1, timingWeight: 0.5 },
+      voisona: { pipeline: "prosody", pitchWeight: 0, timingWeight: 0.3 },
+      coeiroink: { pipeline: "llm-g2p" },
+      voicepeak: { pipeline: "none" },
+    });
+  });
+
+  it("uses llm-g2p for an engine the template leaves out when it can", () => {
+    expect(resolveSpeechPipelines({}, providers)).toMatchObject({
+      voicevox: { pipeline: "llm-g2p" },
+      voicepeak: { pipeline: "none" },
+    });
+  });
+
+  it("rejects a pipeline the engine cannot take", () => {
+    expect(() => resolveSpeechPipelines({ coeiroink: { pipeline: "prosody" } }, providers)).toThrow(
+      "coeiroink does not take prosody",
+    );
+    expect(() => resolveSpeechPipelines({ voicepeak: { pipeline: "llm-g2p" } }, providers)).toThrow(
+      "voicepeak does not take llm-g2p",
+    );
+  });
+
+  it("rejects a timing weight outside 0 to 1", () => {
+    expect(() =>
+      resolveSpeechPipelines({ voicevox: { pipeline: "prosody", timingWeight: 1.5 } }, providers),
+    ).toThrow("timingWeight");
+  });
+});
+
+describe("template speech config", () => {
+  it("runs prosody on VOICEVOX and VoiSona and LLM G2P on COEIROINK", () => {
+    expect(getSpeechPipeline("voicevox")).toEqual({
+      pipeline: "prosody",
+      pitchWeight: 1,
+      timingWeight: 0.5,
+    });
+    expect(getSpeechPipeline("voisona")).toEqual({
+      pipeline: "prosody",
+      pitchWeight: 0,
+      timingWeight: 0.5,
+    });
+    expect(getSpeechPipeline("coeiroink")).toEqual({ pipeline: "llm-g2p" });
+    expect(getSpeechPipeline("voicepeak")).toEqual({ pipeline: "none" });
+  });
+
+  it("adds the weights to the extract only for prosody engines", () => {
+    expect(toSynthesisProsody("voicevox", extract)).toEqual({
+      moras: extract.moras,
+      pauses: [],
+      pitch_weight: 1,
+      timing_weight: 0.5,
+    });
+    expect(toSynthesisProsody("coeiroink", extract)).toBeUndefined();
+    expect(toSynthesisProsody("voicevox", undefined)).toBeUndefined();
+  });
+});

@@ -15,6 +15,7 @@ const requiredPaths = [
   "/v1/dictionary/entries",
   "/v1/dictionary/entries/batch",
   "/v1/dictionary/entries/{id}",
+  "/v1/prosody/extract",
   "/v1/synthesis/voicevox",
   "/v1/synthesis/voisona",
   "/v1/synthesis/coeiroink",
