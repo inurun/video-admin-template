@@ -4,6 +4,7 @@ import type {
   SoundCue,
   VideoAudioConfig,
   VideoSpeechConfig,
+  VideoSpeechVoiceConfig,
 } from "@/video-host/contract";
 
 /** Data only: the server imports this to write the static audio manifest. */
@@ -29,3 +30,11 @@ export const speechConfig = {
   voisona: { pipeline: "prosody" },
   coeiroink: { pipeline: "llm-g2p" },
 } satisfies VideoSpeechConfig;
+
+/**
+ * Data only: per-character reference TTS instruction for the prosody pipeline, keyed by voice id.
+ * A voice left out reads with the shared instruction.
+ */
+export const speechVoiceConfig = {
+  // e.g. "voicevox::113::": { sourceInstructions: "明るく元気な10代。テンポよく、語尾ははっきり下げる。" },
+} satisfies VideoSpeechVoiceConfig;

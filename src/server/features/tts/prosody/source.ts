@@ -1,6 +1,7 @@
 import type { ServerEnv } from "@/server/core/env";
 import { OpenRouterError, postOpenRouter } from "@/server/core/openrouter";
 import { PROSODY_SOURCE } from "./profiles";
+import type { ProsodySource } from "./source-config";
 
 const OPENROUTER_SPEECH_URL = "https://openrouter.ai/api/v1/audio/speech";
 
@@ -22,8 +23,12 @@ export function wavFromPcm(pcm: Buffer, sampleRate: number) {
   return Buffer.concat([header, pcm]);
 }
 
-/** Reads `text` with the reference TTS and returns a WAV. */
-export async function synthesizeProsodySource(serverEnv: ServerEnv, text: string) {
+/** Reads `text` with the reference TTS of `source` and returns a WAV. */
+export async function synthesizeProsodySource(
+  serverEnv: ServerEnv,
+  text: string,
+  source: ProsodySource,
+) {
   const apiKey = serverEnv.OPENROUTER_API_KEY?.trim();
   if (!apiKey) {
     throw new OpenRouterError("OPENROUTER_API_KEY is not set");
@@ -34,11 +39,11 @@ export async function synthesizeProsodySource(serverEnv: ServerEnv, text: string
     apiKey,
     PROSODY_SOURCE,
     JSON.stringify({
-      model: PROSODY_SOURCE.model,
+      model: source.model,
       input: text,
-      voice: PROSODY_SOURCE.voice,
+      voice: source.voice,
       response_format: "pcm",
-      instructions: PROSODY_SOURCE.instructions,
+      instructions: source.instructions,
     }),
   );
   if (!response.ok) {
@@ -54,5 +59,5 @@ export async function synthesizeProsodySource(serverEnv: ServerEnv, text: string
   if (pcm.length === 0) {
     throw new OpenRouterError("OpenRouter speech returned no audio", response.status);
   }
-  return wavFromPcm(pcm, PROSODY_SOURCE.sampleRate);
+  return wavFromPcm(pcm, source.sampleRate);
 }

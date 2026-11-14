@@ -27,6 +27,7 @@ import type { SpeechPipeline } from "@/video-host/contract";
 import { getEffectiveReadText, getUsableG2p } from "@/server/features/tts/providers/comparison";
 import { getSpeechPipeline, toSynthesisProsody } from "@/server/features/tts/speech-pipeline";
 import { analyzeProsody, type ProsodyTarget } from "@/server/features/tts/prosody/pipeline";
+import { prosodySourceFor } from "@/server/features/tts/prosody/source-config";
 
 const inFlightJobs = new Map<string, Promise<void>>();
 const pendingBatches = new Set<Promise<void>>();
@@ -224,7 +225,7 @@ async function runLlmG2p(
   return new Map([...generated].map(([ttsId, result]) => [ttsId, { g2p: result.g2p }]));
 }
 
-/** Same read text and saved kana run once. */
+/** Same read text, saved kana and reference TTS run once. */
 async function runProsody(
   serverEnv: ServerEnv,
   projectPath: string,
@@ -238,10 +239,11 @@ async function runProsody(
   for (const { item } of targets) {
     const readText = getEffectiveReadText(item);
     const g2p = getUsableG2p(item.speech.g2p, readText);
-    const key = stableStringify({ readText, kana: g2p?.kana ?? null });
+    const source = prosodySourceFor(item);
+    const key = stableStringify({ readText, kana: g2p?.kana ?? null, source });
     keyByTtsId.set(item.id, key);
     if (!prosodyTargets.has(key)) {
-      prosodyTargets.set(key, { readText, ...(g2p ? { g2p } : {}) });
+      prosodyTargets.set(key, { readText, source, ...(g2p ? { g2p } : {}) });
     }
   }
   const keys = [...prosodyTargets.keys()];

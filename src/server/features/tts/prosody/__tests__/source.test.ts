@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { synthesizeProsodySource } from "../source";
+import { prosodySourceFor } from "../source-config";
+
+const source = prosodySourceFor({ provider: "voicevox", voiceName: "3" });
 
 describe("synthesizeProsodySource", () => {
   afterEach(() => {
@@ -11,7 +14,7 @@ describe("synthesizeProsodySource", () => {
     const fetchMock = vi.fn(async () => new Response(pcm));
     vi.stubGlobal("fetch", fetchMock);
 
-    const wav = await synthesizeProsodySource({ OPENROUTER_API_KEY: "secret" }, "犬が走る");
+    const wav = await synthesizeProsodySource({ OPENROUTER_API_KEY: "secret" }, "犬が走る", source);
 
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe("https://openrouter.ai/api/v1/audio/speech");
@@ -34,8 +37,8 @@ describe("synthesizeProsodySource", () => {
       "fetch",
       vi.fn(async () => new Response("bad", { status: 400 })),
     );
-    await expect(synthesizeProsodySource({ OPENROUTER_API_KEY: "secret" }, "犬")).rejects.toThrow(
-      "HTTP 400",
-    );
+    await expect(
+      synthesizeProsodySource({ OPENROUTER_API_KEY: "secret" }, "犬", source),
+    ).rejects.toThrow("HTTP 400");
   });
 });

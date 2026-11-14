@@ -20,7 +20,7 @@ For each word decide two readings:
 Report only the words where heard differs from the analyzer's reading, or heard differs from correct.
 - Readings are katakana as pronounced. Particle は→ワ, へ→エ, を→ヲ. Long vowels as ー.
 - Judge the sounds (moras) only. Ignore pitch accent, pauses, speed and emotion.
-- Same sounds written differently (オオ vs オー) are not a difference.
+- Same sounds written differently (オオ vs オー) are not a difference, but a missing or extra long vowel is (オーケ vs オーケー).
 - Return every item, with an empty corrections list when everything matches.`;
 
 const correctionSchema = z.object({
@@ -90,8 +90,33 @@ export function wordsOf(kana: string): KanaWord[] {
   });
 }
 
+const VOWEL_ROWS = [
+  ["ア", "アカガサザタダナハバパマヤラワァャヮ"],
+  ["イ", "イキギシジチヂニヒビピミリィ"],
+  ["ウ", "ウクグスズツヅヌフブプムユルゥュヴ"],
+  ["エ", "エケゲセゼテデネヘベペメレェ"],
+  ["オ", "オコゴソゾトドノホボポモヨロヲォョ"],
+] as const;
+
+function vowelOf(mora: string) {
+  const last = mora.at(-1) ?? "";
+  return VOWEL_ROWS.find(([, row]) => row.includes(last))?.[0];
+}
+
+/** Moras with each ー spelled as the vowel before it, so length counts but spelling does not. */
+function soundMoras(reading: string) {
+  const moras = splitKanaMoras(normalizeReading(reading));
+  return moras.map((mora, index) =>
+    mora === "ー" && index > 0 ? (vowelOf(moras[index - 1]!) ?? mora) : mora,
+  );
+}
+
+/**
+ * Same moras when read aloud: オー and オオ match, but オーケ and オーケー do not (the reference
+ * is aligned mora by mora, so a missing long vowel matters).
+ */
 export function sameSound(a: string, b: string) {
-  return normalizeReading(a).replaceAll("ー", "") === normalizeReading(b).replaceAll("ー", "");
+  return soundMoras(a).join("") === soundMoras(b).join("");
 }
 
 /** Spells the given words in katakana inside the text; words are matched left to right. */

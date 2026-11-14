@@ -68,6 +68,17 @@ export type VideoSpeechConfig = {
 
 export type SpeechPipeline = NonNullable<VideoSpeechConfig[SavedTts["provider"]]>["pipeline"];
 
+/**
+ * Per-character settings of the prosody pipeline, keyed by voice id
+ * (`provider::voiceName::voiceVersion`, e.g. `voicevox::113::`).
+ */
+export type VideoSpeechVoiceConfig = {
+  [voiceId: string]: {
+    /** Delivery instruction for the reference TTS; omitted = the shared default. */
+    sourceInstructions?: string;
+  };
+};
+
 export type VideoDefinition = VideoAudioConfig & {
   Composition: (props: HfData) => HfNode;
   /** Called once with the root `data-mode` before the first mount. */

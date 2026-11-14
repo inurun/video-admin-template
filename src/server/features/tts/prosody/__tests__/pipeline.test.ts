@@ -29,9 +29,17 @@ vi.mock("../reading-check", async () => ({
 }));
 
 import { analyzeProsody } from "../pipeline";
+import type { ProsodySource } from "../source-config";
 import { prosodyExtractPath, prosodySourcePath, readCachedProsody } from "../cache";
 
 const env = { OPENROUTER_API_KEY: "secret" };
+const source: ProsodySource = {
+  id: "test-source",
+  model: "google/gemini-3.8-flash-tts",
+  voice: "Zephyr",
+  instructions: "ふつうに読む。",
+  sampleRate: 24_000,
+};
 const text = "早急に相殺した";
 const analyzed = createG2pItem(text, "早急:ソーキュー'|に:ニ/相殺:ソーサイ'|した:シタ");
 const extract = {
@@ -74,16 +82,18 @@ describe("analyzeProsody", () => {
   it("keeps the analyzer kana when the recording matches and caches the source and extract", async () => {
     mocks.checkReadings.mockResolvedValueOnce(checked([]));
 
-    await expect(analyzeProsody(env, "project", [{ readText: text }])).resolves.toEqual([
+    await expect(analyzeProsody(env, "project", [{ readText: text, source }])).resolves.toEqual([
       { g2p: analyzed, prosody: extract },
     ]);
     expect(mocks.extractProsody).toHaveBeenCalledWith(env, analyzed, wav(text));
     expect(mocks.validateG2pItem).not.toHaveBeenCalled();
-    await expect(fs.readFile(prosodySourcePath("project", analyzed))).resolves.toEqual(wav(text));
-    await expect(readCachedProsody("project", analyzed)).resolves.toEqual(extract);
+    await expect(fs.readFile(prosodySourcePath("project", analyzed, source))).resolves.toEqual(
+      wav(text),
+    );
+    await expect(readCachedProsody("project", analyzed, source)).resolves.toEqual(extract);
 
     // A second run reuses the checked source: no TTS and no LLM.
-    await analyzeProsody(env, "project", [{ readText: text }]);
+    await analyzeProsody(env, "project", [{ readText: text, source }]);
     expect(mocks.synthesizeProsodySource).toHaveBeenCalledTimes(1);
     expect(mocks.checkReadings).toHaveBeenCalledTimes(1);
   });
@@ -94,7 +104,7 @@ describe("analyzeProsody", () => {
     );
     const kana = "早急:サッキュー'|に:ニ/相殺:ソーサイ'|した:シタ";
 
-    const [result] = await analyzeProsody(env, "project", [{ readText: text }]);
+    const [result] = await analyzeProsody(env, "project", [{ readText: text, source }]);
 
     expect(result).toEqual({ g2p: createG2pItem(text, kana), prosody: extract });
     expect(mocks.validateG2pItem).toHaveBeenCalledWith(env, { text, kana });
@@ -108,9 +118,14 @@ describe("analyzeProsody", () => {
       )
       .mockResolvedValueOnce(checked([]));
 
-    const [result] = await analyzeProsody(env, "project", [{ readText: text }]);
+    const [result] = await analyzeProsody(env, "project", [{ readText: text, source }]);
 
-    expect(mocks.synthesizeProsodySource).toHaveBeenNthCalledWith(2, env, "早急にソーサイした");
+    expect(mocks.synthesizeProsodySource).toHaveBeenNthCalledWith(
+      2,
+      env,
+      "早急にソーサイした",
+      source,
+    );
     expect(mocks.extractProsody).toHaveBeenCalledWith(env, analyzed, wav("早急にソーサイした"));
     expect(result).toEqual({ g2p: analyzed, prosody: extract });
   });
@@ -121,12 +136,12 @@ describe("analyzeProsody", () => {
       .mockResolvedValueOnce(checked([misread]))
       .mockResolvedValueOnce(checked([misread]));
 
-    const [result] = await analyzeProsody(env, "project", [{ readText: text }]);
+    const [result] = await analyzeProsody(env, "project", [{ readText: text, source }]);
 
     expect(result).toEqual({ g2p: analyzed });
     expect(mocks.extractProsody).not.toHaveBeenCalled();
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("still misreads"));
-    await expect(fs.access(prosodySourcePath("project", analyzed))).rejects.toThrow();
+    await expect(fs.access(prosodySourcePath("project", analyzed, source))).rejects.toThrow();
   });
 
   it("drops the prosody when the extract fails", async () => {
@@ -135,7 +150,7 @@ describe("analyzeProsody", () => {
       HaqumeiApiError.fromUnknown({ code: "alignment_failed", detail: "too short" }, 422),
     );
 
-    await expect(analyzeProsody(env, "project", [{ readText: text }])).resolves.toEqual([
+    await expect(analyzeProsody(env, "project", [{ readText: text, source }])).resolves.toEqual([
       { g2p: analyzed },
     ]);
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("extract failed"));
@@ -144,7 +159,7 @@ describe("analyzeProsody", () => {
   it("drops the prosody when the reference TTS fails", async () => {
     mocks.synthesizeProsodySource.mockRejectedValueOnce(new Error("HTTP 500"));
 
-    await expect(analyzeProsody(env, "project", [{ readText: text }])).resolves.toEqual([
+    await expect(analyzeProsody(env, "project", [{ readText: text, source }])).resolves.toEqual([
       { g2p: analyzed },
     ]);
     expect(mocks.checkReadings).not.toHaveBeenCalled();
@@ -161,7 +176,7 @@ describe("analyzeProsody", () => {
     const results = await analyzeProsody(
       env,
       "project",
-      texts.map((readText) => ({ readText })),
+      texts.map((readText) => ({ readText, source })),
     );
 
     expect(mocks.checkReadings).toHaveBeenCalledTimes(1);
@@ -182,7 +197,7 @@ describe("analyzeProsody", () => {
       analyzeProsody(
         env,
         "project",
-        texts.map((readText) => ({ readText })),
+        texts.map((readText) => ({ readText, source })),
       ),
     ).resolves.toEqual(items.map((g2p) => ({ g2p })));
     expect(mocks.extractProsody).not.toHaveBeenCalled();
@@ -192,7 +207,7 @@ describe("analyzeProsody", () => {
   it("drops the prosody of an item the check left out", async () => {
     mocks.checkReadings.mockResolvedValueOnce(new Map());
 
-    await expect(analyzeProsody(env, "project", [{ readText: text }])).resolves.toEqual([
+    await expect(analyzeProsody(env, "project", [{ readText: text, source }])).resolves.toEqual([
       { g2p: analyzed },
     ]);
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("no result"));
@@ -202,15 +217,15 @@ describe("analyzeProsody", () => {
     const edited = createG2pItem(text, "早急:サッキュー'|に:ニ/相殺:ソーサイ'|した:シタ");
 
     await expect(
-      analyzeProsody(env, "project", [{ readText: text, g2p: edited }]),
+      analyzeProsody(env, "project", [{ readText: text, g2p: edited, source }]),
     ).resolves.toEqual([{ g2p: edited, prosody: extract }]);
-    expect(mocks.synthesizeProsodySource).toHaveBeenCalledWith(env, "サッキューに相殺した");
+    expect(mocks.synthesizeProsodySource).toHaveBeenCalledWith(env, "サッキューに相殺した", source);
     expect(mocks.checkReadings).not.toHaveBeenCalled();
     expect(mocks.extractProsody).toHaveBeenCalledWith(env, edited, wav("サッキューに相殺した"));
 
     // An accent-only edit reuses the source and only extracts again.
     const accent = createG2pItem(text, "早急:サッキュー'|に:ニ/相殺:ソ'ーサイ|した:シタ");
-    await analyzeProsody(env, "project", [{ readText: text, g2p: accent }]);
+    await analyzeProsody(env, "project", [{ readText: text, g2p: accent, source }]);
     expect(mocks.synthesizeProsodySource).toHaveBeenCalledTimes(1);
     expect(mocks.extractProsody).toHaveBeenLastCalledWith(env, accent, wav("サッキューに相殺した"));
   });
@@ -222,15 +237,15 @@ describe("prosody cache keys", () => {
   const reading = createG2pItem(text, "早急:サッキュー'|に:ニ/相殺:ソーサイ'|した:シタ");
 
   it("shares the source across accent and phrase edits but not reading edits", () => {
-    expect(prosodySourcePath("p", accent)).toBe(prosodySourcePath("p", base));
-    expect(prosodySourcePath("p", reading)).not.toBe(prosodySourcePath("p", base));
-    expect(prosodySourcePath("q", base)).not.toBe(prosodySourcePath("p", base));
+    expect(prosodySourcePath("p", accent, source)).toBe(prosodySourcePath("p", base, source));
+    expect(prosodySourcePath("p", reading, source)).not.toBe(prosodySourcePath("p", base, source));
+    expect(prosodySourcePath("q", base, source)).not.toBe(prosodySourcePath("p", base, source));
   });
 
   it("keys the extract by the whole kana", () => {
-    expect(prosodyExtractPath("p", accent)).not.toBe(prosodyExtractPath("p", base));
-    expect(prosodyExtractPath("p", base)).toBe(
-      prosodyExtractPath("p", createG2pItem(text, base.kana)),
+    expect(prosodyExtractPath("p", accent, source)).not.toBe(prosodyExtractPath("p", base, source));
+    expect(prosodyExtractPath("p", base, source)).toBe(
+      prosodyExtractPath("p", createG2pItem(text, base.kana), source),
     );
   });
 });

@@ -490,7 +490,7 @@ async function planSavedTts(
     reuse === "none" && spoken && !needsG2pAnalyze
       ? getUsableG2p(nextInput.g2p, nextInput.readText)
       : undefined;
-  const prosody = await findSynthesisProsody(projectPath, nextInput.provider, prosodyG2p);
+  const prosody = await findSynthesisProsody(projectPath, nextInput, prosodyG2p);
   return {
     item,
     previous,

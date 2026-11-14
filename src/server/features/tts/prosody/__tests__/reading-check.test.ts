@@ -48,11 +48,16 @@ describe("applyReadings", () => {
 });
 
 describe("sameSound", () => {
-  it("compares katakana moras with long vowel marks dropped", () => {
-    expect(sameSound("オオキイ", "オーキー")).toBe(false);
-    expect(sameSound("ソーキュー", "そうきゅう")).toBe(false);
-    expect(sameSound("ソーキュー", "ソキュ")).toBe(true);
+  it("spells long vowel marks as the vowel before them", () => {
+    expect(sameSound("オオキイ", "オーキー")).toBe(true);
+    expect(sameSound("ソーキュー", "ソオキュウ")).toBe(true);
     expect(sameSound("さがく", "サガク")).toBe(true);
+  });
+
+  it("tells readings apart by their mora count", () => {
+    expect(sameSound("オーケ", "オーケー")).toBe(false);
+    expect(sameSound("ソーキュー", "ソキュ")).toBe(false);
+    expect(sameSound("ソーキュー", "そうきゅう")).toBe(false);
   });
 });
 

@@ -197,7 +197,9 @@ describe("tts analysis by speech pipeline", () => {
     ]);
     await flushJobs();
 
-    expect(mocks.analyzeProsody).toHaveBeenCalledWith(env, "project", [{ readText: "犬" }]);
+    expect(mocks.analyzeProsody).toHaveBeenCalledWith(env, "project", [
+      expect.objectContaining({ readText: "犬" }),
+    ]);
     expect(mocks.generateG2p.mock.calls[0]?.[1]).toMatchObject({
       mode: "page",
       pages: [
@@ -227,7 +229,9 @@ describe("tts analysis by speech pipeline", () => {
     await save([tts("tts-1", "voicevox", "犬"), tts("tts-2", "voicevox", "犬")]);
     await flushJobs();
 
-    expect(mocks.analyzeProsody).toHaveBeenCalledWith(env, "project", [{ readText: "犬" }]);
+    expect(mocks.analyzeProsody).toHaveBeenCalledWith(env, "project", [
+      expect.objectContaining({ readText: "犬" }),
+    ]);
     expect(mocks.generateG2p).not.toHaveBeenCalled();
     // Without prosody the kana is synthesized as before.
     expect(mocks.planVoicevox).toHaveBeenCalledTimes(2);
@@ -247,7 +251,7 @@ describe("tts analysis by speech pipeline", () => {
     await flushJobs();
 
     expect(mocks.analyzeProsody).toHaveBeenCalledWith(env, "project", [
-      { readText: "犬", g2p: edited },
+      expect.objectContaining({ readText: "犬", g2p: edited }),
     ]);
     expect(mocks.planVoicevox).toHaveBeenCalledWith(
       expect.objectContaining({ g2p: edited, prosody: synthesisProsody }),
@@ -261,7 +265,11 @@ describe("tts analysis by speech pipeline", () => {
     const saved = await save([tts("tts-1", "voicevox", "犬", edited)]);
 
     expect(savedTts(saved.project)[0]?.audio.status).toBe("pending");
-    expect(mocks.findSynthesisProsody).toHaveBeenCalledWith("project", "voicevox", edited);
+    expect(mocks.findSynthesisProsody).toHaveBeenCalledWith(
+      "project",
+      expect.objectContaining({ provider: "voicevox" }),
+      edited,
+    );
     expect(mocks.planVoicevox).toHaveBeenCalledWith(
       expect.objectContaining({ g2p: edited, prosody: synthesisProsody }),
     );
@@ -270,8 +278,8 @@ describe("tts analysis by speech pipeline", () => {
 
   it("synthesizes an LLM G2P engine's kana without looking for prosody", async () => {
     const g2p = createG2pItem("猫", "猫:ネコ'");
-    mocks.findSynthesisProsody.mockImplementation(async (_path, provider) =>
-      provider === "voicevox" ? synthesisProsody : undefined,
+    mocks.findSynthesisProsody.mockImplementation(async (_path, voice) =>
+      voice.provider === "voicevox" ? synthesisProsody : undefined,
     );
 
     const saved = await save([tts("tts-1", "voisona", "猫", g2p)]);

@@ -142,7 +142,7 @@ export async function synthesizeTts(serverEnv: ServerEnv, input: unknown) {
   const provider = getTtsProvider(parsed.provider);
   const readText = getEffectiveReadText(parsed);
   const g2p = await resolvePreviewG2p(serverEnv, parsed.provider, readText, parsed.g2p);
-  const prosody = await findSynthesisProsody(parsed.projectPath, parsed.provider, g2p);
+  const prosody = await findSynthesisProsody(parsed.projectPath, parsed, g2p);
   const synthesisInput = {
     ...parsed,
     readText,

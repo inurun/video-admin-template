@@ -25,6 +25,7 @@ import {
   type ReadingCorrection,
 } from "./reading-check";
 import { synthesizeProsodySource } from "./source";
+import type { ProsodySource } from "./source-config";
 
 /** Reference TTS and extract calls in flight at once. */
 const PROSODY_CONCURRENCY = 3;
@@ -32,11 +33,20 @@ const PROSODY_CONCURRENCY = 3;
 /** The kana to save, and the reference prosody when every step went through. */
 export type ProsodyAnalysis = { g2p: G2pItem; prosody?: ProsodyExtract };
 
-/** `g2p` is the saved (possibly edited) kana; without it the kana comes from the analyzer. */
-export type ProsodyTarget = { readText: string; g2p?: G2pItem };
+/**
+ * `g2p` is the saved (possibly edited) kana; without it the kana comes from the analyzer.
+ * `source` is the character's reference TTS.
+ */
+export type ProsodyTarget = { readText: string; g2p?: G2pItem; source: ProsodySource };
 
 /** An analyzer kana whose reference audio still has to pass the reading check. */
-type Unchecked = { id: string; analyzed: G2pItem; words: KanaWord[]; wav: Buffer };
+type Unchecked = {
+  id: string;
+  analyzed: G2pItem;
+  source: ProsodySource;
+  words: KanaWord[];
+  wav: Buffer;
+};
 
 /** Corrections per item id; an item without an entry was not checked. */
 type CheckResults = Map<string, ReadingCorrection[]>;
@@ -73,14 +83,14 @@ function readingsToApply(words: KanaWord[], corrections: ReadingCorrection[]) {
 }
 
 /** Reference audio for each text; an item whose TTS fails is left out (logged). */
-async function synthesizeSources<T extends { id: string; text: string }>(
+async function synthesizeSources(
   serverEnv: ServerEnv,
-  items: readonly T[],
+  items: readonly { id: string; text: string; source: ProsodySource }[],
 ) {
   const wavs = new Map<string, Buffer>();
   await runPool(items, PROSODY_CONCURRENCY, async (item) => {
     try {
-      wavs.set(item.id, await synthesizeProsodySource(serverEnv, item.text));
+      wavs.set(item.id, await synthesizeProsodySource(serverEnv, item.text, item.source));
     } catch (error) {
       warn(item.text, `reference reading failed: ${errorMessage(error)}`);
     }
@@ -157,7 +167,7 @@ async function checkReferences(serverEnv: ServerEnv, items: readonly Unchecked[]
 
   const wavs = await synthesizeSources(
     serverEnv,
-    retries.map(({ item, text }) => ({ id: item.id, text })),
+    retries.map(({ item, text }) => ({ id: item.id, text, source: item.source })),
   );
   const second = await checkInChunks(
     serverEnv,
@@ -180,11 +190,12 @@ async function extractFor(
   serverEnv: ServerEnv,
   projectPath: string,
   g2p: G2pItem,
+  source: ProsodySource,
   wav: Buffer,
 ): Promise<ProsodyAnalysis> {
   try {
     const prosody = await extractProsody(serverEnv, g2p, wav);
-    await writeCachedProsody(projectPath, g2p, prosody);
+    await writeCachedProsody(projectPath, g2p, source, prosody);
     return { g2p, prosody };
   } catch (error) {
     warn(g2p.text, `extract failed: ${errorMessage(error)}`);
@@ -220,8 +231,8 @@ async function settleChecked(
     return { g2p };
   }
 
-  await writeCachedProsodySource(projectPath, g2p, checked.wav);
-  return extractFor(serverEnv, projectPath, g2p, checked.wav);
+  await writeCachedProsodySource(projectPath, g2p, item.source, checked.wav);
+  return extractFor(serverEnv, projectPath, g2p, item.source, checked.wav);
 }
 
 /** An edited kana: words read differently from the analyzer are spelled in katakana, no check. */
@@ -230,25 +241,26 @@ async function fromSavedKana(
   projectPath: string,
   analyzed: G2pItem,
   g2p: G2pItem,
+  source: ProsodySource,
 ): Promise<ProsodyAnalysis> {
-  const cached = await readCachedProsody(projectPath, g2p);
+  const cached = await readCachedProsody(projectPath, g2p, source);
   if (cached) {
     return { g2p, prosody: cached };
   }
 
-  let wav = await readCachedProsodySource(projectPath, g2p);
+  let wav = await readCachedProsodySource(projectPath, g2p, source);
   if (!wav) {
     const words = wordsOf(g2p.kana);
     const changed = changedReadings(words, wordsOf(analyzed.kana));
     try {
-      wav = await synthesizeProsodySource(serverEnv, respell(g2p.text, words, changed));
+      wav = await synthesizeProsodySource(serverEnv, respell(g2p.text, words, changed), source);
     } catch (error) {
       warn(g2p.text, `reference reading failed: ${errorMessage(error)}`);
       return { g2p };
     }
-    await writeCachedProsodySource(projectPath, g2p, wav);
+    await writeCachedProsodySource(projectPath, g2p, source, wav);
   }
-  return extractFor(serverEnv, projectPath, g2p, wav);
+  return extractFor(serverEnv, projectPath, g2p, source, wav);
 }
 
 /**
@@ -276,33 +288,34 @@ export async function analyzeProsody(
   });
 
   const results = new Map<string, ProsodyAnalysis>();
-  const toCheck: { id: string; analyzed: G2pItem }[] = [];
+  const toCheck: { id: string; analyzed: G2pItem; source: ProsodySource }[] = [];
   await runPool(items, PROSODY_CONCURRENCY, async ({ id, target, base }) => {
+    const { source } = target;
     if (target.g2p) {
-      results.set(id, await fromSavedKana(serverEnv, projectPath, base, target.g2p));
+      results.set(id, await fromSavedKana(serverEnv, projectPath, base, target.g2p, source));
       return;
     }
     // A cached source for these readings already passed the check.
-    const cachedSource = await readCachedProsodySource(projectPath, base);
+    const cachedSource = await readCachedProsodySource(projectPath, base, source);
     if (cachedSource) {
-      results.set(id, await extractFor(serverEnv, projectPath, base, cachedSource));
+      results.set(id, await extractFor(serverEnv, projectPath, base, source, cachedSource));
       return;
     }
-    toCheck.push({ id, analyzed: base });
+    toCheck.push({ id, analyzed: base, source });
   });
 
   if (toCheck.length > 0) {
     const wavs = await synthesizeSources(
       serverEnv,
-      toCheck.map(({ id, analyzed: item }) => ({ id, text: item.text })),
+      toCheck.map(({ id, analyzed: item, source }) => ({ id, text: item.text, source })),
     );
-    const unchecked: Unchecked[] = toCheck.flatMap(({ id, analyzed: item }) => {
+    const unchecked: Unchecked[] = toCheck.flatMap(({ id, analyzed: item, source }) => {
       const wav = wavs.get(id);
       if (!wav) {
         results.set(id, { g2p: item });
         return [];
       }
-      return [{ id, analyzed: item, words: wordsOf(item.kana), wav }];
+      return [{ id, analyzed: item, source, words: wordsOf(item.kana), wav }];
     });
     const checked = await checkReferences(serverEnv, unchecked);
     await runPool(unchecked, PROSODY_CONCURRENCY, async (item) => {
