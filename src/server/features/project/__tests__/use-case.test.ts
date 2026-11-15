@@ -185,6 +185,18 @@ function mockPlannedSynthesis(
   });
 }
 
+/** The next plan lands on `audioSrc`, as the saved audio's inputs would. */
+function planOnceAt(
+  mock: { mockImplementationOnce: (impl: () => unknown) => unknown },
+  audioSrc: string,
+) {
+  const fileName = audioSrc.split("/").at(-1) ?? "";
+  mock.mockImplementationOnce(() => ({
+    wav: { fileName, outputPath: `/tmp/${fileName}`, audioSrc },
+    run: async () => audio(audioSrc),
+  }));
+}
+
 function sequenceClips(timeline: SavedTimeline) {
   return timeline.tracks.find((track) => track.id === SEQUENCE_TRACK_ID)?.clips ?? [];
 }
@@ -224,6 +236,14 @@ describe("project use-case", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    // Drops plans a test queued with planOnceAt but did not use.
+    for (const mock of [
+      planVoisonaSynthesisMock,
+      planVoicevoxSynthesisMock,
+      planVoicepeakSynthesisMock,
+    ]) {
+      mock.mockReset();
+    }
     accessMock.mockResolvedValue(undefined);
     mkdirMock.mockResolvedValue(undefined);
     writeFileMock.mockResolvedValue(undefined);
@@ -283,6 +303,7 @@ describe("project use-case", () => {
     };
 
     readSavedProjectMock.mockResolvedValueOnce(previous);
+    planOnceAt(planVoisonaSynthesisMock, "/tts/nested/example/old.wav");
     const result = await saveProject({}, "nested/example", {
       meta: defaultMeta,
       bgm: [],
@@ -595,6 +616,7 @@ describe("project use-case", () => {
       mouth: "wavy-opened" as const,
     };
 
+    planOnceAt(planVoisonaSynthesisMock, "/tts/project/old.wav");
     readSavedProjectMock.mockResolvedValueOnce(previous);
     const result = await saveProject({}, "project", {
       meta: defaultMeta,
@@ -1130,6 +1152,7 @@ describe("project use-case", () => {
       ],
     });
 
+    planOnceAt(planVoicevoxSynthesisMock, "/tts/project/old.wav");
     const saved = await saveProject({}, "project", {
       meta: defaultMeta,
       bgm: [],
@@ -1490,6 +1513,72 @@ describe("project use-case", () => {
 
   it("resynthesizes when previous audio file is missing", async () => {
     accessMock.mockRejectedValueOnce(new Error("missing"));
+    planOnceAt(planVoisonaSynthesisMock, "/tts/project/old.wav");
+    readSavedProjectMock.mockResolvedValueOnce({
+      pages: [
+        {
+          id: "page-1",
+          title: "Page 1",
+          type: "main",
+          meta: { tags: [] },
+          padBeforeSec: 0,
+          padAfterSec: 0,
+          durationSec: 1.2,
+          richText: "<p>Hello</p>",
+          tts: [
+            {
+              id: "tts-1",
+              provider: "voisona",
+              text: "Hello",
+              readText: "Hello",
+              voiceName: "voice",
+              voiceVersion: "1",
+              audio: { status: "ready", src: "/tts/project/old.wav", durationSec: 1.2 },
+              speech: { g2p: helloG2p },
+            },
+          ],
+        },
+      ],
+    });
+    synthesizeVoisonaMock.mockResolvedValueOnce(audio("/tts/project/new.wav", 1.5));
+
+    const serverEnv = {};
+    await saveProject(serverEnv, "project", {
+      meta: defaultMeta,
+      bgm: [],
+      pages: [
+        {
+          id: "page-1",
+          title: "Page 1",
+          type: "main",
+          meta: { tags: [] },
+          padBeforeSec: 0,
+          padAfterSec: 0,
+          richText: "<p>Hello</p>",
+          tts: [
+            {
+              id: "tts-1",
+              provider: "voisona",
+              text: "Hello",
+              readText: "Hello",
+              voiceName: "voice",
+              voiceVersion: "1",
+              padBeforeSec: 0,
+              padAfterSec: 0,
+              volume: 1,
+              speech: { g2p: helloG2p },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(analyzeTextsMock).not.toHaveBeenCalled();
+    expect(synthesizeVoisonaMock).toHaveBeenCalled();
+  });
+
+  it("resynthesizes when the inputs now plan another WAV, such as a new prosody", async () => {
+    planOnceAt(planVoisonaSynthesisMock, "/tts/project/new-prosody.wav");
     readSavedProjectMock.mockResolvedValueOnce({
       pages: [
         {
@@ -3049,6 +3138,7 @@ describe("project use-case", () => {
       ],
     };
 
+    planOnceAt(planVoisonaSynthesisMock, "/tts/project/old.wav");
     readSavedProjectMock.mockResolvedValueOnce(previous);
     const kept = await saveProject({ OPENROUTER_API_KEY: "secret" }, "project", request("Hello"));
     expect(contentPage(kept.project.pages).tts[0]).toMatchObject({

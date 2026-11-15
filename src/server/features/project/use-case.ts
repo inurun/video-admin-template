@@ -228,6 +228,10 @@ function canKeepAnalyzing(item: SaveTtsItem, previous: SavedTts) {
   return pipeline === "prosody" && previous.speech.g2p?.kana === g2p.kana;
 }
 
+/**
+ * `plannedSrc` is the WAV the current inputs (with the cached prosody) would make; saved audio
+ * at another path was made from something else, such as an older prosody, and is not reused.
+ */
 async function classifyTtsReuse(
   item: SaveTtsItem,
   projectPath: string,
@@ -235,6 +239,7 @@ async function classifyTtsReuse(
   nextPresets: Record<string, VoicePreset>,
   previousPresets: Record<string, VoicePreset>,
   forceResynthesis: boolean,
+  plannedSrc: string | undefined,
 ): Promise<TtsReuseKind> {
   if (!previous) {
     return "none";
@@ -249,6 +254,10 @@ async function classifyTtsReuse(
   }
 
   if (!comparisonInputMatches(item, previous, nextPresets, previousPresets)) {
+    return "none";
+  }
+
+  if ("src" in previous.audio && plannedSrc !== undefined && previous.audio.src !== plannedSrc) {
     return "none";
   }
 
@@ -466,6 +475,7 @@ function withSavedG2p(item: SaveTtsItem, previous: SavedTts | undefined): SaveTt
 }
 
 async function planSavedTts(
+  serverEnv: ServerEnv,
   projectPath: string,
   item: SaveTtsItem,
   previous: SavedTts | undefined,
@@ -477,6 +487,14 @@ async function planSavedTts(
   item = withSavedG2p(item, previous);
   validateTts(item);
   const nextInput = createTtsComparisonInput(withEffectiveSynthesisSettings(item, nextPresets));
+  const g2p = getUsableG2p(nextInput.g2p, nextInput.readText);
+  const cachedProsody = await findSynthesisProsody(projectPath, nextInput, g2p);
+  // Without a usable kana, an engine with G2P cannot plan its WAV yet.
+  const plannedSrc =
+    spoken && (g2p || getSpeechPipeline(nextInput.provider).pipeline === "none")
+      ? planProviderSynthesis(serverEnv, projectPath, item.id, nextInput, cachedProsody).wav
+          .audioSrc
+      : undefined;
   const reuse = await classifyTtsReuse(
     item,
     projectPath,
@@ -484,13 +502,11 @@ async function planSavedTts(
     nextPresets,
     previousPresets,
     forceResynthesis,
+    plannedSrc,
   );
   const needsG2pAnalyze = computeNeedsG2pAnalyze(reuse, spoken, nextInput);
-  const prosodyG2p =
-    reuse === "none" && spoken && !needsG2pAnalyze
-      ? getUsableG2p(nextInput.g2p, nextInput.readText)
-      : undefined;
-  const prosody = await findSynthesisProsody(projectPath, nextInput, prosodyG2p);
+  const prosodyG2p = reuse === "none" && spoken && !needsG2pAnalyze ? g2p : undefined;
+  const prosody = prosodyG2p ? cachedProsody : undefined;
   return {
     item,
     previous,
@@ -635,6 +651,7 @@ function listSavePageTtsInPlaybackOrder(page: SavePageItem) {
 }
 
 async function planSavedPage(
+  serverEnv: ServerEnv,
   projectPath: string,
   page: SavePageItem,
   previousTtsById: Map<string, SavedTts>,
@@ -647,6 +664,7 @@ async function planSavedPage(
   const tts = await Promise.all(
     page.tts.map((item) =>
       planSavedTts(
+        serverEnv,
         projectPath,
         item,
         previousTtsById.get(item.id),
@@ -917,6 +935,7 @@ async function saveProjectChangesLocked(
   const plannedPages = await Promise.all(
     [...pagesToProcess.values()].map((page) =>
       planSavedPage(
+        serverEnv,
         projectPath,
         page,
         previousTtsById,
