@@ -34,7 +34,7 @@ function elevenLabsContext(context: ProsodySourceContext | undefined) {
   return Object.keys(options).length > 0 ? { provider: { options: { elevenlabs: options } } } : {};
 }
 
-/** Reads `text` with the reference TTS of `source` and returns a WAV. */
+/** Reads `text` with the reference TTS of `source` (its tag first) and returns a WAV. */
 export async function synthesizeProsodySource(
   serverEnv: ServerEnv,
   text: string,
@@ -52,7 +52,7 @@ export async function synthesizeProsodySource(
     PROSODY_SOURCE,
     JSON.stringify({
       model: source.model,
-      input: text,
+      input: source.tag ? `${source.tag} ${text}` : text,
       voice: source.voice,
       response_format: "pcm",
       ...elevenLabsContext(context),

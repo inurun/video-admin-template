@@ -56,9 +56,8 @@ export type SoundCue = { clip: string; src: string; volume: number };
 /**
  * How each TTS engine gets its readings and prosody. Server data, read once at startup.
  * - `prosody`: haqumei analyze + a reference TTS checked by an LLM; the reference audio's
- *   pitch and timing are mixed into the engine. `pitchWeight` defaults to the engine's own
- *   (VOICEVOX 1) and only engines that take pitch accept it; `timingWeight` (tempo and pauses)
- *   defaults to 0.5. Both are 0 to 1.
+ *   pitch and timing are mixed into the engine. `pitchWeight` is only for engines that take
+ *   pitch (VOICEVOX); `timingWeight` is tempo and pauses. Both are 0 to 1 and default to 0.8.
  * - `llm-g2p`: one LLM G2P pass per page.
  * An engine left out uses `llm-g2p` when it can, otherwise no G2P.
  */
@@ -81,11 +80,16 @@ export type ProsodySourceVoice =
   | "matilda";
 
 /**
- * Per-character reference TTS voice of the prosody pipeline, keyed by voice id
- * (`provider::voiceName::voiceVersion`, e.g. `voicevox::113::`).
+ * Reference TTS of the prosody pipeline. One `voice` reads every character; each character
+ * may set its own ElevenLabs audio tag, written with brackets and put before the text
+ * (e.g. `[tired]`, `[whispers] [sad]`). `tags` is keyed by voice id
+ * (`provider::voiceName::voiceVersion`, e.g. `voicevox::113::`); a character left out reads
+ * with `defaultTag`, and `""` reads without a tag.
  */
 export type VideoSpeechVoiceConfig = {
-  [voiceId: string]: ProsodySourceVoice;
+  voice: ProsodySourceVoice;
+  defaultTag: string;
+  tags: { [voiceId: string]: string };
 };
 
 export type VideoDefinition = VideoAudioConfig & {

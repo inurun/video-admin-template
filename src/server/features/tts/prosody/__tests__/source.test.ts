@@ -1,8 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { synthesizeProsodySource } from "../source";
-import { prosodySourceFor } from "../source-config";
+import type { ProsodySource } from "../source-config";
 
-const source = prosodySourceFor({ provider: "voicevox", voiceName: "3" });
+const source: ProsodySource = {
+  id: "test-source",
+  model: "elevenlabs/eleven-v4",
+  voice: "bella",
+  tag: "",
+  sampleRate: 24_000,
+};
 
 describe("synthesizeProsodySource", () => {
   afterEach(() => {
@@ -21,7 +27,7 @@ describe("synthesizeProsodySource", () => {
     expect(JSON.parse(String(init.body))).toEqual({
       model: "elevenlabs/eleven-v4",
       input: "犬が走る",
-      voice: "sarah",
+      voice: "bella",
       response_format: "pcm",
     });
     expect(wav.toString("ascii", 0, 4)).toBe("RIFF");
@@ -29,6 +35,19 @@ describe("synthesizeProsodySource", () => {
     expect(wav.readUInt32LE(24)).toBe(24_000);
     expect(wav.readUInt32LE(40)).toBe(pcm.length);
     expect(wav.subarray(44)).toEqual(pcm);
+  });
+
+  it("puts the audio tag before the text", async () => {
+    const fetchMock = vi.fn(async () => new Response(Buffer.from([1, 0])));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await synthesizeProsodySource({ OPENROUTER_API_KEY: "secret" }, "犬が走る", {
+      ...source,
+      tag: "[in a monotone]",
+    });
+
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(String(init.body)).input).toBe("[in a monotone] 犬が走る");
   });
 
   it("sends the neighboring utterances as ElevenLabs context", async () => {

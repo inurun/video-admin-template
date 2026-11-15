@@ -8,6 +8,8 @@ export type ProsodySource = {
   id: string;
   model: string;
   voice: ProsodySourceVoice;
+  /** Audio tags put before the text; `""` for none. */
+  tag: string;
   sampleRate: number;
 };
 
@@ -31,13 +33,14 @@ function voiceIdOf(speaker: ProsodySpeaker) {
     : undefined;
 }
 
-/** The reference TTS for a character: the shared settings with its own voice, if any. */
+/** The reference TTS for a character: the shared voice with its own tag, if any. */
 export function prosodySourceFor(speaker: ProsodySpeaker): ProsodySource {
   const voiceId = voiceIdOf(speaker);
   return {
     id: PROSODY_SOURCE.id,
     model: PROSODY_SOURCE.model,
-    voice: (voiceId ? voiceConfig[voiceId] : undefined) ?? PROSODY_SOURCE.voice,
+    voice: voiceConfig.voice,
+    tag: (voiceId ? voiceConfig.tags[voiceId] : undefined) ?? voiceConfig.defaultTag,
     sampleRate: PROSODY_SOURCE.sampleRate,
   };
 }

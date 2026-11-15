@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { getSpeechPipeline, resolveSpeechPipelines, toSynthesisProsody } from "../speech-pipeline";
 
 const providers = {
-  voicevox: { pipelines: { "llm-g2p": true, prosody: { pitch: { defaultWeight: 1 } } } },
+  voicevox: { pipelines: { "llm-g2p": true, prosody: { pitch: true } } },
   voisona: { pipelines: { "llm-g2p": true, prosody: {} } },
   coeiroink: { pipelines: { "llm-g2p": true } },
   voicepeak: { pipelines: {} },
@@ -17,7 +17,7 @@ const extract = {
 };
 
 describe("resolveSpeechPipelines", () => {
-  it("combines the template choice with the engine's pitch weight", () => {
+  it("combines the template choice with the default weights", () => {
     expect(
       resolveSpeechPipelines(
         {
@@ -28,7 +28,7 @@ describe("resolveSpeechPipelines", () => {
         providers,
       ),
     ).toEqual({
-      voicevox: { pipeline: "prosody", pitchWeight: 1, timingWeight: 0.5 },
+      voicevox: { pipeline: "prosody", pitchWeight: 0.8, timingWeight: 0.8 },
       voisona: { pipeline: "prosody", pitchWeight: 0, timingWeight: 0.3 },
       coeiroink: { pipeline: "llm-g2p" },
       voicepeak: { pipeline: "none" },
@@ -51,10 +51,10 @@ describe("resolveSpeechPipelines", () => {
     );
   });
 
-  it("takes the template's pitch weight over the engine's default", () => {
+  it("takes the template's pitch weight over the default", () => {
     expect(
       resolveSpeechPipelines({ voicevox: { pipeline: "prosody", pitchWeight: 0.6 } }, providers),
-    ).toMatchObject({ voicevox: { pipeline: "prosody", pitchWeight: 0.6, timingWeight: 0.5 } });
+    ).toMatchObject({ voicevox: { pipeline: "prosody", pitchWeight: 0.6, timingWeight: 0.8 } });
   });
 
   it("rejects a pitch weight on an engine that takes no pitch", () => {
@@ -77,13 +77,13 @@ describe("template speech config", () => {
   it("runs prosody on VOICEVOX and VoiSona and LLM G2P on COEIROINK", () => {
     expect(getSpeechPipeline("voicevox")).toEqual({
       pipeline: "prosody",
-      pitchWeight: 1,
-      timingWeight: 0.5,
+      pitchWeight: 0.8,
+      timingWeight: 0.8,
     });
     expect(getSpeechPipeline("voisona")).toEqual({
       pipeline: "prosody",
       pitchWeight: 0,
-      timingWeight: 0.5,
+      timingWeight: 0.8,
     });
     expect(getSpeechPipeline("coeiroink")).toEqual({ pipeline: "llm-g2p" });
     expect(getSpeechPipeline("voicepeak")).toEqual({ pipeline: "none" });
@@ -93,8 +93,8 @@ describe("template speech config", () => {
     expect(toSynthesisProsody("voicevox", extract)).toEqual({
       moras: extract.moras,
       pauses: [],
-      pitch_weight: 1,
-      timing_weight: 0.5,
+      pitch_weight: 0.8,
+      timing_weight: 0.8,
     });
     expect(toSynthesisProsody("coeiroink", extract)).toBeUndefined();
     expect(toSynthesisProsody("voicevox", undefined)).toBeUndefined();

@@ -36,7 +36,8 @@ const env = { OPENROUTER_API_KEY: "secret" };
 const source: ProsodySource = {
   id: "test-source",
   model: "elevenlabs/eleven-v4",
-  voice: "sarah",
+  voice: "bella",
+  tag: "",
   sampleRate: 24_000,
 };
 const text = "早急に相殺した";

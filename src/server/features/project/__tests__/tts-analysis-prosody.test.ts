@@ -86,7 +86,7 @@ const extract = {
 const synthesisProsody = {
   moras: extract.moras,
   pauses: [],
-  pitch_weight: 1,
+  pitch_weight: 0.8,
   timing_weight: 0.4,
 };
 

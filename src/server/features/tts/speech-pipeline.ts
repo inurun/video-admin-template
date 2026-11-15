@@ -8,7 +8,8 @@ import type {
   TtsProvider,
 } from "@/server/features/tts/providers/types";
 
-export const DEFAULT_PROSODY_TIMING_WEIGHT = 0.5;
+export const DEFAULT_PROSODY_PITCH_WEIGHT = 0.8;
+export const DEFAULT_PROSODY_TIMING_WEIGHT = 0.8;
 
 /** What an engine actually runs: the template's choice checked against what the engine takes. */
 export type ResolvedSpeechPipeline =
@@ -48,7 +49,7 @@ function resolveOne(
   const pitchWeight = checkWeight(
     provider,
     "pitchWeight",
-    choice.pitchWeight ?? pitch?.defaultWeight ?? 0,
+    pitch ? (choice.pitchWeight ?? DEFAULT_PROSODY_PITCH_WEIGHT) : 0,
   );
   const timingWeight = checkWeight(
     provider,

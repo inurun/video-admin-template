@@ -25,17 +25,20 @@ export const audioConfig = {
 
 /** Data only: the server reads which reading pipeline each TTS engine uses. */
 export const speechConfig = {
-  // pitchWeight omitted = the engine's own (VOICEVOX 1; VoiSona takes no pitch)
-  // timingWeight (tempo and pauses) omitted = 0.5
+  // pitchWeight / timingWeight (tempo and pauses) omitted = 0.8; VoiSona takes no pitch
   voicevox: { pipeline: "prosody" },
   voisona: { pipeline: "prosody" },
   coeiroink: { pipeline: "llm-g2p" },
 } satisfies VideoSpeechConfig;
 
 /**
- * Data only: per-character reference TTS voice for the prosody pipeline, keyed by voice id.
- * A voice left out reads with the shared voice.
+ * Data only: the prosody pipeline's reference TTS. One voice for everyone; audio tags per
+ * character (keyed by voice id), `defaultTag` for the rest.
  */
 export const speechVoiceConfig = {
-  // "voicevox::113::": "lily",
+  voice: "bella",
+  defaultTag: "[in a monotone]",
+  tags: {
+    // "voicevox::113::": "[tired]",
+  },
 } satisfies VideoSpeechVoiceConfig;
