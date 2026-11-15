@@ -58,12 +58,19 @@ export type SoundCue = { clip: string; src: string; volume: number };
  * - `prosody`: haqumei analyze + a reference TTS checked by an LLM; the reference audio's
  *   pitch and timing are mixed into the engine. `pitchWeight` is only for engines that take
  *   pitch (VOICEVOX); `timingWeight` is tempo and pauses. Both are 0 to 1 and default to 0.8.
+ *   `pitchSmoothing` (pitch engines only, 0 to 1, default 0) mixes each mora's reference pitch
+ *   with its neighbors' before mapping; the range stays the engine's, only jitter is evened out.
  * - `llm-g2p`: one LLM G2P pass per page.
  * An engine left out uses `llm-g2p` when it can, otherwise no G2P.
  */
 export type VideoSpeechConfig = {
   [TProvider in SavedTts["provider"]]?:
-    | { pipeline: "prosody"; pitchWeight?: number; timingWeight?: number }
+    | {
+        pipeline: "prosody";
+        pitchWeight?: number;
+        timingWeight?: number;
+        pitchSmoothing?: number;
+      }
     | { pipeline: "llm-g2p" };
 };
 

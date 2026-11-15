@@ -1,4 +1,5 @@
 import type { ProsodyExtract } from "@/_schemas";
+import { smoothPitch } from "@/server/features/tts/prosody/smoothing";
 import { speechConfig } from "@/video/config";
 import type { VideoSpeechConfig } from "@/video-host/contract";
 import { ttsProviders } from "@/server/features/tts/providers/registry";
@@ -10,12 +11,13 @@ import type {
 
 export const DEFAULT_PROSODY_PITCH_WEIGHT = 0.8;
 export const DEFAULT_PROSODY_TIMING_WEIGHT = 0.8;
+export const DEFAULT_PROSODY_PITCH_SMOOTHING = 0;
 
 /** What an engine actually runs: the template's choice checked against what the engine takes. */
 export type ResolvedSpeechPipeline =
   | { pipeline: "none" }
   | { pipeline: "llm-g2p" }
-  | { pipeline: "prosody"; pitchWeight: number; timingWeight: number };
+  | { pipeline: "prosody"; pitchWeight: number; timingWeight: number; pitchSmoothing: number };
 
 function checkWeight(provider: string, name: string, weight: number) {
   if (!(weight >= 0 && weight <= 1)) {
@@ -43,7 +45,7 @@ function resolveOne(
     throw new Error(`speechConfig.${provider}: ${provider} does not take prosody`);
   }
   const { pitch } = supported.prosody;
-  if (choice.pitchWeight !== undefined && !pitch) {
+  if ((choice.pitchWeight !== undefined || choice.pitchSmoothing !== undefined) && !pitch) {
     throw new Error(`speechConfig.${provider}: ${provider} does not take pitch`);
   }
   const pitchWeight = checkWeight(
@@ -56,7 +58,12 @@ function resolveOne(
     "timingWeight",
     choice.timingWeight ?? DEFAULT_PROSODY_TIMING_WEIGHT,
   );
-  return { pipeline: "prosody", pitchWeight, timingWeight };
+  const pitchSmoothing = checkWeight(
+    provider,
+    "pitchSmoothing",
+    pitch ? (choice.pitchSmoothing ?? DEFAULT_PROSODY_PITCH_SMOOTHING) : 0,
+  );
+  return { pipeline: "prosody", pitchWeight, timingWeight, pitchSmoothing };
 }
 
 export function resolveSpeechPipelines(
@@ -88,7 +95,7 @@ export function toSynthesisProsody(
     return undefined;
   }
   return {
-    moras: extract.moras,
+    moras: smoothPitch(extract.moras, extract.pauses, speech.pitchSmoothing),
     pauses: extract.pauses,
     pitch_weight: speech.pitchWeight,
     timing_weight: speech.timingWeight,

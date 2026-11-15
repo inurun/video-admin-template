@@ -4,7 +4,10 @@ import { getHaqumeiApiClient, unwrapHaqumeiData } from "./client";
 import { HaqumeiApiError } from "./error";
 import { assertHaqumeiTextLength, chunkAnalyzeTexts, HAQUMEI_SCHEMA_VERSION } from "./limits";
 
-async function requestAnalyze(serverEnv: ServerEnv, texts: string[]): Promise<G2pItem[]> {
+/** An analyzer result with the indexes of its kana words (as `wordsOf` counts them) taken from the user dictionary. */
+export type AnalyzedItem = { g2p: G2pItem; dictionaryWords: number[] };
+
+async function requestAnalyze(serverEnv: ServerEnv, texts: string[]): Promise<AnalyzedItem[]> {
   const response = await getHaqumeiApiClient(serverEnv).POST("/v1/analyze", {
     body: { schema_version: HAQUMEI_SCHEMA_VERSION, texts },
   });
@@ -18,10 +21,21 @@ async function requestAnalyze(serverEnv: ServerEnv, texts: string[]): Promise<G2
     );
   }
 
-  return data.items.map((item) => g2pItemSchema.parse(item));
+  // `null` (provenance not fully tracked) counts as no dictionary word.
+  return data.items.map((item) => ({
+    g2p: g2pItemSchema.parse(item),
+    dictionaryWords: (item.dictionary_words ?? []).map((word) => word.word_index),
+  }));
 }
 
 export async function analyzeTexts(serverEnv: ServerEnv, texts: string[]): Promise<G2pItem[]> {
+  return (await analyzeTextsWithDictionary(serverEnv, texts)).map((item) => item.g2p);
+}
+
+export async function analyzeTextsWithDictionary(
+  serverEnv: ServerEnv,
+  texts: string[],
+): Promise<AnalyzedItem[]> {
   if (texts.length === 0) {
     return [];
   }
@@ -30,7 +44,7 @@ export async function analyzeTexts(serverEnv: ServerEnv, texts: string[]): Promi
     assertHaqumeiTextLength(text);
   }
 
-  const items: G2pItem[] = [];
+  const items: AnalyzedItem[] = [];
   let chunkOffset = 0;
   for (const chunk of chunkAnalyzeTexts(texts)) {
     try {

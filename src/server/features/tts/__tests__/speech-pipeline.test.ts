@@ -28,8 +28,8 @@ describe("resolveSpeechPipelines", () => {
         providers,
       ),
     ).toEqual({
-      voicevox: { pipeline: "prosody", pitchWeight: 0.8, timingWeight: 0.8 },
-      voisona: { pipeline: "prosody", pitchWeight: 0, timingWeight: 0.3 },
+      voicevox: { pipeline: "prosody", pitchWeight: 0.8, timingWeight: 0.8, pitchSmoothing: 0 },
+      voisona: { pipeline: "prosody", pitchWeight: 0, timingWeight: 0.3, pitchSmoothing: 0 },
       coeiroink: { pipeline: "llm-g2p" },
       voicepeak: { pipeline: "none" },
     });
@@ -61,6 +61,18 @@ describe("resolveSpeechPipelines", () => {
     expect(() =>
       resolveSpeechPipelines({ voisona: { pipeline: "prosody", pitchWeight: 0.5 } }, providers),
     ).toThrow("voisona does not take pitch");
+    expect(() =>
+      resolveSpeechPipelines({ voisona: { pipeline: "prosody", pitchSmoothing: 0.5 } }, providers),
+    ).toThrow("voisona does not take pitch");
+  });
+
+  it("takes the template's pitch smoothing", () => {
+    expect(
+      resolveSpeechPipelines({ voicevox: { pipeline: "prosody", pitchSmoothing: 0.5 } }, providers),
+    ).toMatchObject({ voicevox: { pitchSmoothing: 0.5 } });
+    expect(() =>
+      resolveSpeechPipelines({ voicevox: { pipeline: "prosody", pitchSmoothing: 2 } }, providers),
+    ).toThrow("pitchSmoothing");
   });
 
   it("rejects a weight outside 0 to 1", () => {
@@ -79,11 +91,13 @@ describe("template speech config", () => {
       pipeline: "prosody",
       pitchWeight: 0.8,
       timingWeight: 0.8,
+      pitchSmoothing: 0,
     });
     expect(getSpeechPipeline("voisona")).toEqual({
       pipeline: "prosody",
       pitchWeight: 0,
       timingWeight: 0.8,
+      pitchSmoothing: 0,
     });
     expect(getSpeechPipeline("coeiroink")).toEqual({ pipeline: "llm-g2p" });
     expect(getSpeechPipeline("voicepeak")).toEqual({ pipeline: "none" });

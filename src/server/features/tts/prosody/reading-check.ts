@@ -158,18 +158,28 @@ export function applyReadings(kana: string, readings: Map<number, string>) {
  * Words whose reading differs from the base kana (an analyzer's), matched by surface in order.
  * The values are the new readings.
  */
-export function changedReadings(words: KanaWord[], baseWords: KanaWord[]) {
-  const changed = new Map<number, string>();
+/** For each word, the next base word with the same surface, in order; `undefined` when none. */
+export function alignWords(words: KanaWord[], baseWords: KanaWord[]) {
   let cursor = 0;
-  for (const word of words) {
+  return words.map((word) => {
     const at = baseWords.findIndex((base, i) => i >= cursor && base.surface === word.surface);
-    if (at >= 0) {
-      cursor = at + 1;
+    if (at < 0) {
+      return undefined;
     }
-    if (at < 0 || !sameSound(baseWords[at]!.reading, word.reading)) {
+    cursor = at + 1;
+    return baseWords[at];
+  });
+}
+
+export function changedReadings(words: KanaWord[], baseWords: KanaWord[]) {
+  const aligned = alignWords(words, baseWords);
+  const changed = new Map<number, string>();
+  words.forEach((word, i) => {
+    const base = aligned[i];
+    if (!base || !sameSound(base.reading, word.reading)) {
       changed.set(word.index, word.reading);
     }
-  }
+  });
   return changed;
 }
 

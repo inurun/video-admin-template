@@ -8,6 +8,8 @@ import { HaqumeiApiError } from "@/server/features/haqumei-api/error";
 const mocks = vi.hoisted(() => ({
   ttsDir: "",
   analyzeTexts: vi.fn(),
+  /** Dictionary word indexes per analyzed item. */
+  dictionaryWords: [] as number[][],
   validateG2pItem: vi.fn(),
   extractProsody: vi.fn(),
   synthesizeProsodySource: vi.fn(),
@@ -17,7 +19,13 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/server/_shared/storage", () => ({
   getProjectTtsDir: (projectPath: string) => path.join(mocks.ttsDir, projectPath),
 }));
-vi.mock("@/server/features/haqumei-api/analyze", () => ({ analyzeTexts: mocks.analyzeTexts }));
+vi.mock("@/server/features/haqumei-api/analyze", () => ({
+  analyzeTextsWithDictionary: async (env: unknown, texts: string[]) =>
+    ((await mocks.analyzeTexts(env, texts)) as unknown[]).map((g2p, index) => ({
+      g2p,
+      dictionaryWords: mocks.dictionaryWords[index] ?? [],
+    })),
+}));
 vi.mock("@/server/features/haqumei-api/validate", () => ({
   validateG2pItem: mocks.validateG2pItem,
 }));
@@ -67,6 +75,7 @@ describe("analyzeProsody", () => {
     vi.clearAllMocks();
     mocks.ttsDir = await fs.mkdtemp(path.join(os.tmpdir(), "prosody-"));
     mocks.analyzeTexts.mockResolvedValue([analyzed]);
+    mocks.dictionaryWords = [];
     mocks.validateG2pItem.mockImplementation(async (_env, item) =>
       createG2pItem(item.text, item.kana),
     );
@@ -263,6 +272,74 @@ describe("analyzeProsody", () => {
     await analyzeProsody(env, "project", [{ readText: text, g2p: accent, source }]);
     expect(mocks.synthesizeProsodySource).toHaveBeenCalledTimes(1);
     expect(mocks.extractProsody).toHaveBeenLastCalledWith(env, accent, wav("サッキューに相殺した"));
+  });
+
+  it("reads dictionary words in katakana and keeps their reading through the check", async () => {
+    mocks.dictionaryWords = [[2]];
+    mocks.checkReadings.mockResolvedValueOnce(
+      checked([{ index: 2, surface: "相殺", heard: "ソーサイ", correct: "ソーサツ" }]),
+    );
+
+    const [result] = await analyzeProsody(env, "project", [{ readText: text, source }]);
+
+    expect(mocks.synthesizeProsodySource.mock.calls).toEqual([
+      [env, "早急にソーサイした", source, undefined],
+    ]);
+    expect(mocks.checkReadings.mock.calls[0]![1][0]).toMatchObject({ text });
+    expect(result).toEqual({ g2p: analyzed, prosody: extract });
+  });
+
+  it("keeps dictionary words in katakana when respelling a misread", async () => {
+    mocks.dictionaryWords = [[2]];
+    mocks.checkReadings
+      .mockResolvedValueOnce(
+        checked([{ index: 0, surface: "早急", heard: "ハヤキュー", correct: "ソーキュー" }]),
+      )
+      .mockResolvedValueOnce(checked([]));
+
+    await analyzeProsody(env, "project", [{ readText: text, source }]);
+
+    expect(mocks.synthesizeProsodySource).toHaveBeenLastCalledWith(
+      env,
+      "ソーキューにソーサイした",
+      source,
+      undefined,
+    );
+  });
+
+  it("reads the dictionary words of a saved kana in katakana", async () => {
+    mocks.dictionaryWords = [[2]];
+    const edited = createG2pItem(text, "早急:サッキュー'|に:ニ/相殺:ソーサイ'|した:シタ");
+
+    await analyzeProsody(env, "project", [{ readText: text, g2p: edited, source }]);
+
+    expect(mocks.synthesizeProsodySource).toHaveBeenCalledWith(
+      env,
+      "サッキューにソーサイした",
+      source,
+      undefined,
+    );
+  });
+
+  it("analyzes, reads and checks again when fresh, over the saved kana and caches", async () => {
+    mocks.checkReadings.mockResolvedValue(checked([]));
+    await analyzeProsody(env, "project", [{ readText: text, source }]);
+    const edited = createG2pItem(text, "早急:サッキュー'|に:ニ/相殺:ソーサイ'|した:シタ");
+    mocks.synthesizeProsodySource.mockResolvedValueOnce(wav("again"));
+
+    const [result] = await analyzeProsody(
+      env,
+      "project",
+      [{ readText: text, g2p: edited, source }],
+      { fresh: true },
+    );
+
+    expect(result).toEqual({ g2p: analyzed, prosody: extract });
+    expect(mocks.synthesizeProsodySource).toHaveBeenCalledTimes(2);
+    expect(mocks.checkReadings).toHaveBeenCalledTimes(2);
+    await expect(fs.readFile(prosodySourcePath("project", analyzed, source))).resolves.toEqual(
+      wav("again"),
+    );
   });
 });
 

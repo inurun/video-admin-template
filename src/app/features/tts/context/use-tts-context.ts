@@ -59,15 +59,22 @@ function useTtsCommands() {
         return;
       }
 
+      if (!projectPath) {
+        throw new Error("Project path is required");
+      }
       setAnalyzing(ttsId, true);
       try {
         const result = await generateG2p({
+          projectPath,
           pageId,
           item: {
             id: item.id,
             text: item.text,
             ...(item.readText === undefined ? {} : { readText: item.readText }),
             provider: item.provider,
+            ...(item.provider !== "coeiroink" && item.voiceName
+              ? { voiceName: item.voiceName, voiceVersion: item.voiceVersion }
+              : {}),
             ...getAdjacentTtsContext(form.getValues("tts"), ttsId),
           },
         });
@@ -92,7 +99,7 @@ function useTtsCommands() {
         setAnalyzing(ttsId, false);
       }
     },
-    [canRunTts, form, generateG2p, getTts, pageId, setAnalyzing],
+    [canRunTts, form, generateG2p, getTts, pageId, projectPath, setAnalyzing],
   );
 
   const preview = useCallback(

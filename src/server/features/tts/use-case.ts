@@ -20,6 +20,8 @@ import { getEffectiveReadText, getUsableG2p } from "./providers/comparison";
 import { getTtsProvider } from "./providers/registry";
 import type { TtsProvider } from "./providers/types";
 import { findSynthesisProsody } from "./prosody/cache";
+import { analyzeProsody } from "./prosody/pipeline";
+import { prosodySourceFor } from "./prosody/source-config";
 import { getSpeechPipeline } from "./speech-pipeline";
 import { enqueueProjectMutation } from "@/server/features/project/project-mutation-queue";
 import { TtsCacheClearConflictError } from "@/server/features/tts/errors";
@@ -120,8 +122,38 @@ async function resolvePreviewG2p(
     : generatePreviewG2p(serverEnv, readText, provider);
 }
 
+/**
+ * Regenerate. A prosody engine analyzes again and makes and checks a new reference (the saved
+ * kana and the cached reference are not used); the others ask the LLM again.
+ */
 export async function generateTtsG2p(serverEnv: ServerEnv, input: unknown) {
-  const { pageId, item } = ttsG2pGenerateRequestSchema.parse(input);
+  const { projectPath, pageId, item } = ttsG2pGenerateRequestSchema.parse(input);
+  if (item.provider !== "coeiroink" && getSpeechPipeline(item.provider).pipeline === "prosody") {
+    const previous = item.previous ? getEffectiveReadText(item.previous) : "";
+    const next = item.next ? getEffectiveReadText(item.next) : "";
+    const [result] = await analyzeProsody(
+      serverEnv,
+      projectPath,
+      [
+        {
+          readText: getEffectiveReadText(item),
+          source: prosodySourceFor({
+            provider: item.provider,
+            voiceName: item.voiceName,
+            voiceVersion: item.voiceVersion,
+          }),
+          ...(previous || next
+            ? { context: { ...(previous ? { previous } : {}), ...(next ? { next } : {}) } }
+            : {}),
+        },
+      ],
+      { fresh: true },
+    );
+    if (!result) {
+      throw new Error(`Prosody analysis returned no item for tts ${item.id}`);
+    }
+    return { g2p: result.g2p, source: result.prosody ? "prosody" : "analyze" } as const;
+  }
   return generateSingleG2p(serverEnv, {
     pageId,
     id: item.id,

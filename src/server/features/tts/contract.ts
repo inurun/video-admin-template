@@ -27,21 +27,26 @@ const ttsG2pNeighborSchema = z.object({
   readText: z.string().optional(),
 });
 
+/** `projectPath` and the voice are for the prosody pipeline, which caches the reference per project. */
 export const ttsG2pGenerateRequestSchema = z.object({
+  projectPath: z.string().min(1),
   pageId: z.string().min(1),
   item: z.object({
     id: z.string().min(1),
     text: z.string().min(1),
     readText: z.string().optional(),
     provider: voiceProviderSchema,
+    voiceName: z.string().optional(),
+    voiceVersion: z.string().optional(),
     previous: ttsG2pNeighborSchema.optional(),
     next: ttsG2pNeighborSchema.optional(),
   }),
 });
 
+/** `prosody`: analyzed again and the reference passed the reading check; `analyze`: it did not. */
 export const ttsG2pGenerateResponseSchema = z.object({
   g2p: g2pItemSchema,
-  source: z.enum(["llm", "analyze"]),
+  source: z.enum(["llm", "analyze", "prosody"]),
 });
 
 export type TtsG2pGenerateRequest = z.infer<typeof ttsG2pGenerateRequestSchema>;
