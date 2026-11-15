@@ -489,9 +489,12 @@ async function planSavedTts(
   const nextInput = createTtsComparisonInput(withEffectiveSynthesisSettings(item, nextPresets));
   const g2p = getUsableG2p(nextInput.g2p, nextInput.readText);
   const cachedProsody = await findSynthesisProsody(projectPath, nextInput, g2p);
-  // Without a usable kana, an engine with G2P cannot plan its WAV yet.
+  // Without a usable kana an engine with G2P cannot plan its WAV yet. A prosody engine
+  // without a cached prosody (say after the reference voice changed) keeps its saved audio
+  // rather than reading every reference again.
+  const pipeline = getSpeechPipeline(nextInput.provider).pipeline;
   const plannedSrc =
-    spoken && (g2p || getSpeechPipeline(nextInput.provider).pipeline === "none")
+    spoken && (pipeline === "none" || (g2p && (pipeline !== "prosody" || cachedProsody)))
       ? planProviderSynthesis(serverEnv, projectPath, item.id, nextInput, cachedProsody).wav
           .audioSrc
       : undefined;

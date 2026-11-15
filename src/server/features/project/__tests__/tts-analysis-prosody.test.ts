@@ -325,6 +325,26 @@ describe("tts analysis by speech pipeline", () => {
     expect(savedTts(saved.project)[0]?.audio.status).toBe("pending");
     expect(mocks.planVoisona.mock.calls[0]?.[0]).not.toHaveProperty("prosody");
   });
+  it("keeps saved audio without cached prosody, and makes it again for a new one", async () => {
+    const g2p = createG2pItem("犬", "犬:イ'ヌ");
+    const item = tts("tts-1", "voicevox", "犬", g2p);
+    mocks.findSynthesisProsody.mockResolvedValue(synthesisProsody);
+    await save([item]);
+    await flushJobs();
+    const ready = savedTts(lastWritten())[0]?.audio;
+    expect(ready).toMatchObject({ status: "ready" });
+
+    // Say the reference voice changed: no prosody for the new one yet.
+    mocks.findSynthesisProsody.mockResolvedValue(undefined);
+    const kept = await save([item]);
+    expect(savedTts(kept.project)[0]?.audio).toEqual(ready);
+    expect(mocks.analyzeProsody).not.toHaveBeenCalled();
+
+    // A prosody that plans another WAV (the mock gives every plan its own path).
+    mocks.findSynthesisProsody.mockResolvedValue(synthesisProsody);
+    const remade = await save([item]);
+    expect(savedTts(remade.project)[0]?.audio.status).toBe("pending");
+  });
 });
 
 describe("prosody contexts", () => {
