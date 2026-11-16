@@ -127,7 +127,7 @@ HTML入力欄の選択だけを `agent_browser_eval` で行い、文字列の入
   const expected = <expected-json>;
   const actual = Array.from(document.querySelectorAll("body *"))
     .map((element) => (element.textContent || "").trim())
-    .filter((text) => /^(?:sm|ss)\d+$/.test(text));
+    .filter((text) => /^(?:sm|ss|im)\d+$/.test(text));
   const uniqueActual = Array.from(new Set(actual)).sort();
   const uniqueExpected = Array.from(new Set(expected)).sort();
   return {

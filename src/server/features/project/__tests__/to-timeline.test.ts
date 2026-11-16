@@ -61,6 +61,7 @@ function project(pages: SavedProject["pages"]): SavedProject {
         description: "",
         thumbnailTime: "00:00.000",
         parentWorkIds: [],
+        fixedParentWorkIds: [],
         tags: [],
       },
     },

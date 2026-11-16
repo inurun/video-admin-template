@@ -285,6 +285,7 @@ export const projectNiconicoMetaSchema = z
     description: z.string().default(""),
     thumbnailTime: z.string().default("00:00.000"),
     parentWorkIds: z.array(z.string()).default([]),
+    fixedParentWorkIds: z.array(z.string()).default([]),
     tags: z.array(z.string().trim().min(1)).max(6).default([]),
   })
   .default({
@@ -292,6 +293,7 @@ export const projectNiconicoMetaSchema = z
     description: "",
     thumbnailTime: "00:00.000",
     parentWorkIds: [],
+    fixedParentWorkIds: [],
     tags: [],
   });
 
@@ -316,6 +318,7 @@ export const DEFAULT_PROJECT_META = {
     description: "",
     thumbnailTime: "00:00.000",
     parentWorkIds: [] as string[],
+    fixedParentWorkIds: [] as string[],
     tags: [] as string[],
   },
 };

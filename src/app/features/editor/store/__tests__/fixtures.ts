@@ -63,6 +63,7 @@ export function createSavedProject(overrides: Partial<SavedProject> = {}): Saved
         description: "",
         thumbnailTime: "00:00.000",
         parentWorkIds: [],
+        fixedParentWorkIds: [],
         tags: [],
       },
     },

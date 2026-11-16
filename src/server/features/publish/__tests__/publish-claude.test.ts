@@ -14,6 +14,7 @@ import {
   parsePublishResult,
   PUBLISH_RESULT_SCHEMA,
   shouldRetryBlockedResult,
+  toParentWorks,
   type PublishPrepJob,
 } from "../publish-claude";
 
@@ -249,6 +250,7 @@ describe("publish result and abort guard", () => {
       videoTitle: "title",
       thumbnailPath: "/repo/out/thumbnail.png",
       parentWorkIds: ["sm1", "sm2"],
+      fixedParentWorkIds: [],
       tags: [],
     };
     const result = parsePublishResult({
@@ -314,5 +316,15 @@ describe("publish result and abort guard", () => {
       expect.objectContaining({ message: expect.stringContaining("hard timeout") }),
     );
     guard.stop();
+  });
+});
+
+describe("toParentWorks", () => {
+  it("builds urls for videos, shorts and seiga illustrations", () => {
+    expect(toParentWorks(["sm9", "ss1", "im10778297"]).map((work) => work.url)).toEqual([
+      "https://www.nicovideo.jp/watch/sm9",
+      "https://www.nicovideo.jp/shorts/ss1",
+      "https://seiga.nicovideo.jp/seiga/im10778297",
+    ]);
   });
 });

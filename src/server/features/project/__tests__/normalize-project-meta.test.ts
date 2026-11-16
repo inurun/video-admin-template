@@ -21,6 +21,7 @@ describe("project meta", () => {
         description: "",
         thumbnailTime: "00:00.000",
         parentWorkIds: [],
+        fixedParentWorkIds: [],
         tags: [],
       },
     });
@@ -62,7 +63,8 @@ describe("project meta", () => {
           title: "  Nico  ",
           description: "desc",
           thumbnailTime: "01:23.456",
-          parentWorkIds: ["sm9", " bad ", "sm9", "ss1"],
+          parentWorkIds: ["sm9", " bad ", "sm9", "ss1", "im2"],
+          fixedParentWorkIds: [" im10778297 ", "bad"],
           tags: [],
         },
       }).niconico,
@@ -70,7 +72,8 @@ describe("project meta", () => {
       title: "Nico",
       description: "desc",
       thumbnailTime: "01:23.456",
-      parentWorkIds: ["sm9", "ss1"],
+      parentWorkIds: ["sm9", "ss1", "im2"],
+      fixedParentWorkIds: ["im10778297"],
       tags: [],
     });
   });

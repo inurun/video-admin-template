@@ -171,7 +171,7 @@ export async function startPublish(projectPath: string, autoSubmit: boolean) {
     videoPath,
     LATEST_THUMBNAIL_PATH,
     niconico,
-    niconico.parentWorkIds,
+    [...new Set([...niconico.fixedParentWorkIds, ...niconico.parentWorkIds])],
     autoSubmit,
   )
     .catch((error: unknown) => {

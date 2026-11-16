@@ -22,24 +22,6 @@ import {
   validatePublishPrepResult,
 } from "./niconico-publish";
 
-const NICONICO_VIDEO_ID_PATTERN = /^\/(?:watch\/(sm\d+)|shorts\/(ss\d+))(?:[/?#]|$)/;
-
-function extractNiconicoVideoId(url: string): string | undefined {
-  try {
-    const parsed = new URL(url);
-    if (
-      parsed.protocol !== "https:" ||
-      (parsed.hostname !== "www.nicovideo.jp" && parsed.hostname !== "nicovideo.jp")
-    ) {
-      return undefined;
-    }
-    const match = parsed.pathname.match(NICONICO_VIDEO_ID_PATTERN);
-    return match?.[1] ?? match?.[2];
-  } catch {
-    return undefined;
-  }
-}
-
 export type PublishPrepJobStatus = "queued" | "running" | "succeeded" | "failed" | "canceled";
 
 export type PublishPrepJobResult = VerifiedPublishPrepResult;
@@ -578,7 +560,7 @@ async function runClaudePublishPrep(
   videoPath: string,
   thumbnailPath: string,
   videoMeta: VideoMeta,
-  parentWorks: ParentWork[],
+  parentWorkIds: string[],
 ): Promise<PublishPrepJobResult> {
   const runtime = getJobRuntimeStore().get(job.id);
   if (runtime?.controller.signal.aborted) throw new Error("Job was canceled");
@@ -594,13 +576,6 @@ async function runClaudePublishPrep(
   await ensureNiconicoChrome();
   await attachAgentBrowserToNiconicoChrome();
   pushLog(job, `Attached to existing Chrome via CDP port ${NICONICO_CHROME_CDP_PORT}`);
-
-  const parentWorkIds = parentWorks
-    .map((work) => extractNiconicoVideoId(work.url))
-    .filter((id): id is string => Boolean(id));
-  if (parentWorkIds.length !== parentWorks.length) {
-    throw new Error("One or more Niconico parent work URLs do not contain a valid sm/ss video ID");
-  }
 
   const hardTimeoutMs = getPositiveInteger(
     "NICONICO_PUBLISH_HARD_TIMEOUT_MS",
@@ -632,7 +607,7 @@ async function runClaudePublishPrep(
       videoPath,
       thumbnailPath,
       videoMeta,
-      parentWorks,
+      toParentWorks(parentWorkIds),
       parentWorkIds,
       tags,
     );
@@ -735,12 +710,16 @@ export function assertPublishVideoMeta(value: unknown): VideoMeta {
   return assertVideoMeta(value);
 }
 
+const PARENT_WORK_URL_PREFIXES = {
+  sm: "https://www.nicovideo.jp/watch/",
+  ss: "https://www.nicovideo.jp/shorts/",
+  im: "https://seiga.nicovideo.jp/seiga/",
+} as const;
+
 export function toParentWorks(parentWorkIds: string[]): ParentWork[] {
   return parentWorkIds.map((id) => ({
     title: id,
-    url: id.startsWith("ss")
-      ? `https://www.nicovideo.jp/shorts/${id}`
-      : `https://www.nicovideo.jp/watch/${id}`,
+    url: `${PARENT_WORK_URL_PREFIXES[id.slice(0, 2) as keyof typeof PARENT_WORK_URL_PREFIXES]}${id}`,
   }));
 }
 
@@ -765,7 +744,13 @@ export async function runPublishPrep(
   }
 
   const startedAt = Date.now();
-  const result = await runClaudePublishPrep(job, videoPath, thumbnailPath, videoMeta, parentWorks);
+  const result = await runClaudePublishPrep(
+    job,
+    videoPath,
+    thumbnailPath,
+    videoMeta,
+    parentWorkIds,
+  );
   pushLog(job, `Niconico browser phase completed in ${Date.now() - startedAt}ms`);
   const signal = getJobRuntimeStore().get(job.id)?.controller.signal;
   if (signal?.aborted) {

@@ -88,11 +88,22 @@ export function NiconicoDialog() {
                 </div>
                 <Textarea
                   rows={3}
-                  placeholder="sm9 ss123"
+                  placeholder="sm9 ss123 im123"
                   {...dialog.form.register("parentWorkIds")}
                 />
               </div>
               <FieldError errors={[dialog.form.formState.errors.parentWorkIds]} />
+            </Field>
+            <Field data-invalid={Boolean(dialog.form.formState.errors.fixedParentWorkIds)}>
+              <label className="grid gap-2 text-sm font-medium">
+                Fixed parent works
+                <Textarea
+                  rows={2}
+                  placeholder="im123"
+                  {...dialog.form.register("fixedParentWorkIds")}
+                />
+              </label>
+              <FieldError errors={[dialog.form.formState.errors.fixedParentWorkIds]} />
             </Field>
           </DialogMain>
           <DialogFooter>

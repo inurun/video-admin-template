@@ -229,6 +229,7 @@ describe("project use-case", () => {
       description: "",
       thumbnailTime: "00:00.000",
       parentWorkIds: [],
+      fixedParentWorkIds: [],
       tags: [],
     },
   };
@@ -1282,6 +1283,7 @@ describe("project use-case", () => {
             description: "",
             thumbnailTime: "00:00.000",
             parentWorkIds: [],
+            fixedParentWorkIds: [],
             tags: [],
           },
         },
@@ -1910,6 +1912,7 @@ describe("project use-case", () => {
           description: "",
           thumbnailTime: "00:00.000",
           parentWorkIds: [],
+          fixedParentWorkIds: [],
           tags: [],
         },
       },

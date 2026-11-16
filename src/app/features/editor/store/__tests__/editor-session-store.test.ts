@@ -267,6 +267,7 @@ describe("editor session store", () => {
             description: "",
             thumbnailTime: "00:00.000",
             parentWorkIds: ["ss1"],
+            fixedParentWorkIds: [],
             tags: [],
           },
         },

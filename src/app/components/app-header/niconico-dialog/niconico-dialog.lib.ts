@@ -55,6 +55,7 @@ export const niconicoFormSchema = z.object({
   description: z.string(),
   thumbnailTime: z.string(),
   parentWorkIds: z.string(),
+  fixedParentWorkIds: z.string(),
   tags: z.string().refine((value) => parseTagsInput(value).length <= 6, {
     message: "Up to 6 tags",
   }),
@@ -69,6 +70,7 @@ export function toNiconicoFormValues(niconico: ProjectNiconicoMeta): NiconicoFor
     description: normalized.description,
     thumbnailTime: normalized.thumbnailTime,
     parentWorkIds: formatParentWorkIdsInput(normalized.parentWorkIds),
+    fixedParentWorkIds: formatParentWorkIdsInput(normalized.fixedParentWorkIds),
     tags: getConfiguredNiconicoTags(normalized.tags).join(" "),
   };
 }
@@ -79,6 +81,7 @@ export function fromNiconicoFormValues(values: NiconicoFormValues): ProjectNicon
     description: values.description,
     thumbnailTime: values.thumbnailTime,
     parentWorkIds: parseParentWorkIdsInput(values.parentWorkIds),
+    fixedParentWorkIds: parseParentWorkIdsInput(values.fixedParentWorkIds),
     tags: createNiconicoTags(parseTagsInput(values.tags)),
   });
 }

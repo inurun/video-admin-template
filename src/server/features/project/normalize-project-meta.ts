@@ -8,6 +8,7 @@ type ProjectNiconicoMeta = {
   description: string;
   thumbnailTime: string;
   parentWorkIds: string[];
+  fixedParentWorkIds: string[];
   tags: string[];
 };
 
@@ -23,7 +24,7 @@ type ProjectMetaLike = {
 
 const DEFAULT_VIDEO_SIZE_PRESET = VIDEO_SIZE_PRESETS[0];
 const DEFAULT_THUMBNAIL_TIME = "00:00.000";
-const PARENT_WORK_ID_PATTERN = /^(?:sm|ss)\d+$/;
+const PARENT_WORK_ID_PATTERN = /^(?:sm|ss|im)\d+$/;
 const VIDEO_SIZE_PRESETS_BY_SIZE = new Map(
   VIDEO_SIZE_PRESETS.map((preset) => [`${preset.width}x${preset.height}`, preset]),
 );
@@ -53,6 +54,7 @@ export function normalizeNiconicoMeta(
     description: value?.description ?? "",
     thumbnailTime: normalizeThumbnailTime(value?.thumbnailTime),
     parentWorkIds: normalizeParentWorkIds(value?.parentWorkIds),
+    fixedParentWorkIds: normalizeParentWorkIds(value?.fixedParentWorkIds),
     tags: [...new Set((value?.tags ?? []).map((tag) => tag.trim()).filter(Boolean))],
   };
 }

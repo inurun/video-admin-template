@@ -13,6 +13,7 @@ describe("saved Niconico tags", () => {
       description: "desc",
       thumbnailTime: "00:00.000",
       parentWorkIds: "",
+      fixedParentWorkIds: "",
       tags: "日記 実況 ゲーム 音声合成",
     };
     const first = fromNiconicoFormValues(form);
@@ -32,6 +33,7 @@ describe("saved Niconico tags", () => {
       description: "",
       thumbnailTime: "00:00.000",
       parentWorkIds: "",
+      fixedParentWorkIds: "",
       tags: "日記 日記",
     });
     expect(saved.tags).toEqual([
