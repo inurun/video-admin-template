@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { frameToSnapshotSeconds, hfRenderArgs, hfSnapshotArgs } from "../hf-cli";
+import { frameToSnapshotSeconds, hfEnv, hfRenderArgs, hfSnapshotArgs } from "../hf-cli";
 
 describe("hfRenderArgs", () => {
   it("renders the project to the output at the former bitrate", () => {
@@ -12,9 +12,13 @@ describe("hfRenderArgs", () => {
       "standard",
       "--video-bitrate",
       "12M",
-      "--workers",
-      "1",
     ]);
+  });
+});
+
+describe("hfEnv", () => {
+  it("routes capture to one drawElement worker", () => {
+    expect(hfEnv()).toMatchObject({ HF_DE_PARALLEL_ROUTER: "false", HF_DE_SINGLE_MIN_FRAMES: "1" });
   });
 });
 
