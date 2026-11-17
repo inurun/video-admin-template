@@ -59,7 +59,8 @@ export type SoundCue = { clip: string; src: string; volume: number };
  *   pitch and timing are mixed into the engine. `pitchWeight` is only for engines that take
  *   pitch (VOICEVOX); `timingWeight` is tempo and pauses. Both are 0 to 1 and default to 0.8.
  *   `pitchSmoothing` (pitch engines only, 0 to 1, default 0) mixes each mora's reference pitch
- *   with its neighbors' before mapping; the range stays the engine's, only jitter is evened out.
+ *   with its neighbors' before mapping (1 = half its own, half the neighbors'); the range stays
+ *   the engine's, only jitter is evened out.
  *   `pitchLimit` (pitch engines only, above 0, omitted = none) soft-limits each mora's reference
  *   pitch to that many standard deviations from the utterance mean, both up and down, so one
  *   spike or dip does not flatten the rest of the utterance. 1.5 to 2 is a good start.

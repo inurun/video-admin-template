@@ -3,7 +3,9 @@ import type { ProsodyExtract } from "@/_schemas";
 type Mora = ProsodyExtract["moras"][number];
 
 /**
- * Mixes each mora's log F0 with the mean of its voiced neighbors by `amount` (0 keeps it).
+ * Mixes each mora's log F0 with the mean of its voiced neighbors: `amount` 0 keeps it, 1 is
+ * half its own and half the neighbors' (1/4 each with two). The mora always keeps at least half,
+ * so an alternating high-low contour is evened out, never turned upside down.
  * Neighbors across a pause or without F0 are left out; the input values are used throughout.
  */
 export function smoothPitch(
@@ -28,6 +30,7 @@ export function smoothPitch(
       return mora;
     }
     const mean = neighbors.reduce((sum, value) => sum + value, 0) / neighbors.length;
-    return { ...mora, log_f0: (1 - amount) * mora.log_f0 + amount * mean };
+    const weight = amount / 2;
+    return { ...mora, log_f0: (1 - weight) * mora.log_f0 + weight * mean };
   });
 }
