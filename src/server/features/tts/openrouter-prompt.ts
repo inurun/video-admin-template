@@ -14,7 +14,8 @@ const SURFACE = `# Surface
 - Every character the reading covers is in the surface (なんだ:ナ'ンダ, never な:ナ'ン|だ:ダ).
 - Skip brackets and symbols, except dictionary words containing them (e.g. （笑）): use that whole word as one surface.
 - Word granularity is free.
-- Numbers: copy the digits (3.14:サンテンイチヨン, 6:ロッ|本:ポン, 20:ニジュッ|分:プン). To split a number into several phrases, rewrite it as kanji numerals and keep counters as separate words (1985年 → 千:セ'ン/九百:キューヒャク/八十五:ハチジューゴ|年:ネ'ン; 十:ジュー|月:ガツ, never 十月).`;
+- Numbers: copy the digits (3.14:サンテンイチヨン, 6:ロッ|本:ポン, 20:ニジュッ|分:プン). To split a digit number into several phrases, rewrite it as kanji numerals and keep counters as separate words (1985年 → 千:セ'ン/九百:キューヒャク/八十五:ハチジューゴ|年:ネ'ン; 十:ジュー|月:ガツ, never 十月).
+- Numerals written in kana stay kana; never rewrite them as kanji or digits (いちにち:イチニチ, never 一日).`;
 
 const READING = `# Reading
 - Katakana as pronounced: particle は→ワ, へ→エ, を→ヲ. Long vowels as ー (先生:センセー, でしょう:デショー), but keep verb/adjective endings (思う:オモウ, 美味しい:オイシイ).
