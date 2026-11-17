@@ -6,12 +6,7 @@ import { analyzeTextsWithDictionary } from "@/server/features/haqumei-api/analyz
 import { extractProsody } from "@/server/features/haqumei-api/prosody";
 import { validateG2pItem } from "@/server/features/haqumei-api/validate";
 import { chunkItems } from "@/server/features/tts/llm-g2p-profile";
-import {
-  readCachedProsody,
-  readCachedProsodySource,
-  writeCachedProsody,
-  writeCachedProsodySource,
-} from "./cache";
+import { readCachedProsody, readSettledG2p, writeCachedProsody, writeSettledG2p } from "./cache";
 import { LLM_READING_CHECK_PROFILE } from "./profiles";
 import {
   alignWords,
@@ -234,14 +229,13 @@ async function checkReferences(serverEnv: ServerEnv, items: readonly Unchecked[]
 
 async function extractFor(
   serverEnv: ServerEnv,
-  projectPath: string,
   g2p: G2pItem,
   source: ProsodySource,
   wav: Buffer,
 ): Promise<ProsodyAnalysis> {
   try {
     const prosody = await extractProsody(serverEnv, g2p, wav);
-    await writeCachedProsody(projectPath, g2p, source, prosody);
+    await writeCachedProsody(g2p, source, prosody);
     return { g2p, prosody };
   } catch (error) {
     warn(g2p.text, `extract failed: ${errorMessage(error)}`);
@@ -252,7 +246,6 @@ async function extractFor(
 /** Settles the kana from the checked readings, then extracts the prosody. */
 async function settleChecked(
   serverEnv: ServerEnv,
-  projectPath: string,
   item: Unchecked,
   checked: { wav: Buffer; corrections: ReadingCorrection[] } | undefined,
 ): Promise<ProsodyAnalysis> {
@@ -277,52 +270,48 @@ async function settleChecked(
     return { g2p };
   }
 
-  await writeCachedProsodySource(projectPath, g2p, item.source, checked.wav);
-  return extractFor(serverEnv, projectPath, g2p, item.source, checked.wav);
+  await writeSettledG2p(analyzed, item.source, g2p);
+  return extractFor(serverEnv, g2p, item.source, checked.wav);
 }
 
 /**
- * An edited kana: words read differently from the analyzer, and the analyzer's dictionary
- * words, are spelled in katakana; no check.
+ * An edited or already settled kana: words read differently from the analyzer, and the
+ * analyzer's dictionary words, are spelled in katakana; no check.
  */
 async function fromSavedKana(
   serverEnv: ServerEnv,
-  projectPath: string,
   analyzed: AnalyzedItem,
   g2p: G2pItem,
   source: ProsodySource,
   context: ProsodySourceContext | undefined,
 ): Promise<ProsodyAnalysis> {
-  const cached = await readCachedProsody(projectPath, g2p, source);
+  const cached = await readCachedProsody(g2p, source);
   if (cached) {
     return { g2p, prosody: cached };
   }
 
-  let wav = await readCachedProsodySource(projectPath, g2p, source);
-  if (!wav) {
-    const words = wordsOf(g2p.kana);
-    const baseWords = wordsOf(analyzed.g2p.kana);
-    const dictionary = new Set(analyzed.dictionaryWords.map((word) => word.index));
-    const changed = changedReadings(words, baseWords);
-    alignWords(words, baseWords).forEach((base, i) => {
-      if (base && dictionary.has(base.index)) {
-        changed.set(words[i]!.index, words[i]!.reading);
-      }
-    });
-    try {
-      wav = await synthesizeProsodySource(
-        serverEnv,
-        respell(g2p.text, words, changed),
-        source,
-        context,
-      );
-    } catch (error) {
-      warn(g2p.text, `reference reading failed: ${errorMessage(error)}`);
-      return { g2p };
+  const words = wordsOf(g2p.kana);
+  const baseWords = wordsOf(analyzed.g2p.kana);
+  const dictionary = new Set(analyzed.dictionaryWords.map((word) => word.index));
+  const changed = changedReadings(words, baseWords);
+  alignWords(words, baseWords).forEach((base, i) => {
+    if (base && dictionary.has(base.index)) {
+      changed.set(words[i]!.index, words[i]!.reading);
     }
-    await writeCachedProsodySource(projectPath, g2p, source, wav);
+  });
+  let wav: Buffer;
+  try {
+    wav = await synthesizeProsodySource(
+      serverEnv,
+      respell(g2p.text, words, changed),
+      source,
+      context,
+    );
+  } catch (error) {
+    warn(g2p.text, `reference reading failed: ${errorMessage(error)}`);
+    return { g2p };
   }
-  return extractFor(serverEnv, projectPath, g2p, source, wav);
+  return extractFor(serverEnv, g2p, source, wav);
 }
 
 /**
@@ -332,12 +321,14 @@ async function fromSavedKana(
  * Analyzer kana go through the reading check together: their reference audio is made first,
  * then checked `chunkSize` utterances per LLM request.
  *
- * `fresh` ignores the saved kana and the cached reference audio: every target is analyzed,
- * read and checked again (the caches are overwritten).
+ * An analyzer kana that passed the check before (in any project) is taken as settled: its
+ * extract is reused, or it is read again like a saved kana. The reference audio is not kept.
+ *
+ * `fresh` ignores the saved kana and the caches: every target is analyzed, read and checked
+ * again (the caches are overwritten).
  */
 export async function analyzeProsody(
   serverEnv: ServerEnv,
-  projectPath: string,
   targets: readonly ProsodyTarget[],
   { fresh = false }: { fresh?: boolean } = {},
 ): Promise<ProsodyAnalysis[]> {
@@ -357,19 +348,9 @@ export async function analyzeProsody(
   const toCheck: Omit<Unchecked, "wav">[] = [];
   await runPool(items, PROSODY_CONCURRENCY, async ({ id, target, base }) => {
     const { source, context } = target;
-    if (target.g2p && !fresh) {
-      results.set(
-        id,
-        await fromSavedKana(serverEnv, projectPath, base, target.g2p, source, context),
-      );
-      return;
-    }
-    // A cached source for these readings already passed the check.
-    const cachedSource = fresh
-      ? undefined
-      : await readCachedProsodySource(projectPath, base.g2p, source);
-    if (cachedSource) {
-      results.set(id, await extractFor(serverEnv, projectPath, base.g2p, source, cachedSource));
+    const settled = fresh ? undefined : (target.g2p ?? (await readSettledG2p(base.g2p, source)));
+    if (settled) {
+      results.set(id, await fromSavedKana(serverEnv, base, settled, source, context));
       return;
     }
     const words = wordsOf(base.g2p.kana);
@@ -384,6 +365,8 @@ export async function analyzeProsody(
     });
   });
 
+  // The pool settles out of order; read and check in the targets' order.
+  toCheck.sort((a, b) => Number(a.id) - Number(b.id));
   if (toCheck.length > 0) {
     const wavs = await synthesizeSources(
       serverEnv,
@@ -399,7 +382,7 @@ export async function analyzeProsody(
     });
     const checked = await checkReferences(serverEnv, unchecked);
     await runPool(unchecked, PROSODY_CONCURRENCY, async (item) => {
-      results.set(item.id, await settleChecked(serverEnv, projectPath, item, checked.get(item.id)));
+      results.set(item.id, await settleChecked(serverEnv, item, checked.get(item.id)));
     });
   }
 

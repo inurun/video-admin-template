@@ -127,13 +127,12 @@ async function resolvePreviewG2p(
  * kana and the cached reference are not used); the others ask the LLM again.
  */
 export async function generateTtsG2p(serverEnv: ServerEnv, input: unknown) {
-  const { projectPath, pageId, item } = ttsG2pGenerateRequestSchema.parse(input);
+  const { pageId, item } = ttsG2pGenerateRequestSchema.parse(input);
   if (item.provider !== "coeiroink" && getSpeechPipeline(item.provider).pipeline === "prosody") {
     const previous = item.previous ? getEffectiveReadText(item.previous) : "";
     const next = item.next ? getEffectiveReadText(item.next) : "";
     const [result] = await analyzeProsody(
       serverEnv,
-      projectPath,
       [
         {
           readText: getEffectiveReadText(item),
@@ -174,7 +173,7 @@ export async function synthesizeTts(serverEnv: ServerEnv, input: unknown) {
   const provider = getTtsProvider(parsed.provider);
   const readText = getEffectiveReadText(parsed);
   const g2p = await resolvePreviewG2p(serverEnv, parsed.provider, readText, parsed.g2p);
-  const prosody = await findSynthesisProsody(parsed.projectPath, parsed, g2p);
+  const prosody = await findSynthesisProsody(parsed, g2p);
   const synthesisInput = {
     ...parsed,
     readText,

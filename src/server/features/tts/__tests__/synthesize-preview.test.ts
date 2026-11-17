@@ -44,7 +44,6 @@ describe("synthesizeTts preview", () => {
 
     expect(mocks.generateG2pWithCache).not.toHaveBeenCalled();
     expect(mocks.findSynthesisProsody).toHaveBeenCalledWith(
-      "project",
       expect.objectContaining({ provider: "voicevox" }),
       g2p,
     );

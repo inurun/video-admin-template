@@ -6,6 +6,7 @@
 .next
 node_modules
 out
+cache
 dist
 *.log
 *.tsbuildinfo

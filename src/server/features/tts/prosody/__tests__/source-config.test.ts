@@ -9,11 +9,9 @@ vi.mock("@/video/config", async () => ({
     tags: { "voicevox::113::": "[tired]", "voicevox::14::": "" },
   },
 }));
-vi.mock("@/server/_shared/storage", () => ({
-  getProjectTtsDir: (projectPath: string) => `/tts/${projectPath}`,
-}));
+vi.mock("@/server/_shared/storage", () => ({ PROSODY_CACHE_DIR: "/cache/prosody" }));
 
-import { prosodySourcePath } from "../cache";
+import { prosodyExtractPath } from "../cache";
 import { prosodySourceFor } from "../source-config";
 
 describe("prosodySourceFor", () => {
@@ -29,13 +27,13 @@ describe("prosodySourceFor", () => {
     expect(prosodySourceFor({ provider: "voicevox" }).tag).toBe("[in a monotone]");
   });
 
-  it("gives each tag its own reference audio", () => {
+  it("gives each tag its own extract", () => {
     const g2p = createG2pItem("日本語でOK", "日本語:ニホンゴ|で:デ'/ＯＫ:オ'ーケー");
     const anko = prosodySourceFor({ provider: "voicevox", voiceName: "113" });
     const shared = prosodySourceFor({ provider: "voicevox", voiceName: "3" });
-    expect(prosodySourcePath("p", g2p, anko)).not.toBe(prosodySourcePath("p", g2p, shared));
-    expect(prosodySourcePath("p", g2p, shared)).toBe(
-      prosodySourcePath("p", g2p, prosodySourceFor({ provider: "voisona", voiceName: "x" })),
+    expect(prosodyExtractPath(g2p, anko)).not.toBe(prosodyExtractPath(g2p, shared));
+    expect(prosodyExtractPath(g2p, shared)).toBe(
+      prosodyExtractPath(g2p, prosodySourceFor({ provider: "voisona", voiceName: "x" })),
     );
   });
 });

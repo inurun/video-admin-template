@@ -200,7 +200,7 @@ describe("tts analysis by speech pipeline", () => {
     ]);
     await flushJobs();
 
-    expect(mocks.analyzeProsody).toHaveBeenCalledWith(env, "project", [
+    expect(mocks.analyzeProsody).toHaveBeenCalledWith(env, [
       expect.objectContaining({ readText: "犬" }),
     ]);
     expect(mocks.generateG2p.mock.calls[0]?.[1]).toMatchObject({
@@ -232,7 +232,7 @@ describe("tts analysis by speech pipeline", () => {
     await save([tts("tts-1", "voicevox", "犬"), tts("tts-2", "voicevox", "犬")]);
     await flushJobs();
 
-    expect(mocks.analyzeProsody).toHaveBeenCalledWith(env, "project", [
+    expect(mocks.analyzeProsody).toHaveBeenCalledWith(env, [
       expect.objectContaining({ readText: "犬" }),
     ]);
     expect(mocks.generateG2p).not.toHaveBeenCalled();
@@ -251,7 +251,7 @@ describe("tts analysis by speech pipeline", () => {
     await save(texts.map((t, index) => tts(`tts-${index}`, "voicevox", t)));
     await flushJobs();
 
-    const targets = mocks.analyzeProsody.mock.calls[0]?.[2] as { context?: unknown }[];
+    const targets = mocks.analyzeProsody.mock.calls[0]?.[1] as { context?: unknown }[];
     expect(targets.map((target) => target.context)).toEqual([
       { next: "二。三。" },
       { previous: "一。", next: "三。四。" },
@@ -272,7 +272,7 @@ describe("tts analysis by speech pipeline", () => {
     ]);
     await flushJobs();
 
-    expect(mocks.analyzeProsody.mock.calls[0]?.[2]).toEqual([
+    expect(mocks.analyzeProsody.mock.calls[0]?.[1]).toEqual([
       expect.objectContaining({ readText: "犬", context: { next: "猫犬" } }),
       expect.objectContaining({ readText: "猫", context: { previous: "犬", next: "犬" } }),
     ]);
@@ -289,7 +289,7 @@ describe("tts analysis by speech pipeline", () => {
     });
     await flushJobs();
 
-    expect(mocks.analyzeProsody).toHaveBeenCalledWith(env, "project", [
+    expect(mocks.analyzeProsody).toHaveBeenCalledWith(env, [
       expect.objectContaining({ readText: "犬", g2p: edited }),
     ]);
     expect(mocks.planVoicevox).toHaveBeenCalledWith(
@@ -305,7 +305,6 @@ describe("tts analysis by speech pipeline", () => {
 
     expect(savedTts(saved.project)[0]?.audio.status).toBe("pending");
     expect(mocks.findSynthesisProsody).toHaveBeenCalledWith(
-      "project",
       expect.objectContaining({ provider: "voicevox" }),
       edited,
     );

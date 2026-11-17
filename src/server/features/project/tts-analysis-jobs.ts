@@ -291,7 +291,7 @@ async function runProsody(
     }
   }
   const keys = [...prosodyTargets.keys()];
-  const analyses = await analyzeProsody(serverEnv, projectPath, [...prosodyTargets.values()]);
+  const analyses = await analyzeProsody(serverEnv, [...prosodyTargets.values()]);
   const byKey = new Map(keys.map((key, index) => [key, analyses[index]!]));
   return new Map([...keyByTtsId].map(([ttsId, key]) => [ttsId, byKey.get(key)!] as const));
 }

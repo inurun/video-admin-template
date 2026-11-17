@@ -82,7 +82,6 @@ describe("generateTtsG2p", () => {
 
     expect(analyzeProsodyMock).toHaveBeenCalledWith(
       {},
-      "project",
       [
         {
           readText: "にんき",
