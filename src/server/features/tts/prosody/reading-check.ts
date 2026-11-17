@@ -12,26 +12,20 @@ export type ReadingCorrection = { index: number; surface: string; heard: string;
 const KANA_WORD = /[^/、？！|]+/gu;
 
 const SYSTEM = `You check how Japanese utterances were actually pronounced in recordings.
-Input: items, each with id, text, and words = an analyzer's split of the text, each with index, surface and its reading in katakana.
-After the items, one recording per item follows, each introduced by "recording <id>". Judge each item only by its own recording.
+Each utterance comes as "#<id>", its text, and its kana: an analyzer's reading of the text as words "surface:reading" separated by spaces (punctuation stands alone), followed by its recording. Judge each utterance only by its own recording.
 For each word decide two readings:
 - heard: the reading as spoken in the recording.
 - correct: the reading a native speaker would use for this word in this context.
-Report only the words where heard differs from the analyzer's reading, or heard differs from correct.
+Return every utterance. When a word's heard differs from its kana reading, or heard differs from correct, write heard and correct as whole kana lines: the same words in the same order with the same surfaces and punctuation, only the readings changed. When everything matches, set both to null.
 - Readings are katakana as pronounced. Particle は→ワ, へ→エ, を→ヲ. Long vowels as ー.
 - Judge the sounds (moras) only. Ignore pitch accent, pauses, speed and emotion.
 - Same sounds written differently (オオ vs オー) are not a difference, but a missing or extra long vowel is (オーケ vs オーケー).
-- Return every item, with an empty corrections list when everything matches.`;
-
-const correctionSchema = z.object({
-  index: z.number().int(),
-  surface: z.string(),
-  heard: z.string(),
-  correct: z.string(),
-});
+`;
 
 const outputSchema = z.object({
-  items: z.array(z.object({ id: z.string(), corrections: z.array(correctionSchema) })),
+  items: z.array(
+    z.object({ id: z.string(), heard: z.string().nullable(), correct: z.string().nullable() }),
+  ),
 });
 
 const outputJsonSchema = {
@@ -44,31 +38,19 @@ const outputJsonSchema = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["id", "corrections"],
+        required: ["id", "heard", "correct"],
         properties: {
           id: { type: "string" },
-          corrections: {
-            type: "array",
-            items: {
-              type: "object",
-              additionalProperties: false,
-              required: ["index", "surface", "heard", "correct"],
-              properties: {
-                index: { type: "integer" },
-                surface: { type: "string" },
-                heard: { type: "string" },
-                correct: { type: "string" },
-              },
-            },
-          },
+          heard: { type: ["string", "null"] },
+          correct: { type: ["string", "null"] },
         },
       },
     },
   },
 } as const;
 
-/** One utterance to check: its text, the analyzer's words, and the reference recording. */
-export type ReadingCheckItem = { id: string; text: string; words: KanaWord[]; wav: Buffer };
+/** One utterance to check: its text, the analyzer's kana, and the reference recording. */
+export type ReadingCheckItem = { id: string; text: string; kana: string; wav: Buffer };
 
 function splitWord(word: string) {
   const colon = word.indexOf(":");
@@ -183,12 +165,96 @@ export function changedReadings(words: KanaWord[], baseWords: KanaWord[]) {
   return changed;
 }
 
+const PUNCTUATION = /([、？！])/u;
+
+/** The kana as the check reads and writes it: words "surface:reading" and punctuation, spaced. */
+export function kanaLine(kana: string) {
+  return kana
+    .replaceAll("'", "")
+    .split(/[/|]|([、？！])/u)
+    .filter(Boolean)
+    .join(" ");
+}
+
+/** The words of a kana line, punctuation left out. */
+function lineWords(line: string) {
+  return line
+    .split(/\s+/u)
+    .filter((token) => token && !PUNCTUATION.test(token))
+    .map((token) => {
+      const { surface, reading } = splitWord(token);
+      return { surface: surface ?? reading, reading };
+    });
+}
+
+/**
+ * The line's reading of each analyzer word, matched by surface. The line may split or join
+ * words differently: a line word spanning several analyzer words must read the same as they
+ * do (then each keeps its own reading). `undefined` when the surfaces differ, or a joined span
+ * reads differently (the difference cannot be put on one word).
+ */
+function readingsByWord(words: KanaWord[], line: string): string[] | undefined {
+  const tokens = lineWords(line);
+  const readings: string[] = [];
+  let w = 0;
+  let t = 0;
+  while (w < words.length || t < tokens.length) {
+    const group = { words: [] as KanaWord[], tokens: [] as typeof tokens };
+    let wordSurface = "";
+    let tokenSurface = "";
+    do {
+      if (wordSurface.length <= tokenSurface.length && w < words.length) {
+        group.words.push(words[w]!);
+        wordSurface += words[w++]!.surface;
+      } else if (t < tokens.length) {
+        group.tokens.push(tokens[t]!);
+        tokenSurface += tokens[t++]!.surface;
+      } else {
+        return undefined;
+      }
+    } while (wordSurface !== tokenSurface);
+    const reading = group.tokens.map((token) => token.reading).join("");
+    if (group.words.length === 1) {
+      readings.push(reading);
+    } else if (sameSound(reading, group.words.map((word) => word.reading).join(""))) {
+      readings.push(...group.words.map((word) => word.reading));
+    } else {
+      return undefined;
+    }
+  }
+  return readings;
+}
+
+/**
+ * Corrections from the heard and correct lines, matched to the analyzer's words by surface;
+ * `undefined` when a line cannot be matched.
+ */
+export function correctionsFromLines(
+  words: KanaWord[],
+  heardLine: string,
+  correctLine: string,
+): ReadingCorrection[] | undefined {
+  const heard = readingsByWord(words, heardLine);
+  const correct = readingsByWord(words, correctLine);
+  if (!heard || !correct) {
+    return undefined;
+  }
+  return words.flatMap((word, i) => {
+    const h = heard[i]!;
+    const c = correct[i]!;
+    return normalizeReading(h) !== word.reading || !sameSound(h, c)
+      ? [{ index: word.index, surface: word.surface, heard: h, correct: c }]
+      : [];
+  });
+}
+
 /**
  * Asks the LLM, for a chunk of utterances in one request, which words each recording reads
  * differently from the analyzer, and how they should be read.
  *
- * Ids are sent as "1", "2"…, like the LLM G2P. The result has an entry only for the items the
- * LLM returned; a missing item counts as unchecked.
+ * Ids are sent as "1", "2"…, like the LLM G2P. The LLM returns every utterance, with null lines
+ * when nothing differs; an utterance it leaves out counts as matching too. An utterance whose
+ * returned lines do not have the analyzer's words is left out of the result (unchecked).
  */
 export async function checkReadings(
   serverEnv: ServerEnv,
@@ -198,42 +264,44 @@ export async function checkReadings(
   const result = await requestOpenRouterJson(serverEnv, {
     profile: LLM_READING_CHECK_PROFILE,
     system: SYSTEM,
-    user: [
+    user: items.flatMap((item, index) => [
       {
-        type: "text",
-        text: JSON.stringify({
-          items: items.map((item, index) => ({
-            id: aliases[index],
-            text: item.text,
-            words: item.words,
-          })),
-        }),
+        type: "text" as const,
+        text: `#${aliases[index]}\ntext: ${item.text}\nkana: ${kanaLine(item.kana)}`,
       },
-      ...items.flatMap((item, index) => [
-        { type: "text" as const, text: `recording ${aliases[index]}` },
-        {
-          type: "input_audio" as const,
-          input_audio: { data: item.wav.toString("base64"), format: "wav" as const },
-        },
-      ]),
-    ],
+      {
+        type: "input_audio" as const,
+        input_audio: { data: item.wav.toString("base64"), format: "wav" as const },
+      },
+    ]),
     schemaName: "readings",
     jsonSchema: outputJsonSchema,
     output: outputSchema,
   });
 
+  const corrections = new Map<string, ReadingCorrection[]>(items.map((item) => [item.id, []]));
   const byAlias = new Map(items.map((item, index) => [aliases[index]!, item]));
-  const corrections = new Map<string, ReadingCorrection[]>();
+  const seen = new Set<string>();
   for (const entry of result.output.items) {
     const item = byAlias.get(entry.id);
-    if (!item || corrections.has(item.id)) {
+    if (!item || seen.has(item.id)) {
       continue;
     }
-    const indexes = new Set(item.words.map((word) => word.index));
-    corrections.set(
-      item.id,
-      entry.corrections.filter((correction) => indexes.has(correction.index)),
+    seen.add(item.id);
+    if (entry.heard === null && entry.correct === null) {
+      continue;
+    }
+    const words = wordsOf(item.kana);
+    const found = correctionsFromLines(
+      words,
+      entry.heard ?? entry.correct ?? "",
+      entry.correct ?? entry.heard ?? "",
     );
+    if (found) {
+      corrections.set(item.id, found);
+    } else {
+      corrections.delete(item.id);
+    }
   }
   return corrections;
 }

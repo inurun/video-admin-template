@@ -154,7 +154,7 @@ async function checkInChunks(
         if (corrections) {
           results.set(item.id, corrections);
         } else {
-          warn(item.text, "reading check returned no result for this item");
+          warn(item.text, "reading check returned readings that do not match the kana's words");
         }
       }
     } catch (error) {
@@ -169,7 +169,7 @@ async function checkInChunks(
 const toCheckItem = (item: Unchecked): ReadingCheckItem => ({
   id: item.id,
   text: item.analyzed.text,
-  words: item.words,
+  kana: item.analyzed.kana,
   wav: item.wav,
 });
 

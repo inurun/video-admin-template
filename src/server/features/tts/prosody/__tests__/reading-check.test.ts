@@ -3,6 +3,8 @@ import {
   applyReadings,
   changedReadings,
   checkReadings,
+  correctionsFromLines,
+  kanaLine,
   respell,
   sameSound,
   wordsOf,
@@ -76,12 +78,89 @@ describe("changedReadings", () => {
   });
 });
 
+describe("kanaLine", () => {
+  it("spaces words and punctuation and drops accent marks", () => {
+    expect(kanaLine(kana)).toBe(
+      "出納係:スイトーガカリ が:ガ 、 差額:サガク を:ヲ 早急:ソーキュー に:ニ",
+    );
+  });
+});
+
+describe("correctionsFromLines", () => {
+  const words = wordsOf("頭:アタマ'|が:ガ、頭:アタマ'|の:ノ/中:チュウ");
+
+  it("matches words by position, so a repeated surface stays apart", () => {
+    expect(
+      correctionsFromLines(
+        words,
+        "頭:アタマ が:ガ 、 頭:アトモ の:ノ 中:チュウ",
+        "頭:アタマ が:ガ 、 頭:アタマ の:ノ 中:ナカ",
+      ),
+    ).toEqual([
+      { index: 2, surface: "頭", heard: "アトモ", correct: "アタマ" },
+      { index: 4, surface: "中", heard: "チュウ", correct: "ナカ" },
+    ]);
+  });
+
+  it("ignores a spelling that sounds the same", () => {
+    expect(
+      correctionsFromLines(
+        words,
+        "頭:アタマ が:ガ 頭:アタマ の:ノ 中:チュウ",
+        "頭:アタマ が:ガ 頭:アタマ の:ノ 中:チュー",
+      ),
+    ).toEqual([]);
+  });
+
+  it("accepts words split or joined differently when they read the same", () => {
+    const split = wordsOf("今日:キョー|は:ワ/だ:ダ|まし:マシ/かじゃ:カジャ");
+    expect(
+      correctionsFromLines(
+        split,
+        "今日:キョー は:ワ だまし:ダマシ か:カ じゃ:ジャ",
+        "今日:キョー は:ワ だまし:ダマシ か:カ じゃ:ジャ",
+      ),
+    ).toEqual([]);
+    expect(
+      correctionsFromLines(
+        split,
+        "今日:キョー は:ワ だまし:ダマシ か:カ じゃ:ジャ",
+        "今日:キョー は:ワ だまし:ダマシ か:ケ じゃ:ジャ",
+      ),
+    ).toEqual([{ index: 4, surface: "かじゃ", heard: "カジャ", correct: "ケジャ" }]);
+    expect(
+      correctionsFromLines(
+        split,
+        "今日:キョー は:ワ だまし:ダマシイ かじゃ:カジャ",
+        "今日:キョー は:ワ だまし:ダマシ かじゃ:カジャ",
+      ),
+    ).toBeUndefined();
+  });
+
+  it("gives up on lines with other words", () => {
+    expect(
+      correctionsFromLines(
+        words,
+        "頭:アタマ が:ガ 頭:アタマ の:ノ",
+        "頭:アタマ が:ガ 頭:アタマ の:ノ",
+      ),
+    ).toBeUndefined();
+    expect(
+      correctionsFromLines(
+        words,
+        "頭:アタマ が:ガ 頭:アタマ の:ノ 中:ナカ",
+        "頭:アタマ が:ガ 頭:アタマ の:ノ 仲:ナカ",
+      ),
+    ).toBeUndefined();
+  });
+});
+
 describe("checkReadings", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  it("checks a chunk in one request with short ids and one recording per item", async () => {
+  it("sends each utterance next to its recording and reads back the differing lines", async () => {
     const fetchMock = vi.fn(async () =>
       Response.json({
         choices: [
@@ -91,13 +170,13 @@ describe("checkReadings", () => {
                 items: [
                   {
                     id: "1",
-                    corrections: [
-                      { index: 4, surface: "早急", heard: "サッキュー", correct: "サッキュー" },
-                      { index: 99, surface: "?", heard: "ア", correct: "ア" },
-                    ],
+                    heard: "出納係:スイトーガカリ が:ガ 、 差額:サガク を:ヲ 早急:サッキュー に:ニ",
+                    correct:
+                      "出納係:スイトーガカリ が:ガ 、 差額:サガク を:ヲ 早急:サッキュー に:ニ",
                   },
-                  { id: "2", corrections: [] },
-                  { id: "9", corrections: [] },
+                  { id: "2", heard: null, correct: null },
+                  { id: "3", heard: "抜け:ヌケ", correct: "抜け:ヌケ" },
+                  { id: "9", heard: null, correct: null },
                 ],
               }),
             },
@@ -106,13 +185,11 @@ describe("checkReadings", () => {
       }),
     );
     vi.stubGlobal("fetch", fetchMock);
-    const words = wordsOf(kana);
-    const other = wordsOf("境内:ケ'イダイ");
 
     const result = await checkReadings({ OPENROUTER_API_KEY: "secret" }, [
-      { id: "a", text: "出納係が、差額を早急に", words, wav: Buffer.from("RIFF-a") },
-      { id: "b", text: "境内", words: other, wav: Buffer.from("RIFF-b") },
-      { id: "c", text: "抜けた", words: other, wav: Buffer.from("RIFF-c") },
+      { id: "a", text: "出納係が、差額を早急に", kana, wav: Buffer.from("RIFF-a") },
+      { id: "b", text: "境内", kana: "境内:ケ'イダイ", wav: Buffer.from("RIFF-b") },
+      { id: "c", text: "抜けた", kana: "抜けた:ヌケタ'", wav: Buffer.from("RIFF-c") },
     ]);
 
     expect(result).toEqual(
@@ -136,19 +213,12 @@ describe("checkReadings", () => {
     expect(body.messages[1].content).toEqual([
       {
         type: "text",
-        text: JSON.stringify({
-          items: [
-            { id: "1", text: "出納係が、差額を早急に", words },
-            { id: "2", text: "境内", words: other },
-            { id: "3", text: "抜けた", words: other },
-          ],
-        }),
+        text: "#1\ntext: 出納係が、差額を早急に\nkana: 出納係:スイトーガカリ が:ガ 、 差額:サガク を:ヲ 早急:ソーキュー に:ニ",
       },
-      { type: "text", text: "recording 1" },
       audio("RIFF-a"),
-      { type: "text", text: "recording 2" },
+      { type: "text", text: "#2\ntext: 境内\nkana: 境内:ケイダイ" },
       audio("RIFF-b"),
-      { type: "text", text: "recording 3" },
+      { type: "text", text: "#3\ntext: 抜けた\nkana: 抜けた:ヌケタ" },
       audio("RIFF-c"),
     ]);
   });

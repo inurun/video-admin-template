@@ -243,13 +243,13 @@ describe("analyzeProsody", () => {
     expect(warn).toHaveBeenCalledTimes(2);
   });
 
-  it("drops the prosody of an item the check left out", async () => {
+  it("drops the prosody of an item the check could not match", async () => {
     mocks.checkReadings.mockResolvedValueOnce(new Map());
 
     await expect(analyzeProsody(env, "project", [{ readText: text, source }])).resolves.toEqual([
       { g2p: analyzed },
     ]);
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining("no result"));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("do not match"));
   });
 
   it("respells edited readings for a saved kana without a reading check", async () => {
