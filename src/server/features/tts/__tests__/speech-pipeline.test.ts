@@ -75,6 +75,18 @@ describe("resolveSpeechPipelines", () => {
     ).toThrow("pitchSmoothing");
   });
 
+  it("takes the template's pitch limit on pitch engines only", () => {
+    expect(
+      resolveSpeechPipelines({ voicevox: { pipeline: "prosody", pitchLimit: 2 } }, providers),
+    ).toMatchObject({ voicevox: { pitchLimit: 2 } });
+    expect(() =>
+      resolveSpeechPipelines({ voicevox: { pipeline: "prosody", pitchLimit: 0 } }, providers),
+    ).toThrow("pitchLimit");
+    expect(() =>
+      resolveSpeechPipelines({ voisona: { pipeline: "prosody", pitchLimit: 2 } }, providers),
+    ).toThrow("voisona does not take pitch");
+  });
+
   it("rejects a weight outside 0 to 1", () => {
     expect(() =>
       resolveSpeechPipelines({ voicevox: { pipeline: "prosody", timingWeight: 1.5 } }, providers),

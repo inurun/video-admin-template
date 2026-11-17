@@ -1,4 +1,5 @@
 import type { ProsodyExtract } from "@/_schemas";
+import { limitPitch } from "@/server/features/tts/prosody/limit";
 import { smoothPitch } from "@/server/features/tts/prosody/smoothing";
 import { speechConfig } from "@/video/config";
 import type { VideoSpeechConfig } from "@/video-host/contract";
@@ -17,7 +18,14 @@ export const DEFAULT_PROSODY_PITCH_SMOOTHING = 0;
 export type ResolvedSpeechPipeline =
   | { pipeline: "none" }
   | { pipeline: "llm-g2p" }
-  | { pipeline: "prosody"; pitchWeight: number; timingWeight: number; pitchSmoothing: number };
+  | {
+      pipeline: "prosody";
+      pitchWeight: number;
+      timingWeight: number;
+      pitchSmoothing: number;
+      /** Omitted: the reference pitch is not limited. */
+      pitchLimit?: number;
+    };
 
 function checkWeight(provider: string, name: string, weight: number) {
   if (!(weight >= 0 && weight <= 1)) {
@@ -45,7 +53,12 @@ function resolveOne(
     throw new Error(`speechConfig.${provider}: ${provider} does not take prosody`);
   }
   const { pitch } = supported.prosody;
-  if ((choice.pitchWeight !== undefined || choice.pitchSmoothing !== undefined) && !pitch) {
+  if (
+    (choice.pitchWeight !== undefined ||
+      choice.pitchSmoothing !== undefined ||
+      choice.pitchLimit !== undefined) &&
+    !pitch
+  ) {
     throw new Error(`speechConfig.${provider}: ${provider} does not take pitch`);
   }
   const pitchWeight = checkWeight(
@@ -63,7 +76,17 @@ function resolveOne(
     "pitchSmoothing",
     pitch ? (choice.pitchSmoothing ?? DEFAULT_PROSODY_PITCH_SMOOTHING) : 0,
   );
-  return { pipeline: "prosody", pitchWeight, timingWeight, pitchSmoothing };
+  const { pitchLimit } = choice;
+  if (pitchLimit !== undefined && !(pitchLimit > 0 && Number.isFinite(pitchLimit))) {
+    throw new Error(`speechConfig.${provider}.pitchLimit must be above 0: ${pitchLimit}`);
+  }
+  return {
+    pipeline: "prosody",
+    pitchWeight,
+    timingWeight,
+    pitchSmoothing,
+    ...(pitchLimit === undefined ? {} : { pitchLimit }),
+  };
 }
 
 export function resolveSpeechPipelines(
@@ -94,8 +117,11 @@ export function toSynthesisProsody(
   if (!extract || speech.pipeline !== "prosody") {
     return undefined;
   }
+  // Limited first, so a spike is not spread onto its neighbors by the smoothing.
+  const moras =
+    speech.pitchLimit === undefined ? extract.moras : limitPitch(extract.moras, speech.pitchLimit);
   return {
-    moras: smoothPitch(extract.moras, extract.pauses, speech.pitchSmoothing),
+    moras: smoothPitch(moras, extract.pauses, speech.pitchSmoothing),
     pauses: extract.pauses,
     pitch_weight: speech.pitchWeight,
     timing_weight: speech.timingWeight,
