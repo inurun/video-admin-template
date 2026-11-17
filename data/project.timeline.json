@@ -1,5 +1,5 @@
 {
-  "durationSec": 30.42168480725625,
+  "durationSec": 62.143036281179135,
   "tracks": [
     {
       "id": "sequence",
@@ -7,7 +7,7 @@
         {
           "id": "4fefb322-99a7-4b25-a677-43744c8265c8",
           "startSec": 0,
-          "durationSec": 15.667018140589569,
+          "durationSec": 15.472018140589569,
           "clips": [
             {
               "id": "b50f5244-0475-4a4f-b1ae-2522d5167399",
@@ -18,36 +18,36 @@
             {
               "id": "72503fe7-3bbe-4e27-b94d-4c76eb73766e",
               "startSec": 0.965,
-              "durationSec": 5.38,
+              "durationSec": 5.185,
               "clips": []
             },
             {
               "id": "aa024511-c45c-45ca-ae72-c00e23ba1b80",
-              "startSec": 6.345,
+              "startSec": 6.1499999999999995,
               "durationSec": 2.295,
               "clips": []
             },
             {
               "id": "f5435580-4797-4366-9562-223a1430cf07",
-              "startSec": 8.64,
+              "startSec": 8.445,
               "durationSec": 2.165,
               "clips": []
             },
             {
               "id": "332099ca-ef4d-41f8-8336-a89275c96df9",
-              "startSec": 10.805,
+              "startSec": 10.61,
               "durationSec": 1.8250000000000002,
               "clips": []
             },
             {
               "id": "d7b3225d-0c48-4e9a-8c14-fea56a3fd041",
-              "startSec": 12.629999999999999,
+              "startSec": 12.434999999999999,
               "durationSec": 1.885,
               "clips": []
             },
             {
               "id": "d04c25aa-9f11-4374-864e-6ae35deaea1c",
-              "startSec": 14.514999999999999,
+              "startSec": 14.319999999999999,
               "durationSec": 1.1520181405895693,
               "clips": []
             }
@@ -55,148 +55,206 @@
         },
         {
           "id": "dc0d43e0-dbe9-4601-b78e-e83b8f20b309",
-          "startSec": 15.667018140589569,
-          "durationSec": 0.548,
+          "startSec": 15.472018140589569,
+          "durationSec": 39.765684807256235,
           "clips": [
             {
-              "id": "13abc733-bfbb-47b0-a7d3-18df35c84787",
+              "id": "73b7e444-dee1-4880-b2ab-e79b216778ba",
               "startSec": 0,
-              "durationSec": 0.548,
+              "durationSec": 0.8786666666666666,
               "clips": []
-            }
-          ]
-        },
-        {
-          "id": "b9abfcfe-41bc-45dc-8d56-6c226212050d",
-          "startSec": 16.21501814058957,
-          "durationSec": 0.548,
-          "clips": [
+            },
             {
-              "id": "0fc68457-c327-4da3-8e1e-76521bfff0dc",
-              "startSec": 0,
-              "durationSec": 0.548,
+              "id": "f3edac37-e0bd-4069-aad0-34139fa29918",
+              "startSec": 0.8786666666666666,
+              "durationSec": 2.116,
               "clips": []
-            }
-          ]
-        },
-        {
-          "id": "35d9f2e0-6da2-4ff2-a7cf-07e760eea888",
-          "startSec": 16.763018140589573,
-          "durationSec": 0.548,
-          "clips": [
+            },
             {
-              "id": "b12592e8-93e7-44b4-85e1-e6527fcd2c58",
-              "startSec": 0,
-              "durationSec": 0.548,
+              "id": "b265827b-d61d-4b1d-ae5d-911e429d89d8",
+              "startSec": 2.994666666666667,
+              "durationSec": 0.772,
               "clips": []
-            }
-          ]
-        },
-        {
-          "id": "0ae62c55-c3b2-41f3-9d4d-f80f98c57d7a",
-          "startSec": 17.311018140589574,
-          "durationSec": 0.548,
-          "clips": [
+            },
             {
-              "id": "52049047-8e9b-4d8d-bcd6-12e2a023fed5",
-              "startSec": 0,
-              "durationSec": 0.548,
+              "id": "fef78254-3b3f-4140-871f-3901f6bbc3c1",
+              "startSec": 3.7666666666666666,
+              "durationSec": 0.6973333333333334,
               "clips": []
-            }
-          ]
-        },
-        {
-          "id": "250eac19-3a1e-44df-ab9a-70f7e859d7b7",
-          "startSec": 17.859018140589576,
-          "durationSec": 0.548,
-          "clips": [
+            },
             {
-              "id": "1bbf27de-e56f-4634-9223-bbb39dff9cdd",
-              "startSec": 0,
-              "durationSec": 0.548,
-              "clips": []
-            }
-          ]
-        },
-        {
-          "id": "ac0d24d1-944f-444d-9196-966e2ce2bd95",
-          "startSec": 18.407018140589578,
-          "durationSec": 0.548,
-          "clips": [
-            {
-              "id": "d5578f8c-2e07-4ec1-9b4e-5e97643adc7e",
-              "startSec": 0,
-              "durationSec": 0.548,
-              "clips": []
-            }
-          ]
-        },
-        {
-          "id": "09d5f67d-c8e0-4264-99d7-ebbf7baddda7",
-          "startSec": 18.95501814058958,
-          "durationSec": 0.548,
-          "clips": [
-            {
-              "id": "608dd2d7-64ca-4bf3-bd07-8e7273d535bb",
-              "startSec": 0,
-              "durationSec": 0.548,
-              "clips": []
-            }
-          ]
-        },
-        {
-          "id": "03a1618f-952b-4cec-8eda-a65dfff2fe5b",
-          "startSec": 19.50301814058958,
-          "durationSec": 2.768,
-          "clips": [
-            {
-              "id": "d6a74a06-7769-412c-8d0c-f81b6cc32c4a",
-              "startSec": 0,
+              "id": "5a82464b-1dd5-4534-bedc-a62d19e2e576",
+              "startSec": 4.464,
               "durationSec": 0.708,
               "clips": []
             },
             {
-              "id": "de3934b3-8322-44be-bf9b-9481127a733f",
-              "startSec": 0.708,
-              "durationSec": 0.548,
+              "id": "c55ecb9f-94c4-4ae0-8de9-2cee3e52866d",
+              "startSec": 5.172000000000001,
+              "durationSec": 0.7613333333333333,
               "clips": []
             },
             {
-              "id": "0efa9d67-a2b7-4a5b-91f1-4f9201c12775",
-              "startSec": 1.256,
-              "durationSec": 0.6759999999999999,
+              "id": "9fd5e73e-f18a-4c45-bd9e-2247371b27d7",
+              "startSec": 5.933333333333334,
+              "durationSec": 1.9133333333333333,
               "clips": []
             },
             {
-              "id": "13bcc8bf-88ca-4ef1-8cdd-4b5b2c6b1722",
-              "startSec": 1.932,
-              "durationSec": 0.836,
-              "clips": []
-            }
-          ]
-        },
-        {
-          "id": "4992c3d4-0531-4a1c-a9dc-681654619cd7",
-          "startSec": 22.271018140589582,
-          "durationSec": 1.2453333333333334,
-          "clips": [
-            {
-              "id": "062cad1e-d221-4708-90b8-2017877d1e35",
-              "startSec": 0,
-              "durationSec": 0.6333333333333333,
+              "id": "fd15882a-4977-4d2f-aea0-e8d6de87f325",
+              "startSec": 7.846666666666667,
+              "durationSec": 0.3773333333333333,
               "clips": []
             },
             {
-              "id": "87cf7567-d968-40b7-9f77-a228d8447723",
-              "startSec": 0.6333333333333333,
-              "durationSec": 0.612,
+              "id": "9a692afe-7777-465d-839e-4ef820afac5a",
+              "startSec": 8.224,
+              "durationSec": 1.092,
+              "clips": []
+            },
+            {
+              "id": "514f90cc-0ab2-464f-bf4f-438d1d0e7245",
+              "startSec": 9.316,
+              "durationSec": 0.708,
+              "clips": []
+            },
+            {
+              "id": "726b0956-c548-4a8a-bf9e-f1fd098a41a6",
+              "startSec": 10.024000000000001,
+              "durationSec": 1.4013333333333333,
+              "clips": []
+            },
+            {
+              "id": "f7e2b609-c41f-429f-a0ce-e10cb2da79d4",
+              "startSec": 11.425333333333334,
+              "durationSec": 0.6973333333333334,
+              "clips": []
+            },
+            {
+              "id": "4d665602-48f9-449d-8ecb-d5d54564a74b",
+              "startSec": 12.122666666666667,
+              "durationSec": 1.5613333333333335,
+              "clips": []
+            },
+            {
+              "id": "e07acb55-f1c5-4189-9e6c-b6d29eb7e11c",
+              "startSec": 13.684000000000001,
+              "durationSec": 0.46499999999999997,
+              "clips": []
+            },
+            {
+              "id": "b1b595d0-73f1-48d9-b8ab-02b15b616a64",
+              "startSec": 14.149000000000001,
+              "durationSec": 0.46499999999999997,
+              "clips": []
+            },
+            {
+              "id": "d5213bbf-44c4-486e-a647-d3c68cd4e1f6",
+              "startSec": 14.614,
+              "durationSec": 0.46499999999999997,
+              "clips": []
+            },
+            {
+              "id": "60ff007b-b47e-4285-aa7c-a0d1b3a936a0",
+              "startSec": 15.079,
+              "durationSec": 1.1986666666666668,
+              "clips": []
+            },
+            {
+              "id": "92dcbd3e-497f-4544-8a9a-642dc0a430d2",
+              "startSec": 16.27766666666667,
+              "durationSec": 0.9533333333333334,
+              "clips": []
+            },
+            {
+              "id": "fd4dd897-a4a6-481d-b113-92f4eea10505",
+              "startSec": 17.231,
+              "durationSec": 1.476,
+              "clips": []
+            },
+            {
+              "id": "b034d87c-7eb2-4874-8719-2a55ee9231c2",
+              "startSec": 18.707,
+              "durationSec": 1.1520181405895693,
+              "clips": []
+            },
+            {
+              "id": "a4d35c2b-15b1-426b-8fa9-0b497362e95f",
+              "startSec": 19.85901814058957,
+              "durationSec": 1.9986666666666668,
+              "clips": []
+            },
+            {
+              "id": "26939759-7cd4-48cd-8a2a-0ed89d215934",
+              "startSec": 21.857684807256234,
+              "durationSec": 1.2306666666666668,
+              "clips": []
+            },
+            {
+              "id": "30a51760-e070-49a1-83db-709c7aa54583",
+              "startSec": 23.088351473922902,
+              "durationSec": 2.3613333333333335,
+              "clips": []
+            },
+            {
+              "id": "cb57430e-85e3-46f9-8f92-72d2cd735b95",
+              "startSec": 25.449684807256236,
+              "durationSec": 1.6253333333333335,
+              "clips": []
+            },
+            {
+              "id": "eda59c79-4909-4469-ad18-a469dc517d59",
+              "startSec": 27.07501814058957,
+              "durationSec": 1.065,
+              "clips": []
+            },
+            {
+              "id": "7c9df782-c9e1-4e60-9dbd-350af159ae18",
+              "startSec": 28.14001814058957,
+              "durationSec": 5.5,
+              "clips": []
+            },
+            {
+              "id": "63468766-0bea-4566-8cf2-623aeb31f899",
+              "startSec": 33.640018140589575,
+              "durationSec": 1.05,
+              "clips": []
+            },
+            {
+              "id": "8085ba7e-412e-4c33-86cf-a9006aaf7794",
+              "startSec": 34.69001814058957,
+              "durationSec": 0.6649999999999999,
+              "clips": []
+            },
+            {
+              "id": "53ca3a6f-a73e-4e96-8fb6-6495fe6852a4",
+              "startSec": 35.35501814058957,
+              "durationSec": 0.9533333333333334,
+              "clips": []
+            },
+            {
+              "id": "60a97f52-c9cb-4899-a211-94581af3cba7",
+              "startSec": 36.308351473922905,
+              "durationSec": 1.8706666666666667,
+              "clips": []
+            },
+            {
+              "id": "704d2887-ab65-490d-a3b4-de760641e772",
+              "startSec": 38.17901814058957,
+              "durationSec": 0.8146666666666667,
+              "clips": []
+            },
+            {
+              "id": "bc365b64-c326-43a7-86dc-f12bc1064740",
+              "startSec": 38.99368480725624,
+              "durationSec": 0.772,
               "clips": []
             }
           ]
         },
         {
           "id": "01bb6c59-ba56-4dc1-8086-5dd7dc16fc20",
-          "startSec": 23.516351473922917,
+          "startSec": 55.237702947845804,
           "durationSec": 1.405333333333333,
           "clips": [
             {
@@ -221,7 +279,7 @@
         },
         {
           "id": "1b6584d9-cab1-49b8-953c-d833ae2bc3a7",
-          "startSec": 24.92168480725625,
+          "startSec": 56.643036281179135,
           "durationSec": 5.5,
           "clips": [
             {

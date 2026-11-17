@@ -4,7 +4,7 @@
     "description": "Admin + HyperFrames sample template",
     "width": 1920,
     "height": 1080,
-    "updatedAt": "2026-10-16T09:15:41.640Z",
+    "updatedAt": "2026-11-14T07:29:44.443Z",
     "weather": {},
     "niconico": {
       "title": "HTML説明文テスト",
@@ -50,21 +50,21 @@
           "voiceVersion": "2.0.2",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/0d52bb0659bcd168991ef5ece91df5f2.wav",
+            "src": "/tts/project/e51e96d20e45ed364e2b805d593b6cf7.wav",
             "durationSec": 0.965
           }
         },
         {
           "id": "72503fe7-3bbe-4e27-b94d-4c76eb73766e",
-          "text": "これはvoisonaのtsmlサンプルだよ！claudeとか読めないし、ラーメンは辛いし",
-          "readText": "これはvoisonaのtsmlサンプルだよ！claudeとか読めないし、ラーメンは辛いし",
+          "text": "これはvoisonaのtsmlサンプルだよ！claudeとか読めないし、ラーメンは辛い！",
+          "readText": "これはvoisonaのtsmlサンプルだよ！claudeとか読めないし、ラーメンは辛い！",
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
           "speech": {
             "g2p": {
-              "text": "これはvoisonaのtsmlサンプルだよ！claudeとか読めないし、ラーメンは辛いし",
-              "kana": "これ:コレ|は:ワ'/voisona:ボイ'ソナ|の:ノ/tsml:ティーエスエムエ'ル/サンプル:サ'ンプル|だ:ダ|よ:ヨ！claude:クロ'ード|とか:トカ/読め:ヨメ|ない:ナ'イ|し:シ、ラーメン:ラ'ーメン|は:ワ/辛い:カラ'イ|し:シ",
+              "text": "これはvoisonaのtsmlサンプルだよ！claudeとか読めないし、ラーメンは辛い！",
+              "kana": "これ:コレ|は:ワ'/ｖｏｉｓｏｎａ:ボイソナ|の:ノ'/ｔｓｍｌ:ティーエスエムエル'/サンプル:サ'ンプル|だ:ダ|よ:ヨ！ｃｌａｕｄｅ:クロード|とか:トカ'/読め:ヨメ'|ない:ナイ|し:シ、ラーメン:ラ'ーメン|は:ワ/辛:カラ'|い:イ！",
               "warnings": []
             }
           },
@@ -78,8 +78,8 @@
           "voiceVersion": "2.0.2",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/cf46219e0d819c8e0b77fe4ae52a07d7.wav",
-            "durationSec": 5.38
+            "src": "/tts/project/fb3968a2b78b6ebb1610571ad60f9702.wav",
+            "durationSec": 5.185
           }
         },
         {
@@ -106,7 +106,7 @@
           "voiceVersion": "2.0.2",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/315aea433e95c5dea7b099344db22daf.wav",
+            "src": "/tts/project/e6fe2a6d6201144c3eb8ac6767cf4640.wav",
             "durationSec": 2.295
           }
         },
@@ -134,7 +134,7 @@
           "voiceVersion": "2.0.2",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/fe5a1282c2dfdbcbfc4c61c71747c512.wav",
+            "src": "/tts/project/a450b20d99fec9d7ae3bfa4a926bbe24.wav",
             "durationSec": 2.165
           }
         },
@@ -162,7 +162,7 @@
           "voiceVersion": "2.0.2",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/e6466c906e16036ee26256235871c802.wav",
+            "src": "/tts/project/a5661a9bba15cb07669e2bce11299fb1.wav",
             "durationSec": 1.8250000000000002
           }
         },
@@ -190,7 +190,7 @@
           "voiceVersion": "2.0.2",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/9a6efac35bb0698068e7f4a73299db54.wav",
+            "src": "/tts/project/d669cbc3e30eb4d45d83d80db9a41dd4.wav",
             "durationSec": 1.885
           }
         },
@@ -237,380 +237,890 @@
       },
       "tts": [
         {
-          "id": "13abc733-bfbb-47b0-a7d3-18df35c84787",
-          "text": "テスト",
-          "readText": "テスト",
+          "id": "73b7e444-dee1-4880-b2ab-e79b216778ba",
+          "text": "えーということで",
+          "readText": "えーということで",
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {},
-          "avatar": {
-            "base": "normal",
-            "eyes": "opened",
-            "mouth": "opened"
+          "speech": {
+            "g2p": {
+              "text": "えーということで",
+              "kana": "えー:エー|と:ト'/いう:イウ|こと:コト'|で:デ",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
           },
           "provider": "voicevox",
-          "voiceName": "3",
+          "voiceName": "14",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/3a247f1817a572dfa81e67cd7b98f1ef.wav",
-            "durationSec": 0.548
-          }
-        }
-      ]
-    },
-    {
-      "id": "b9abfcfe-41bc-45dc-8d56-6c226212050d",
-      "title": "",
-      "padBeforeSec": 0,
-      "padAfterSec": 0,
-      "richText": null,
-      "type": "main",
-      "meta": {
-        "tags": []
-      },
-      "tts": [
-        {
-          "id": "0fc68457-c327-4da3-8e1e-76521bfff0dc",
-          "text": "テスト",
-          "readText": "テスト",
-          "padBeforeSec": 0,
-          "padAfterSec": 0,
-          "volume": 1,
-          "speech": {},
-          "avatar": {
-            "base": "normal",
-            "eyes": "opened",
-            "mouth": "opened"
-          },
-          "provider": "voicevox",
-          "voiceName": "3",
-          "audio": {
-            "status": "ready",
-            "src": "/tts/project/3a247f1817a572dfa81e67cd7b98f1ef.wav",
-            "durationSec": 0.548
-          }
-        }
-      ]
-    },
-    {
-      "id": "35d9f2e0-6da2-4ff2-a7cf-07e760eea888",
-      "title": "",
-      "padBeforeSec": 0,
-      "padAfterSec": 0,
-      "richText": null,
-      "type": "main",
-      "meta": {
-        "tags": []
-      },
-      "tts": [
-        {
-          "id": "b12592e8-93e7-44b4-85e1-e6527fcd2c58",
-          "text": "テスト",
-          "readText": "テスト",
-          "padBeforeSec": 0,
-          "padAfterSec": 0,
-          "volume": 1,
-          "speech": {},
-          "avatar": {
-            "base": "normal",
-            "eyes": "opened",
-            "mouth": "opened"
-          },
-          "provider": "voicevox",
-          "voiceName": "3",
-          "audio": {
-            "status": "ready",
-            "src": "/tts/project/3a247f1817a572dfa81e67cd7b98f1ef.wav",
-            "durationSec": 0.548
-          }
-        }
-      ]
-    },
-    {
-      "id": "0ae62c55-c3b2-41f3-9d4d-f80f98c57d7a",
-      "title": "",
-      "padBeforeSec": 0,
-      "padAfterSec": 0,
-      "richText": null,
-      "type": "main",
-      "meta": {
-        "tags": []
-      },
-      "tts": [
-        {
-          "id": "52049047-8e9b-4d8d-bcd6-12e2a023fed5",
-          "text": "テスト",
-          "readText": "テスト",
-          "padBeforeSec": 0,
-          "padAfterSec": 0,
-          "volume": 1,
-          "speech": {},
-          "avatar": {
-            "base": "normal",
-            "eyes": "opened",
-            "mouth": "opened"
-          },
-          "provider": "voicevox",
-          "voiceName": "3",
-          "audio": {
-            "status": "ready",
-            "src": "/tts/project/3a247f1817a572dfa81e67cd7b98f1ef.wav",
-            "durationSec": 0.548
-          }
-        }
-      ]
-    },
-    {
-      "id": "250eac19-3a1e-44df-ab9a-70f7e859d7b7",
-      "title": "",
-      "padBeforeSec": 0,
-      "padAfterSec": 0,
-      "richText": null,
-      "type": "main",
-      "meta": {
-        "tags": []
-      },
-      "tts": [
-        {
-          "id": "1bbf27de-e56f-4634-9223-bbb39dff9cdd",
-          "text": "テスト",
-          "readText": "テスト",
-          "padBeforeSec": 0,
-          "padAfterSec": 0,
-          "volume": 1,
-          "speech": {},
-          "avatar": {
-            "base": "normal",
-            "eyes": "opened",
-            "mouth": "opened"
-          },
-          "provider": "voicevox",
-          "voiceName": "3",
-          "audio": {
-            "status": "ready",
-            "src": "/tts/project/3a247f1817a572dfa81e67cd7b98f1ef.wav",
-            "durationSec": 0.548
-          }
-        }
-      ]
-    },
-    {
-      "id": "ac0d24d1-944f-444d-9196-966e2ce2bd95",
-      "title": "",
-      "padBeforeSec": 0,
-      "padAfterSec": 0,
-      "richText": null,
-      "type": "main",
-      "meta": {
-        "tags": []
-      },
-      "tts": [
-        {
-          "id": "d5578f8c-2e07-4ec1-9b4e-5e97643adc7e",
-          "text": "テスト",
-          "readText": "テスト",
-          "padBeforeSec": 0,
-          "padAfterSec": 0,
-          "volume": 1,
-          "speech": {},
-          "avatar": {
-            "base": "normal",
-            "eyes": "opened",
-            "mouth": "opened"
-          },
-          "provider": "voicevox",
-          "voiceName": "3",
-          "audio": {
-            "status": "ready",
-            "src": "/tts/project/3a247f1817a572dfa81e67cd7b98f1ef.wav",
-            "durationSec": 0.548
-          }
-        }
-      ]
-    },
-    {
-      "id": "09d5f67d-c8e0-4264-99d7-ebbf7baddda7",
-      "title": "",
-      "padBeforeSec": 0,
-      "padAfterSec": 0,
-      "richText": null,
-      "type": "main",
-      "meta": {
-        "tags": []
-      },
-      "tts": [
-        {
-          "id": "608dd2d7-64ca-4bf3-bd07-8e7273d535bb",
-          "text": "テスト",
-          "readText": "テスト",
-          "padBeforeSec": 0,
-          "padAfterSec": 0,
-          "volume": 1,
-          "speech": {},
-          "avatar": {
-            "base": "normal",
-            "eyes": "opened",
-            "mouth": "opened"
-          },
-          "provider": "voicevox",
-          "voiceName": "3",
-          "audio": {
-            "status": "ready",
-            "src": "/tts/project/3a247f1817a572dfa81e67cd7b98f1ef.wav",
-            "durationSec": 0.548
-          }
-        }
-      ]
-    },
-    {
-      "id": "03a1618f-952b-4cec-8eda-a65dfff2fe5b",
-      "title": "テスト",
-      "padBeforeSec": 0,
-      "padAfterSec": 0,
-      "richText": null,
-      "type": "main",
-      "meta": {
-        "tags": []
-      },
-      "tts": [
-        {
-          "id": "d6a74a06-7769-412c-8d0c-f81b6cc32c4a",
-          "text": "テストだも",
-          "readText": "テストだも",
-          "padBeforeSec": 0,
-          "padAfterSec": 0,
-          "volume": 1,
-          "speech": {},
-          "avatar": {
-            "base": "normal",
-            "eyes": "opened",
-            "mouth": "opened"
-          },
-          "provider": "voicevox",
-          "voiceName": "3",
-          "audio": {
-            "status": "ready",
-            "src": "/tts/project/ddd18e502ff2c96020a74aa33410f830.wav",
-            "durationSec": 0.708
+            "src": "/tts/project/c2b3930bbb664b6d2370327c3a6718b8.wav",
+            "durationSec": 0.8786666666666666
           }
         },
         {
-          "id": "de3934b3-8322-44be-bf9b-9481127a733f",
-          "text": "テスト",
-          "readText": "テスト",
+          "id": "f3edac37-e0bd-4069-aad0-34139fa29918",
+          "text": "新しい調整メソッドのテストです",
+          "readText": "新しい調整メソッドのテストです",
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {},
-          "avatar": {
-            "base": "normal",
-            "eyes": "opened",
-            "mouth": "opened"
+          "speech": {
+            "g2p": {
+              "text": "新しい調整メソッドのテストです",
+              "kana": "新しい:アタラシ'イ/調整:チョーセー|メソッド:メ'ソッド|の:ノ/テスト:テ'スト|です:デス",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "14",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/3b6a4a56be803e14710261267de3ca8e.wav",
+            "durationSec": 2.116
+          }
+        },
+        {
+          "id": "b265827b-d61d-4b1d-ae5d-911e429d89d8",
+          "text": "変わってる？",
+          "readText": "変わってる？",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "変わってる？",
+              "kana": "変わっ:カワッ|てる:テ'ル？",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
           },
           "provider": "voicevox",
           "voiceName": "3",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/3a247f1817a572dfa81e67cd7b98f1ef.wav",
-            "durationSec": 0.548
+            "src": "/tts/project/4e6f7d7a5b6248d4566933e713fc38c1.wav",
+            "durationSec": 0.772
           }
         },
         {
-          "id": "0efa9d67-a2b7-4a5b-91f1-4f9201c12775",
-          "text": "なんだもん",
-          "readText": "なんだもん",
+          "id": "fef78254-3b3f-4140-871f-3901f6bbc3c1",
+          "text": "どうでしょう",
+          "readText": "どうでしょう",
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {},
-          "avatar": {
-            "base": "normal",
-            "eyes": "opened",
-            "mouth": "opened"
+          "speech": {
+            "g2p": {
+              "text": "どうでしょう",
+              "kana": "どう:ド'ー|でしょう:デショー",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
           },
           "provider": "voicevox",
-          "voiceName": "3",
+          "voiceName": "46",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/6f19c0be48b74486caabbbed392d8255.wav",
-            "durationSec": 0.6759999999999999
+            "src": "/tts/project/23a69250b12b74c1172b72dffc5f38f7.wav",
+            "durationSec": 0.6973333333333334
           }
         },
         {
-          "id": "13bcc8bf-88ca-4ef1-8cdd-4b5b2c6b1722",
-          "text": "なんだもん？",
-          "readText": "なんだもん？",
+          "id": "5a82464b-1dd5-4534-bedc-a62d19e2e576",
+          "text": "あかさたな！",
+          "readText": "あかさたな！",
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {},
-          "avatar": {
-            "base": "normal",
-            "eyes": "opened",
-            "mouth": "opened"
+          "speech": {
+            "g2p": {
+              "text": "あかさたな！",
+              "kana": "あかさ:アカサ|た:タ'|な:ナ！",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
           },
           "provider": "voicevox",
           "voiceName": "43",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/9875f7a7245e0a3a47fda9455fbb7c1d.wav",
-            "durationSec": 0.836
-          }
-        }
-      ]
-    },
-    {
-      "id": "4992c3d4-0531-4a1c-a9dc-681654619cd7",
-      "title": "",
-      "padBeforeSec": 0,
-      "padAfterSec": 0,
-      "richText": null,
-      "type": "main",
-      "meta": {
-        "tags": []
-      },
-      "tts": [
-        {
-          "id": "062cad1e-d221-4708-90b8-2017877d1e35",
-          "text": "ラブコメ",
-          "readText": "ラブコメ",
-          "padBeforeSec": 0,
-          "padAfterSec": 0,
-          "volume": 1,
-          "speech": {},
-          "avatar": {
-            "base": "normal",
-            "eyes": "opened",
-            "mouth": "opened"
-          },
-          "provider": "voicevox",
-          "voiceName": "3",
-          "audio": {
-            "status": "ready",
-            "src": "/tts/project/e91454101be81b7019a6e33890b11a00.wav",
-            "durationSec": 0.6333333333333333
+            "src": "/tts/project/e79622d8f8ee0bc6f25253b25bbcfb17.wav",
+            "durationSec": 0.708
           }
         },
         {
-          "id": "87cf7567-d968-40b7-9f77-a228d8447723",
-          "text": "なのです",
-          "readText": "なのです",
+          "id": "c55ecb9f-94c4-4ae0-8de9-2cee3e52866d",
+          "text": "はまやらわ",
+          "readText": "はまやらわ",
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {},
-          "avatar": {
-            "base": "normal",
-            "eyes": "opened",
-            "mouth": "opened"
+          "speech": {
+            "g2p": {
+              "text": "はまやらわ",
+              "kana": "はま:ハマ'|やら:ヤラ|わ:ワ",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "43",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/23ffb8088d8d2309801e228e1b9b3998.wav",
+            "durationSec": 0.7613333333333333
+          }
+        },
+        {
+          "id": "9fd5e73e-f18a-4c45-bd9e-2247371b27d7",
+          "text": "インフィールドフライの時に見る夢！",
+          "readText": "インフィールドフライの時に見る夢！",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "インフィールドフライの時に見る夢！",
+              "kana": "インフィールドフライ:インフィールドフ'ライ|の:ノ|時:トキ|に:ニ/見る:ミ'ル/夢:ユメ'！",
+              "warnings": [
+                {
+                  "code": "unknown_word",
+                  "source_span": {
+                    "start_utf16": 0,
+                    "end_utf16": 10
+                  }
+                }
+              ]
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "43",
+          "synthesisSettings": {
+            "speedScale": 1.3,
+            "intonationScale": 0.8,
+            "prePhonemeLength": 0,
+            "postPhonemeLength": 0,
+            "pauseLengthScale": 0.5
+          },
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/bea7e4db45b306accef45a7439701d3b.wav",
+            "durationSec": 1.9133333333333333
+          }
+        },
+        {
+          "id": "fd15882a-4977-4d2f-aea0-e8d6de87f325",
+          "text": "えっ",
+          "readText": "えっ",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "えっ",
+              "kana": "えっ:エ'ッ",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
           },
           "provider": "voicevox",
           "voiceName": "3",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/fd62f83e3aae200f828b92ac7f83151d.wav",
-            "durationSec": 0.612
+            "src": "/tts/project/13de62e62243345610dade8dac6f895c.wav",
+            "durationSec": 0.3773333333333333
+          }
+        },
+        {
+          "id": "9a692afe-7777-465d-839e-4ef820afac5a",
+          "text": "そんな語尾上がる？",
+          "readText": "そんな語尾上がる？",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "そんな語尾上がる？",
+              "kana": "そんな:ソンナ'/語尾:ゴ'ビ/上がる:アガル'？",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "3",
+          "synthesisSettings": {
+            "speedScale": 1.4,
+            "pitchScale": -0.01,
+            "intonationScale": 0.8,
+            "prePhonemeLength": 0,
+            "postPhonemeLength": 0,
+            "pauseLengthScale": 0.5
+          },
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/dde0cac555fde0b48aa96dde54af742d.wav",
+            "durationSec": 1.092
+          }
+        },
+        {
+          "id": "514f90cc-0ab2-464f-bf4f-438d1d0e7245",
+          "text": "それはそう",
+          "readText": "それはそう",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "それはそう",
+              "kana": "それ:ソレ|は:ワ'/そう:ソー'",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "3",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/ddd48e75f1b9efc1009253871e534be3.wav",
+            "durationSec": 0.708
+          }
+        },
+        {
+          "id": "726b0956-c548-4a8a-bf9e-f1fd098a41a6",
+          "text": "見る夢！見る夢！",
+          "readText": "見る夢！見る夢！",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "見る夢！見る夢！",
+              "kana": "見る:ミ'ル/夢:ユメ'！見る:ミ'ル/夢:ユメ'！",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "43",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/959fc4ef995b922fb887c3db7fc609f0.wav",
+            "durationSec": 1.4013333333333333
+          }
+        },
+        {
+          "id": "f7e2b609-c41f-429f-a0ce-e10cb2da79d4",
+          "text": "猿夢",
+          "readText": "猿夢",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "猿夢",
+              "kana": "猿:サル'|夢:ユメ",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "43",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/09ef44e2a5b75c53be838f0c25051855.wav",
+            "durationSec": 0.6973333333333334
+          }
+        },
+        {
+          "id": "4d665602-48f9-449d-8ecb-d5d54564a74b",
+          "text": "ずんだも変わってる気がするが",
+          "readText": "ずんだも変わってる気がするが",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "ずんだも変わってる気がするが",
+              "kana": "ずんだ:ズ'ンダ|も:モ/変わっ:カワッ|てる:テル'|気:キ|が:ガ|する:スル|が:ガ",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "14",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/e84ef113919831d22838d5599922cf22.wav",
+            "durationSec": 1.5613333333333335
+          }
+        },
+        {
+          "id": "e07acb55-f1c5-4189-9e6c-b6d29eb7e11c",
+          "text": "ポ",
+          "readText": "ポ",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "ポ",
+              "kana": "ポ:ポ'",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voisona",
+          "voiceName": "ui_ja_JP",
+          "voiceVersion": "2.0.0",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/766ce9b2de21ec43965e65548b2c1ea9.wav",
+            "durationSec": 0.46499999999999997
+          }
+        },
+        {
+          "id": "b1b595d0-73f1-48d9-b8ab-02b15b616a64",
+          "text": "ポ",
+          "readText": "ポ",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "ポ",
+              "kana": "ポ:ポ'",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voisona",
+          "voiceName": "ui_ja_JP",
+          "voiceVersion": "2.0.0",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/766ce9b2de21ec43965e65548b2c1ea9.wav",
+            "durationSec": 0.46499999999999997
+          }
+        },
+        {
+          "id": "d5213bbf-44c4-486e-a647-d3c68cd4e1f6",
+          "text": "ポ",
+          "readText": "ポ",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "ポ",
+              "kana": "ポ:ポ'",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voisona",
+          "voiceName": "ui_ja_JP",
+          "voiceVersion": "2.0.0",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/766ce9b2de21ec43965e65548b2c1ea9.wav",
+            "durationSec": 0.46499999999999997
+          }
+        },
+        {
+          "id": "60ff007b-b47e-4285-aa7c-a0d1b3a936a0",
+          "text": "ポは変わりませんね",
+          "readText": "ポは変わりませんね",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "ポは変わりませんね",
+              "kana": "ポ:ポ'|は:ワ/変わり:カワリ|ませ:マセ'|ん:ン|ね:ネ",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "46",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/29f8451a7e13af2a08fe23078a5e132e.wav",
+            "durationSec": 1.1986666666666668
+          }
+        },
+        {
+          "id": "92dcbd3e-497f-4544-8a9a-642dc0a430d2",
+          "text": "うどんそばラーメン",
+          "readText": "うどんそばラーメン",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "うどんそばラーメン",
+              "kana": "うどんそばラーメン:ウドンソバラ'ーメン",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "14",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/322271d122df4efc9455d2ff92df46dc.wav",
+            "durationSec": 0.9533333333333334
+          }
+        },
+        {
+          "id": "fd4dd897-a4a6-481d-b113-92f4eea10505",
+          "text": "コメント返信をしていくぅ",
+          "readText": "コメント返信をしていくぅ",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "コメント返信をしていくぅ",
+              "kana": "コメント:コメント|返信:ヘ'ンシン|を:ヲ|し:シ|て:テ|いく:イク|ぅ:ウ",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "3",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/ea70803bf9d06cbae8b299d9b4626802.wav",
+            "durationSec": 1.476
+          }
+        },
+        {
+          "id": "b034d87c-7eb2-4874-8719-2a55ee9231c2",
+          "text": "カゼヒキです",
+          "readText": "カゼヒキです",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "カゼヒキです",
+              "kana": "カゼヒキ:カゼヒキ|です:デ'ス",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "coeiroink",
+          "speakerUuid": "272c0178-a248-11f1-82fa-0242ac1c000c",
+          "styleId": 1295160681,
+          "modelVersion": "0.0.1",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/aa968903b06b1b1bf79a25b76826446f.wav",
+            "durationSec": 1.1520181405895693
+          }
+        },
+        {
+          "id": "a4d35c2b-15b1-426b-8fa9-0b497362e95f",
+          "text": "あ、カゼヒキくんは変わらないのだ",
+          "readText": "あ、カゼヒキくんは変わらないのだ",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "あ、カゼヒキくんは変わらないのだ",
+              "kana": "あ:ア'、カゼ:カゼ'|ヒキ:ヒキ|くん:クン|は:ワ/変わら:カワラ|ない:ナ'イ|の:ノ|だ:ダ",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "3",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/c237e9031ae100c1a93ca9ae9516cf89.wav",
+            "durationSec": 1.9986666666666668
+          }
+        },
+        {
+          "id": "26939759-7cd4-48cd-8a2a-0ed89d215934",
+          "text": "今でもう自然なので",
+          "readText": "今でもう自然なので",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "今でもう自然なので",
+              "kana": "今:イ'マ|で:デ/もう:モ'ー/自然:シゼン|な:ナ'|ので:ノデ",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "3",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/0bcc7566981cbfeadc0361264e9ab7a1.wav",
+            "durationSec": 1.2306666666666668
+          }
+        },
+        {
+          "id": "30a51760-e070-49a1-83db-709c7aa54583",
+          "text": "変わらないのだ、のだでかなり語尾上がるな",
+          "readText": "変わらないのだ、のだでかなり語尾上がるな",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "変わらないのだ、のだでかなり語尾上がるな",
+              "kana": "変わら:カワラ|ない:ナ'イ|の:ノ|だ:ダ、の:ノ|だ:ダ|で:デ'/かなり:カ'ナリ/語尾:ゴ'ビ/上がる:アガル'|な:ナ",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "14",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/baa5cfc62fa088b5a57ae4429b35d415.wav",
+            "durationSec": 2.3613333333333335
+          }
+        },
+        {
+          "id": "cb57430e-85e3-46f9-8f92-72d2cd735b95",
+          "text": "こーれ、調整できるのかー？",
+          "readText": "こーれ、調整できるのかー？",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "こーれ、調整できるのかー？",
+              "kana": "こーれ:コ'レ、調整:チョーセー'/できる:デキ'ル|の:ノ|かー:カー？",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "14",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/9899fba5c83822ca2507fd6dcaa98419.wav",
+            "durationSec": 1.6253333333333335
+          }
+        },
+        {
+          "id": "eda59c79-4909-4469-ad18-a469dc517d59",
+          "text": "セイシュンワン！",
+          "readText": "セイシュンワン！",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "セイシュンワン！",
+              "kana": "セイシュン:セイシュン|ワン:ワ'ン！",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voisona",
+          "voiceName": "futaba-minato_ja_JP",
+          "voiceVersion": "2.0.2",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/871f2b2fbb56cf366f4e16145356ac81.wav",
+            "durationSec": 1.065
+          }
+        },
+        {
+          "id": "7c9df782-c9e1-4e60-9dbd-350af159ae18",
+          "text": "流れは次のとおりです。デデンネを捕獲します。ブラックペッパーをまな板にまぶします！",
+          "readText": "流れは次のとおりです。デデンネを捕獲します。ブラックペッパーをまな板にまぶします！",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "流れは次のとおりです。デデンネを捕獲します。ブラックペッパーをまな板にまぶします！",
+              "kana": "流れ:ナガレ'|は:ワ/次:ツギ'|の:ノ|とおり:トーリ|です:デス、デデンネ:デデ'ンネ|を:ヲ/捕獲:ホカク|し:シ|ます:マ'ス、ブラックペッパー:ブラックペ'ッパー|を:ヲ/まな板:マナイタ'|に:ニ/まぶし:マブシ|ます:マ'ス！",
+              "warnings": [
+                {
+                  "code": "unknown_word",
+                  "source_span": {
+                    "start_utf16": 11,
+                    "end_utf16": 15
+                  }
+                },
+                {
+                  "code": "unknown_word",
+                  "source_span": {
+                    "start_utf16": 22,
+                    "end_utf16": 30
+                  }
+                }
+              ]
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voisona",
+          "voiceName": "futaba-minato_ja_JP",
+          "voiceVersion": "2.0.2",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/75f32f8cbef03bbf064235f1876f7da2.wav",
+            "durationSec": 5.5
+          }
+        },
+        {
+          "id": "63468766-0bea-4566-8cf2-623aeb31f899",
+          "text": "うぇううぇう",
+          "readText": "うぇううぇう",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "うぇううぇう",
+              "kana": "うぇ:ウェ'/う:ウ'/うぇ:ウェ'/う:ウ'",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voisona",
+          "voiceName": "ui_ja_JP",
+          "voiceVersion": "2.0.0",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/67aa7fca49a18392daad760396d9404f.wav",
+            "durationSec": 1.05
+          }
+        },
+        {
+          "id": "8085ba7e-412e-4c33-86cf-a9006aaf7794",
+          "text": "んふー",
+          "readText": "んふー",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "んふー",
+              "kana": "ん:ン'/ふー:フ'",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voisona",
+          "voiceName": "ui_ja_JP",
+          "voiceVersion": "2.0.0",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/2e85ebd20561448f1f62a030509c28f8.wav",
+            "durationSec": 0.6649999999999999
+          }
+        },
+        {
+          "id": "53ca3a6f-a73e-4e96-8fb6-6495fe6852a4",
+          "text": "日本語でOK",
+          "readText": "日本語でOK",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "日本語でOK",
+              "kana": "日本語:ニホンゴ|で:デ'/ＯＫ:オ'ーケ",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "113",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/c0fca417b1b97dda8868a045751ac482.wav",
+            "durationSec": 0.9533333333333334
+          }
+        },
+        {
+          "id": "60a97f52-c9cb-4899-a211-94581af3cba7",
+          "text": "ボイソナ組はあまり変わりませんね",
+          "readText": "ボイソナ組はあまり変わりませんね",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "ボイソナ組はあまり変わりませんね",
+              "kana": "ボイソナ:ボイソナ|組:グミ|は:ワ'/あまり:アマリ'/変わり:カワリ|ませ:マセ'|ん:ン|ね:ネ",
+              "warnings": [
+                {
+                  "code": "unknown_word",
+                  "source_span": {
+                    "start_utf16": 0,
+                    "end_utf16": 4
+                  }
+                }
+              ]
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "46",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/3ab43ec8b93c2a8100388646361fa88b.wav",
+            "durationSec": 1.8706666666666667
+          }
+        },
+        {
+          "id": "704d2887-ab65-490d-a3b4-de760641e772",
+          "text": "未来の芋",
+          "readText": "未来の芋",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "未来の芋",
+              "kana": "未来:ミ'ライ|の:ノ/芋:イモ'",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "43",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/c9e33d569d6e0aa6a494b946cf8df8ac.wav",
+            "durationSec": 0.8146666666666667
+          }
+        },
+        {
+          "id": "bc365b64-c326-43a7-86dc-f12bc1064740",
+          "text": "さつまいも",
+          "readText": "さつまいも",
+          "padBeforeSec": 0,
+          "padAfterSec": 0,
+          "volume": 1,
+          "speech": {
+            "g2p": {
+              "text": "さつまいも",
+              "kana": "さつまいも:サツマイモ'",
+              "warnings": []
+            }
+          },
+          "avatarSource": {
+            "kind": "auto",
+            "key": "9c7ef7defe4d8018ef702056473eb8a4"
+          },
+          "provider": "voicevox",
+          "voiceName": "43",
+          "audio": {
+            "status": "ready",
+            "src": "/tts/project/57bdb1c6bfa0cc38c2132d1bdefa42e3.wav",
+            "durationSec": 0.772
           }
         }
       ]
@@ -1478,12 +1988,18 @@
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {},
+          "speech": {
+            "g2p": {
+              "text": "テストなのだ",
+              "kana": "テスト:テ'スト|な:ナ|の:ノ|だ:ダ",
+              "warnings": []
+            }
+          },
           "provider": "voicevox",
           "voiceName": "3",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/72f14aef12211d271ed56eb5711cee91.wav",
+            "src": "/tts/project/edabca7254478218516216b47bc3038f.wav",
             "durationSec": 0.8039999999999999
           }
         },
@@ -1494,12 +2010,18 @@
           "padBeforeSec": 0,
           "padAfterSec": 0,
           "volume": 1,
-          "speech": {},
+          "speech": {
+            "g2p": {
+              "text": "弱そう",
+              "kana": "弱:ヨワ|そう:ソ'ー",
+              "warnings": []
+            }
+          },
           "provider": "voicevox",
           "voiceName": "3",
           "audio": {
             "status": "ready",
-            "src": "/tts/project/ef41f1d32f3dcc35871a9caf65e8d315.wav",
+            "src": "/tts/project/72424a8fc8e0cff605e75a2cf9a2dced.wav",
             "durationSec": 0.6013333333333333
           }
         }
@@ -1564,7 +2086,7 @@
       "synthesisSettings": {
         "speedScale": 1.4,
         "pitchScale": -0.01,
-        "intonationScale": 0.9,
+        "intonationScale": 0.8,
         "prePhonemeLength": 0,
         "postPhonemeLength": 0,
         "pauseLengthScale": 0.5
@@ -1586,7 +2108,7 @@
       "provider": "voicevox",
       "synthesisSettings": {
         "speedScale": 1.3,
-        "intonationScale": 1.2,
+        "intonationScale": 0.9,
         "prePhonemeLength": 0,
         "postPhonemeLength": 0,
         "pauseLengthScale": 0.5
@@ -1596,9 +2118,9 @@
       "voiceName": "14",
       "provider": "voicevox",
       "synthesisSettings": {
-        "speedScale": 1.3,
+        "speedScale": 1.2,
         "pitchScale": -0.02,
-        "intonationScale": 1,
+        "intonationScale": 0.9,
         "prePhonemeLength": 0,
         "postPhonemeLength": 0,
         "pauseLengthScale": 0.5
