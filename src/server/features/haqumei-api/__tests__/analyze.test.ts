@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { analyzeTexts } from "../analyze";
+import { analyzeTexts, analyzeTextsWithDictionary } from "../analyze";
 import { HaqumeiApiError } from "../error";
 import { createG2pItem } from "@/_schemas/__tests__/g2p-fixture";
 
@@ -97,5 +97,37 @@ describe("analyzeTexts", () => {
     expect(post).toHaveBeenCalledWith("/v1/analyze", {
       body: { schema_version: "3", texts: ["雨衣"] },
     });
+  });
+
+  it("keeps the kind of each dictionary word", async () => {
+    const post = vi.fn(async () => ({
+      response: new Response(null, { status: 200 }),
+      data: {
+        schema_version: "3",
+        haqumei_version: "0.12.2",
+        items: [
+          {
+            text: "雨衣が辛い",
+            kana: "雨衣:アメコロ'|が:ガ/辛い:カラ'イ",
+            warnings: [],
+            dictionary_words: [
+              { word_index: 0, kind: "fixed" },
+              { word_index: 2, kind: "contextual" },
+            ],
+          },
+        ],
+      },
+    }));
+    getHaqumeiApiClientMock.mockReturnValueOnce({ POST: post });
+
+    await expect(analyzeTextsWithDictionary({}, ["雨衣が辛い"])).resolves.toEqual([
+      {
+        g2p: createG2pItem("雨衣が辛い", "雨衣:アメコロ'|が:ガ/辛い:カラ'イ"),
+        dictionaryWords: [
+          { index: 0, kind: "fixed" },
+          { index: 2, kind: "contextual" },
+        ],
+      },
+    ]);
   });
 });

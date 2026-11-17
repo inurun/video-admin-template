@@ -8,8 +8,8 @@ import { HaqumeiApiError } from "@/server/features/haqumei-api/error";
 const mocks = vi.hoisted(() => ({
   ttsDir: "",
   analyzeTexts: vi.fn(),
-  /** Dictionary word indexes per analyzed item. */
-  dictionaryWords: [] as number[][],
+  /** Dictionary words per analyzed item. */
+  dictionaryWords: [] as { index: number; kind: "fixed" | "contextual" }[][],
   validateG2pItem: vi.fn(),
   extractProsody: vi.fn(),
   synthesizeProsodySource: vi.fn(),
@@ -275,7 +275,7 @@ describe("analyzeProsody", () => {
   });
 
   it("reads dictionary words in katakana and keeps their reading through the check", async () => {
-    mocks.dictionaryWords = [[2]];
+    mocks.dictionaryWords = [[{ index: 2, kind: "fixed" }]];
     mocks.checkReadings.mockResolvedValueOnce(
       checked([{ index: 2, surface: "相殺", heard: "ソーサイ", correct: "ソーサツ" }]),
     );
@@ -289,8 +289,28 @@ describe("analyzeProsody", () => {
     expect(result).toEqual({ g2p: analyzed, prosody: extract });
   });
 
+  it("lets the check correct a contextual dictionary word", async () => {
+    mocks.dictionaryWords = [[{ index: 2, kind: "contextual" }]];
+    mocks.checkReadings
+      .mockResolvedValueOnce(
+        checked([{ index: 2, surface: "相殺", heard: "ソーサイ", correct: "ソーサツ" }]),
+      )
+      .mockResolvedValueOnce(
+        checked([{ index: 2, surface: "相殺", heard: "ソーサツ", correct: "ソーサツ" }]),
+      );
+    const kana = "早急:ソーキュー'|に:ニ/相殺:ソーサツ'|した:シタ";
+
+    const [result] = await analyzeProsody(env, "project", [{ readText: text, source }]);
+
+    expect(mocks.synthesizeProsodySource.mock.calls).toEqual([
+      [env, "早急にソーサイした", source, undefined],
+      [env, "早急にソーサツした", source, undefined],
+    ]);
+    expect(result).toEqual({ g2p: createG2pItem(text, kana), prosody: extract });
+  });
+
   it("keeps dictionary words in katakana when respelling a misread", async () => {
-    mocks.dictionaryWords = [[2]];
+    mocks.dictionaryWords = [[{ index: 2, kind: "fixed" }]];
     mocks.checkReadings
       .mockResolvedValueOnce(
         checked([{ index: 0, surface: "早急", heard: "ハヤキュー", correct: "ソーキュー" }]),
@@ -308,7 +328,7 @@ describe("analyzeProsody", () => {
   });
 
   it("reads the dictionary words of a saved kana in katakana", async () => {
-    mocks.dictionaryWords = [[2]];
+    mocks.dictionaryWords = [[{ index: 2, kind: "fixed" }]];
     const edited = createG2pItem(text, "早急:サッキュー'|に:ニ/相殺:ソーサイ'|した:シタ");
 
     await analyzeProsody(env, "project", [{ readText: text, g2p: edited, source }]);

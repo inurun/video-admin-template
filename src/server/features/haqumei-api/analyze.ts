@@ -1,11 +1,13 @@
-import { g2pItemSchema, type G2pItem } from "@/_schemas";
+import { g2pItemSchema, type DictionaryEntry, type G2pItem } from "@/_schemas";
 import type { ServerEnv } from "@/server/core/env";
 import { getHaqumeiApiClient, unwrapHaqumeiData } from "./client";
 import { HaqumeiApiError } from "./error";
 import { assertHaqumeiTextLength, chunkAnalyzeTexts, HAQUMEI_SCHEMA_VERSION } from "./limits";
 
-/** An analyzer result with the indexes of its kana words (as `wordsOf` counts them) taken from the user dictionary. */
-export type AnalyzedItem = { g2p: G2pItem; dictionaryWords: number[] };
+/** A kana word (indexed as `wordsOf` counts them) whose reading came from the user dictionary. */
+export type DictionaryWord = { index: number; kind: DictionaryEntry["kind"] };
+
+export type AnalyzedItem = { g2p: G2pItem; dictionaryWords: DictionaryWord[] };
 
 async function requestAnalyze(serverEnv: ServerEnv, texts: string[]): Promise<AnalyzedItem[]> {
   const response = await getHaqumeiApiClient(serverEnv).POST("/v1/analyze", {
@@ -24,7 +26,10 @@ async function requestAnalyze(serverEnv: ServerEnv, texts: string[]): Promise<An
   // `null` (provenance not fully tracked) counts as no dictionary word.
   return data.items.map((item) => ({
     g2p: g2pItemSchema.parse(item),
-    dictionaryWords: (item.dictionary_words ?? []).map((word) => word.word_index),
+    dictionaryWords: (item.dictionary_words ?? []).map((word) => ({
+      index: word.word_index,
+      kind: word.kind,
+    })),
   }));
 }
 

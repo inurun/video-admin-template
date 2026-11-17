@@ -1,5 +1,5 @@
 import type { G2pItem, ProsodyExtract } from "@/_schemas";
-import type { AnalyzedItem } from "@/server/features/haqumei-api/analyze";
+import type { AnalyzedItem, DictionaryWord } from "@/server/features/haqumei-api/analyze";
 import type { ServerEnv } from "@/server/core/env";
 import { runPool } from "@/server/_shared/run-pool";
 import { analyzeTextsWithDictionary } from "@/server/features/haqumei-api/analyze";
@@ -49,7 +49,8 @@ export type ProsodyTarget = {
 /**
  * An analyzer kana whose reference audio still has to pass the reading check. `dictionary` holds
  * the readings of the words taken from the user dictionary: the reference TTS gets them in
- * katakana, and the check cannot change them.
+ * katakana. The check cannot change the `fixed` ones; a contextual word's reading was only
+ * chosen by the analyzer, so the check may correct it like any other word.
  */
 type Unchecked = {
   id: string;
@@ -58,6 +59,7 @@ type Unchecked = {
   context?: ProsodySourceContext;
   words: KanaWord[];
   dictionary: Map<number, string>;
+  fixed: Set<number>;
   wav: Buffer;
 };
 
@@ -80,8 +82,8 @@ const misreadOf = (corrections: ReadingCorrection[]) =>
   corrections.filter((c) => !sameSound(c.heard, c.correct));
 
 /** The dictionary words' readings, by word index. */
-const dictionaryReadings = (words: KanaWord[], indexes: Iterable<number>) => {
-  const wanted = new Set(indexes);
+const dictionaryReadings = (words: KanaWord[], dictionaryWords: DictionaryWord[]) => {
+  const wanted = new Set(dictionaryWords.map((word) => word.index));
   return new Map(words.filter((w) => wanted.has(w.index)).map((w) => [w.index, w.reading]));
 };
 
@@ -89,9 +91,13 @@ const dictionaryReadings = (words: KanaWord[], indexes: Iterable<number>) => {
 const referenceText = (item: Omit<Unchecked, "wav">, extra = new Map<number, string>()) =>
   respell(item.analyzed.text, item.words, new Map([...item.dictionary, ...extra]));
 
-/** Leaves the dictionary words out of the check's corrections. */
-const ownCorrections = (item: Pick<Unchecked, "dictionary">, corrections: ReadingCorrection[]) =>
-  corrections.filter((c) => !item.dictionary.has(c.index));
+/** The fixed dictionary words, by word index. */
+const fixedWords = (dictionaryWords: DictionaryWord[]) =>
+  new Set(dictionaryWords.filter((word) => word.kind === "fixed").map((word) => word.index));
+
+/** Leaves the fixed dictionary words out of the check's corrections. */
+const ownCorrections = (item: Pick<Unchecked, "fixed">, corrections: ReadingCorrection[]) =>
+  corrections.filter((c) => !item.fixed.has(c.index));
 
 /** Readings to write into the kana: what was heard, or the correct one where the audio misread. */
 function readingsToApply(words: KanaWord[], corrections: ReadingCorrection[]) {
@@ -296,7 +302,7 @@ async function fromSavedKana(
   if (!wav) {
     const words = wordsOf(g2p.kana);
     const baseWords = wordsOf(analyzed.g2p.kana);
-    const dictionary = new Set(analyzed.dictionaryWords);
+    const dictionary = new Set(analyzed.dictionaryWords.map((word) => word.index));
     const changed = changedReadings(words, baseWords);
     alignWords(words, baseWords).forEach((base, i) => {
       if (base && dictionary.has(base.index)) {
@@ -374,6 +380,7 @@ export async function analyzeProsody(
       context,
       words,
       dictionary: dictionaryReadings(words, base.dictionaryWords),
+      fixed: fixedWords(base.dictionaryWords),
     });
   });
 
