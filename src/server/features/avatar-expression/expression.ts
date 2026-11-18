@@ -7,6 +7,8 @@ import {
   resolveAvatarSettings,
   type AvatarAppearance,
   type AvatarType,
+  VOICE_EMOTIONS,
+  voiceEmotions,
 } from "@/_schemas/catalog";
 import { stableStringify } from "@/server/_shared/stable-stringify";
 import { LLM_AVATAR_PROFILE } from "./profile";
@@ -30,8 +32,12 @@ export function expressionChoices(type: AvatarType, field: ExpressionField): str
   return Object.keys(avatarExpressions[type][field]);
 }
 
+/** Whether auto has anything to pick for a turn: eyes / mouth options, or a line's voice emotion. */
 export function hasTurnExpressions(type: AvatarType) {
-  return TURN_FIELDS.some((field) => expressionChoices(type, field).length > 0);
+  return (
+    VOICE_EMOTIONS.length > 1 ||
+    TURN_FIELDS.some((field) => expressionChoices(type, field).length > 0)
+  );
 }
 
 /** `angry-opened` → `angry`; plain `opened` / `closed` are the default mouth. */
@@ -110,7 +116,7 @@ export function minimizeOverride(
   return entries.length > 0 ? (Object.fromEntries(entries) as AvatarOverride) : undefined;
 }
 
-/** Changes when the turn's text, its avatar, the meanings or the profile change. */
+/** Changes when the turn's text, its avatar, the meanings (voice emotions too) or the profile change. */
 export function expressionTurnKey(avatarType: AvatarType, lines: readonly string[]) {
   return crypto
     .createHash("md5")
@@ -119,6 +125,7 @@ export function expressionTurnKey(avatarType: AvatarType, lines: readonly string
         profile: LLM_AVATAR_PROFILE.id,
         avatar: avatarType,
         meanings: avatarExpressions[avatarType],
+        voiceEmotions,
         lines,
       }),
     )

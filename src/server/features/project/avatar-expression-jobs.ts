@@ -1,4 +1,7 @@
 import { savedProjectSchema, type SavedPage, type SavedTts } from "@/_schemas";
+import { createTtsAnalysisKey } from "@/server/features/tts/analysis-key";
+import { getEffectiveReadText, getUsableG2p } from "@/server/features/tts/providers/comparison";
+import { getSpeechPipeline } from "@/server/features/tts/speech-pipeline";
 import {
   readSavedProject,
   readSavedProjectDocument,
@@ -6,7 +9,7 @@ import {
 } from "@/server/_shared/storage";
 import type { ServerEnv } from "@/server/core/env";
 import { hasOpenRouterApiKey } from "@/server/core/openrouter";
-import { applyExpressions } from "@/server/features/avatar-expression/apply";
+import { applyExpressions, type ExpressionPicks } from "@/server/features/avatar-expression/apply";
 import { planPageExpressions } from "@/server/features/avatar-expression/auto-plan";
 import {
   DEFAULT_EXPRESSION,
@@ -17,8 +20,9 @@ import {
   predictExpressions,
 } from "@/server/features/avatar-expression/use-case";
 import { enqueueProjectMutation } from "./project-mutation-queue";
+import { startAnalysisBatch, type AnalysisJobTarget } from "./tts-analysis-jobs";
 
-type ExpressionPick = { eyes: string; mouth: string };
+type ExpressionPick = NonNullable<ExpressionPicks["turns"][string]>;
 
 export type ExpressionJobTarget = { pageId: string; keys: string[] };
 
@@ -72,19 +76,62 @@ async function predictPicksByKey(serverEnv: ServerEnv, projectPath: string, page
   );
 }
 
-/** Writes results only into turns still pending for the same text; anything newer wins. */
+type WrittenExpression = Pick<SavedTts, "avatar" | "avatarSource" | "voiceEmotion">;
+
+/**
+ * A line whose made audio was read with another voice emotion goes back to analyzing, so its
+ * prosody reference is read again. Lines still analyzing pick the emotion up themselves (their
+ * analysis waits for the expression job).
+ */
+function reanalyzeForEmotion(
+  projectPath: string,
+  pageId: string,
+  item: SavedTts,
+): { item: SavedTts; target?: AnalysisJobTarget } {
+  if (
+    getSpeechPipeline(item.provider).pipeline !== "prosody" ||
+    (item.audio.status !== "ready" && item.audio.status !== "pending")
+  ) {
+    return { item };
+  }
+  const readText = getEffectiveReadText(item);
+  const g2p = getUsableG2p(item.speech.g2p, readText);
+  if (!g2p) {
+    return { item };
+  }
+  const analysisKey = createTtsAnalysisKey({
+    projectPath,
+    pageId,
+    ttsId: item.id,
+    provider: item.provider,
+    text: item.text,
+    effectiveReadText: readText,
+    kana: g2p.kana,
+    ...(item.voiceEmotion ? { voiceEmotion: item.voiceEmotion } : {}),
+  });
+  return {
+    item: { ...item, audio: { status: "analyzing", analysisKey } } as SavedTts,
+    target: { pageId, ttsId: item.id, analysisKey },
+  };
+}
+
+/**
+ * Writes results only into turns still pending for the same text; anything newer wins. Returns
+ * the lines to analyze again because their voice emotion changed.
+ */
 async function applyExpressionResults(
   projectPath: string,
   target: ExpressionJobTarget,
   picksByKey: ReadonlyMap<string, ExpressionPick> | null,
-) {
+): Promise<AnalysisJobTarget[]> {
   const project = await readSavedProject(projectPath);
+  const analysisTargets: AnalysisJobTarget[] = [];
   let changed = false;
   const pages = project.pages.map((page) => {
     if (page.id !== target.pageId || page.type !== "main") {
       return page;
     }
-    const written = new Map<string, Pick<SavedTts, "avatar" | "avatarSource">>();
+    const written = new Map<string, WrittenExpression>();
     for (const turn of buildExpressionTurns(page.tts)) {
       const key = expressionTurnKey(
         turn.avatarType,
@@ -99,7 +146,11 @@ async function applyExpressionResults(
       const pick = picksByKey?.get(key);
       if (!pick) {
         for (const item of turn.items) {
-          written.set(item.id, { avatar: item.avatar, avatarSource: { kind: "failed", key } });
+          written.set(item.id, {
+            avatar: item.avatar,
+            voiceEmotion: item.voiceEmotion,
+            avatarSource: { kind: "failed", key },
+          });
         }
         continue;
       }
@@ -109,7 +160,11 @@ async function applyExpressionResults(
         picks: { turns: { [turn.id]: pick } },
       });
       for (const item of applied.tts) {
-        written.set(item.id, { avatar: item.avatar, avatarSource: { kind: "auto", key } });
+        written.set(item.id, {
+          avatar: item.avatar,
+          voiceEmotion: item.voiceEmotion,
+          avatarSource: { kind: "auto", key },
+        });
       }
     }
     if (written.size === 0) {
@@ -123,21 +178,31 @@ async function applyExpressionResults(
         if (!next) {
           return item;
         }
-        const { avatar: _avatar, ...rest } = item;
-        return {
+        const { avatar: _avatar, voiceEmotion: _voiceEmotion, ...rest } = item;
+        const updated = {
           ...rest,
           ...(next.avatar ? { avatar: next.avatar } : {}),
+          ...(next.voiceEmotion ? { voiceEmotion: next.voiceEmotion } : {}),
           avatarSource: next.avatarSource,
-        };
+        } as SavedTts;
+        if (updated.voiceEmotion === item.voiceEmotion) {
+          return updated;
+        }
+        const reanalyzed = reanalyzeForEmotion(projectPath, page.id, updated);
+        if (reanalyzed.target) {
+          analysisTargets.push(reanalyzed.target);
+        }
+        return reanalyzed.item;
       }),
     };
   });
 
   if (!changed) {
-    return;
+    return [];
   }
   const { timeline } = await readSavedProjectDocument(projectPath);
   await writeSavedProject(projectPath, savedProjectSchema.parse({ ...project, pages }), timeline);
+  return analysisTargets;
 }
 
 async function runExpressionJob(
@@ -152,16 +217,19 @@ async function runExpressionJob(
     console.error("[avatar-expression]", error);
     picksByKey = null;
   }
-  await enqueueProjectMutation(projectPath, () =>
+  const analysisTargets = await enqueueProjectMutation(projectPath, () =>
     applyExpressionResults(projectPath, target, picksByKey),
   );
+  startAnalysisBatch(serverEnv, projectPath, analysisTargets);
 }
 
+/** Resolves when every started job has written its results (failures included). */
 export function startExpressionJobs(
   serverEnv: ServerEnv,
   projectPath: string,
   targets: readonly ExpressionJobTarget[],
-) {
+): Promise<void> {
+  const tasks: Promise<void>[] = [];
   for (const target of targets) {
     const keys = target.keys.map((key) => jobKey(projectPath, target.pageId, key));
     const task = Promise.resolve()
@@ -180,10 +248,12 @@ export function startExpressionJobs(
       inFlightJobs.set(key, task);
     }
     pendingJobs.add(task);
+    tasks.push(task);
     void task.finally(() => {
       pendingJobs.delete(task);
     });
   }
+  return Promise.all(tasks).then(() => undefined);
 }
 
 export async function flushExpressionJobsForTests() {

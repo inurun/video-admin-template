@@ -86,7 +86,6 @@ describe("generateTtsG2p", () => {
         {
           readText: "にんき",
           source: expect.objectContaining({ voice: expect.any(String) }),
-          context: { previous: "前" },
         },
       ],
       { fresh: true },

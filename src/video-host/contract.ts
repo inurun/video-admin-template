@@ -81,20 +81,13 @@ export type VideoSpeechConfig = {
 
 export type SpeechPipeline = NonNullable<VideoSpeechConfig[SavedTts["provider"]]>["pipeline"];
 
-/** Reference TTS voices (ElevenLabs v4, female) the prosody pipeline may read with. */
-export type ProsodySourceVoice =
-  | "sarah"
-  | "alice"
-  | "bella"
-  | "jessica"
-  | "laura"
-  | "lily"
-  | "matilda";
+/** Reference TTS voices (Fish Audio Drama 3, Fish Official) the prosody pipeline may read with. */
+export type ProsodySourceVoice = "hina" | "shiori";
 
 /**
  * Reference TTS of the prosody pipeline. One `voice` reads every character; each character
- * may set its own ElevenLabs audio tag, written with brackets and put before the text
- * (e.g. `[tired]`, `[whispers] [sad]`). `tags` is keyed by voice id
+ * may set its own Drama 3 direction, written in brackets and put before the text
+ * (e.g. `[tired]`, `[whispering, sleepy]`). `tags` is keyed by voice id
  * (`provider::voiceName::voiceVersion`, e.g. `voicevox::113::`); a character left out reads
  * with `defaultTag`, and `""` reads without a tag.
  */

@@ -12,6 +12,7 @@ import {
 import {
   avatarOverrideSchema,
   avatarSourceSchema,
+  voiceEmotionSchema,
   bgmTrackSchema,
   DEFAULT_VOICE_PRESETS,
   endcardPageMetaSchema,
@@ -42,6 +43,7 @@ const saveTtsBaseFields = {
   speech: saveTtsSpeechSchema.optional(),
   avatar: avatarOverrideSchema.optional(),
   avatarSource: avatarSourceSchema.optional(),
+  voiceEmotion: voiceEmotionSchema.optional(),
 };
 
 const namedSaveTtsIdentity = {

@@ -50,13 +50,18 @@ import {
 const env = { OPENROUTER_API_KEY: "secret" };
 const source: ProsodySource = {
   id: "test-source",
-  model: "elevenlabs/eleven-v4",
-  voice: "bella",
+  model: "fish-audio/drama-3",
+  voice: "hina",
   tag: "",
-  sampleRate: 24_000,
+  sampleRate: 44_100,
 };
 const text = "早急に相殺した";
-const context = { previous: "前の文。", next: "次の文。" };
+/** A Fish phoneme tag, as the reference TTS gets an accent phrase. */
+const ph = (phonemes: string) => `<|phoneme_start|>${phonemes}<|phoneme_end|>`;
+const SAKKYUU_NI = ph("sa0clkyu1u1ni0");
+const SOOKYUU_NI = ph("so0o1kyu1u1ni0");
+const SOOSAI_SHITA = ph("so0o1sa1i1shi0ta0");
+const SOOSATSU_SHITA = ph("so0o1sa1tsu1shi0ta0");
 const analyzed = createG2pItem(text, "早急:ソーキュー'|に:ニ/相殺:ソーサイ'|した:シタ");
 const extract = {
   schema_version: "3",
@@ -144,14 +149,13 @@ describe("analyzeProsody", () => {
     ]);
     expect(mocks.synthesizeProsodySource).toHaveBeenLastCalledWith(
       env,
-      "サッキューに相殺した",
+      `${SAKKYUU_NI}相殺した`,
       source,
-      undefined,
     );
     expect(mocks.checkReadings).toHaveBeenCalledTimes(1);
   });
 
-  it("respells a word the recording misread and checks once more", async () => {
+  it("reads the phrase of a misread word as phonemes and checks once more", async () => {
     mocks.checkReadings
       .mockResolvedValueOnce(
         checked([{ index: 2, surface: "相殺", heard: "ソーサツ", correct: "ソーサイ" }]),
@@ -163,40 +167,11 @@ describe("analyzeProsody", () => {
     expect(mocks.synthesizeProsodySource).toHaveBeenNthCalledWith(
       2,
       env,
-      "早急にソーサイした",
+      `早急に${SOOSAI_SHITA}`,
       source,
-      undefined,
     );
-    expect(mocks.extractProsody).toHaveBeenCalledWith(env, analyzed, wav("早急にソーサイした"));
+    expect(mocks.extractProsody).toHaveBeenCalledWith(env, analyzed, wav(`早急に${SOOSAI_SHITA}`));
     expect(result).toEqual({ g2p: analyzed, prosody: extract });
-  });
-
-  it("passes the context to the first reading and to the respelled one", async () => {
-    mocks.checkReadings
-      .mockResolvedValueOnce(
-        checked([{ index: 2, surface: "相殺", heard: "ソーサツ", correct: "ソーサイ" }]),
-      )
-      .mockResolvedValueOnce(checked([]));
-
-    await analyzeProsody(env, [{ readText: text, source, context }]);
-
-    expect(mocks.synthesizeProsodySource.mock.calls).toEqual([
-      [env, text, source, context],
-      [env, "早急にソーサイした", source, context],
-    ]);
-  });
-
-  it("passes the context when reading an edited kana", async () => {
-    const edited = createG2pItem(text, "早急:サッキュー'|に:ニ/相殺:ソーサイ'|した:シタ");
-
-    await analyzeProsody(env, [{ readText: text, g2p: edited, source, context }]);
-
-    expect(mocks.synthesizeProsodySource).toHaveBeenCalledWith(
-      env,
-      "サッキューに相殺した",
-      source,
-      context,
-    );
   });
 
   it("drops the prosody but keeps the correct reading when the retry still misreads", async () => {
@@ -280,7 +255,7 @@ describe("analyzeProsody", () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("do not match"));
   });
 
-  it("respells edited readings for a saved kana without a reading check", async () => {
+  it("reads the phrases of edited readings as phonemes, without a reading check", async () => {
     const edited = createG2pItem(text, "早急:サッキュー'|に:ニ/相殺:ソーサイ'|した:シタ");
 
     await expect(analyzeProsody(env, [{ readText: text, g2p: edited, source }])).resolves.toEqual([
@@ -288,12 +263,11 @@ describe("analyzeProsody", () => {
     ]);
     expect(mocks.synthesizeProsodySource).toHaveBeenCalledWith(
       env,
-      "サッキューに相殺した",
+      `${SAKKYUU_NI}相殺した`,
       source,
-      undefined,
     );
     expect(mocks.checkReadings).not.toHaveBeenCalled();
-    expect(mocks.extractProsody).toHaveBeenCalledWith(env, edited, wav("サッキューに相殺した"));
+    expect(mocks.extractProsody).toHaveBeenCalledWith(env, edited, wav(`${SAKKYUU_NI}相殺した`));
 
     // The same kana reuses the extract; an accent edit reads again (the audio is not kept).
     await analyzeProsody(env, [{ readText: text, g2p: edited, source }]);
@@ -301,10 +275,14 @@ describe("analyzeProsody", () => {
     const accent = createG2pItem(text, "早急:サッキュー'|に:ニ/相殺:ソ'ーサイ|した:シタ");
     await analyzeProsody(env, [{ readText: text, g2p: accent, source }]);
     expect(mocks.synthesizeProsodySource).toHaveBeenCalledTimes(2);
-    expect(mocks.extractProsody).toHaveBeenLastCalledWith(env, accent, wav("サッキューに相殺した"));
+    expect(mocks.extractProsody).toHaveBeenLastCalledWith(
+      env,
+      accent,
+      wav(`${SAKKYUU_NI}相殺した`),
+    );
   });
 
-  it("reads dictionary words in katakana and keeps their reading through the check", async () => {
+  it("reads dictionary words as phonemes and keeps their reading through the check", async () => {
     mocks.dictionaryWords = [[{ index: 2, kind: "fixed" }]];
     mocks.checkReadings.mockResolvedValueOnce(
       checked([{ index: 2, surface: "相殺", heard: "ソーサイ", correct: "ソーサツ" }]),
@@ -313,7 +291,7 @@ describe("analyzeProsody", () => {
     const [result] = await analyzeProsody(env, [{ readText: text, source }]);
 
     expect(mocks.synthesizeProsodySource.mock.calls).toEqual([
-      [env, "早急にソーサイした", source, undefined],
+      [env, `早急に${SOOSAI_SHITA}`, source],
     ]);
     expect(mocks.checkReadings.mock.calls[0]![1][0]).toMatchObject({ text });
     expect(result).toEqual({ g2p: analyzed, prosody: extract });
@@ -333,13 +311,13 @@ describe("analyzeProsody", () => {
     const [result] = await analyzeProsody(env, [{ readText: text, source }]);
 
     expect(mocks.synthesizeProsodySource.mock.calls).toEqual([
-      [env, "早急にソーサイした", source, undefined],
-      [env, "早急にソーサツした", source, undefined],
+      [env, `早急に${SOOSAI_SHITA}`, source],
+      [env, `早急に${SOOSATSU_SHITA}`, source],
     ]);
     expect(result).toEqual({ g2p: createG2pItem(text, kana), prosody: extract });
   });
 
-  it("keeps dictionary words in katakana when respelling a misread", async () => {
+  it("keeps dictionary words as phonemes when reading a misread again", async () => {
     mocks.dictionaryWords = [[{ index: 2, kind: "fixed" }]];
     mocks.checkReadings
       .mockResolvedValueOnce(
@@ -351,13 +329,12 @@ describe("analyzeProsody", () => {
 
     expect(mocks.synthesizeProsodySource).toHaveBeenLastCalledWith(
       env,
-      "ソーキューにソーサイした",
+      `${SOOKYUU_NI}${SOOSAI_SHITA}`,
       source,
-      undefined,
     );
   });
 
-  it("reads the dictionary words of a saved kana in katakana", async () => {
+  it("reads the dictionary words of a saved kana as phonemes", async () => {
     mocks.dictionaryWords = [[{ index: 2, kind: "fixed" }]];
     const edited = createG2pItem(text, "早急:サッキュー'|に:ニ/相殺:ソーサイ'|した:シタ");
 
@@ -365,9 +342,8 @@ describe("analyzeProsody", () => {
 
     expect(mocks.synthesizeProsodySource).toHaveBeenCalledWith(
       env,
-      "サッキューにソーサイした",
+      `${SAKKYUU_NI}${SOOSAI_SHITA}`,
       source,
-      undefined,
     );
   });
 

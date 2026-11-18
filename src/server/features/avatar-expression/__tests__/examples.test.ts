@@ -43,7 +43,14 @@ describe("collectPageExpressions", () => {
       }),
     );
     expect(history.turns).toEqual([
-      { avatar: "demo", context: [], lines: ["一", "二"], eyes: "shaded-opened", mouth: "default" },
+      {
+        avatar: "demo",
+        context: [],
+        lines: ["一", "二"],
+        eyes: "shaded-opened",
+        mouth: "default",
+        voices: ["neutral", "neutral"],
+      },
     ]);
     expect(history.bases).toEqual([]);
   });
@@ -57,6 +64,7 @@ describe("selectExamples", () => {
       lines: [line],
       eyes,
       mouth,
+      voices: [] as never[],
     });
     const history = {
       turns: [
@@ -87,6 +95,7 @@ describe("expressionRates", () => {
       lines: [],
       eyes,
       mouth: "default",
+      voices: [] as never[],
     });
     expect(
       expressionRates({

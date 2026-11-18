@@ -32,8 +32,9 @@ export function useAutoExpressionButton() {
       }
       const writes = toAvatarExpressionWrites(current, response);
       setValue("meta.avatars", writes.avatars, { shouldDirty: true });
-      for (const { index, avatar, avatarSource } of writes.tts) {
+      for (const { index, avatar, voiceEmotion, avatarSource } of writes.tts) {
         setValue(`tts.${index}.avatar`, avatar, { shouldDirty: true });
+        setValue(`tts.${index}.voiceEmotion`, voiceEmotion, { shouldDirty: true });
         setValue(`tts.${index}.avatarSource`, avatarSource, { shouldDirty: true });
       }
     } catch (error) {

@@ -1,5 +1,10 @@
 import type { AvatarOverride } from "@/_schemas";
-import { resolveAvatarSettings, type AvatarType } from "@/_schemas/catalog";
+import {
+  DEFAULT_VOICE_EMOTION,
+  resolveAvatarSettings,
+  type AvatarType,
+  type VoiceEmotion,
+} from "@/_schemas/catalog";
 import {
   DEFAULT_EXPRESSION,
   expressionChoices,
@@ -23,12 +28,14 @@ export type ExpressionTurn<T extends ExpressionTurnItem = ExpressionTurnItem> = 
 export type ExpressionPicks = {
   /** Omitted: page bases are left alone (the save-time job only owns eyes / mouth). */
   bases?: Partial<Record<AvatarType, string>>;
-  turns: Partial<Record<string, { eyes: string; mouth: string }>>;
+  /** `voices`: one per line of the turn; missing lines are neutral. */
+  turns: Partial<Record<string, { eyes: string; mouth: string; voices?: VoiceEmotion[] }>>;
 };
 
 export type AppliedExpressions = {
   avatars: PageAvatars;
-  tts: { id: string; avatar?: AvatarOverride }[];
+  /** `voiceEmotion` is left out for neutral. */
+  tts: { id: string; avatar?: AvatarOverride; voiceEmotion?: VoiceEmotion }[];
 };
 
 function setField(
@@ -89,7 +96,7 @@ export function applyExpressions(input: {
       mouth: DEFAULT_EXPRESSION,
     };
     const inherited = resolveAvatarSettings(turn.avatarType, avatars[turn.avatarType]);
-    return turn.items.map((item) => {
+    return turn.items.map((item, index) => {
       const override = TURN_FIELDS.reduce<AvatarOverride | undefined>(
         (current, field) =>
           isAutoValue(turn.avatarType, field, current?.[field])
@@ -97,7 +104,12 @@ export function applyExpressions(input: {
             : current,
         item.avatar,
       );
-      return { id: item.id, avatar: minimizeOverride(override, inherited) };
+      const voice = pick.voices?.[index] ?? DEFAULT_VOICE_EMOTION;
+      return {
+        id: item.id,
+        avatar: minimizeOverride(override, inherited),
+        ...(voice === DEFAULT_VOICE_EMOTION ? {} : { voiceEmotion: voice }),
+      };
     });
   });
 

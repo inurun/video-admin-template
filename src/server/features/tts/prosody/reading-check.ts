@@ -101,22 +101,6 @@ export function sameSound(a: string, b: string) {
   return soundMoras(a).join("") === soundMoras(b).join("");
 }
 
-/** Spells the given words in katakana inside the text; words are matched left to right. */
-export function respell(text: string, words: KanaWord[], readings: Map<number, string>) {
-  let out = "";
-  let cursor = 0;
-  for (const word of words) {
-    const at = text.indexOf(word.surface, cursor);
-    if (at < 0) {
-      continue;
-    }
-    const reading = readings.get(word.index);
-    out += text.slice(cursor, at) + (reading ? normalizeReading(reading) : word.surface);
-    cursor = at + word.surface.length;
-  }
-  return out + text.slice(cursor);
-}
-
 /** Puts readings back into the kana, keeping its phrases; a changed word keeps its nucleus offset. */
 export function applyReadings(kana: string, readings: Map<number, string>) {
   let index = -1;

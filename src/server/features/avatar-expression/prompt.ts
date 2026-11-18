@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { AVATAR_TYPES, avatarExpressions, type AvatarType } from "@/_schemas/catalog";
+import {
+  AVATAR_TYPES,
+  avatarExpressions,
+  VOICE_EMOTIONS,
+  voiceEmotions,
+  type AvatarType,
+} from "@/_schemas/catalog";
 import type { ExpressionHistory, ExpressionRates } from "./examples";
 import {
   DEFAULT_EXPRESSION,
@@ -10,7 +16,7 @@ import {
 
 const FIELDS = ["base", "eyes", "mouth"] as const satisfies readonly ExpressionField[];
 
-const INSTRUCTIONS = `You pick avatar expressions for a Japanese comedy diary video. Characters talk in short lines; their avatar is shown while they speak.
+const INSTRUCTIONS = `You pick avatar expressions and voice emotions for a Japanese comedy diary video. Characters talk in short lines; their avatar is shown while they speak.
 
 # Input
 - title: the page title (may be empty).
@@ -19,6 +25,7 @@ const INSTRUCTIONS = `You pick avatar expressions for a Japanese comedy diary vi
 
 # Output
 - turns: one entry per input turn id with eyes and mouth. Each is "default" or one of that character's options for the field.
+- voices: in each turn entry, one voice emotion per line of the turn, in order. It sets how the line is acted out loud.
 - bases: one entry per character that has base options. A base is a costume worn for the whole page: pick one only when the page's topic calls for it, else "default".
 
 # Rules
@@ -26,7 +33,8 @@ const INSTRUCTIONS = `You pick avatar expressions for a Japanese comedy diary vi
 - Most turns are plain talk: explaining, asking, answering, agreeing. Those stay default; pick an option only for a clear mood or reaction.
 - Eyes and mouth are picked separately; combine them when both fit.
 - Judge from what the turn means in the conversation (what it answers, the joke, the mood), not from punctuation such as "…".
-- Keep one character's expression across their nearby turns while the mood holds.`;
+- Keep one character's expression across their nearby turns while the mood holds.
+- Voice emotions are judged per line: a turn may move from one to another. "neutral" is plain talk; pick another only when the line clearly carries that feeling.`;
 
 function meaningsSection() {
   const lines: string[] = [];
@@ -46,6 +54,12 @@ function meaningsSection() {
   return lines.join("\n");
 }
 
+function voiceEmotionsSection() {
+  return Object.entries(voiceEmotions)
+    .map(([emotion, { meaning }]) => `${emotion}=${meaning}`)
+    .join(" / ");
+}
+
 export function buildSystemPrompt(examples: ExpressionHistory, rates: ExpressionRates) {
   const shownRates = Object.fromEntries(
     Object.entries(rates).map(([avatar, fields]) => [
@@ -61,6 +75,8 @@ export function buildSystemPrompt(examples: ExpressionHistory, rates: Expression
     INSTRUCTIONS,
     "# Meanings",
     meaningsSection(),
+    "# Voice emotions",
+    voiceEmotionsSection(),
     "# Usage rates (past videos; turns for eyes / mouth, pages for base)",
     JSON.stringify(shownRates),
     "# Examples: turns (past videos; context = the turns just before)",
@@ -93,7 +109,9 @@ export function buildUserContent(input: {
 
 export const expressionOutputSchema = z.object({
   bases: z.array(z.object({ avatar: z.string(), base: z.string() })),
-  turns: z.array(z.object({ id: z.string(), eyes: z.string(), mouth: z.string() })),
+  turns: z.array(
+    z.object({ id: z.string(), eyes: z.string(), mouth: z.string(), voices: z.array(z.string()) }),
+  ),
 });
 
 export type ExpressionOutput = z.infer<typeof expressionOutputSchema>;
@@ -127,6 +145,7 @@ export function buildOutputJsonSchema(avatars: readonly AvatarType[], turnIds: r
         id: { type: "string", enum: [...turnIds] },
         eyes: { type: "string", enum: labelEnum(avatars, "eyes") },
         mouth: { type: "string", enum: labelEnum(avatars, "mouth") },
+        voices: { type: "array", items: { type: "string", enum: [...VOICE_EMOTIONS] } },
       }),
     },
   });

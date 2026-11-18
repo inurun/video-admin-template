@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { WEATHER_LOCATION_IDS } from "@/_schemas/catalog/weather";
 import { AVATAR_TYPES, type AvatarAppearance } from "@/_schemas/catalog/avatar";
+import { VOICE_EMOTIONS } from "@/_schemas/catalog/voice-emotions";
 
 export { avatarOptions, type AvatarType } from "@/_schemas/catalog/avatar";
 export { WEATHER_LOCATION_IDS, WEATHER_LOCATION_LABELS } from "@/_schemas/catalog/weather";
@@ -87,6 +88,12 @@ export const avatarSourceSchema = z.discriminatedUnion("kind", [
 ]);
 
 export const avatarTypeSchema = z.enum(AVATAR_TYPES);
+
+/**
+ * A line's voice emotion: read by the prosody reference TTS as a direction. Unset is neutral.
+ * Auto Expression owns it with eyes / mouth (`avatarSource`).
+ */
+export const voiceEmotionSchema = z.enum(VOICE_EMOTIONS);
 
 const namedVoiceOptionFields = {
   voiceName: z.string().min(1),

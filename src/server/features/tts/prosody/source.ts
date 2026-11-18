@@ -1,6 +1,6 @@
 import type { ServerEnv } from "@/server/core/env";
 import { OpenRouterError, postOpenRouter } from "@/server/core/openrouter";
-import { PROSODY_SOURCE } from "./profiles";
+import { PROSODY_SOURCE, PROSODY_SOURCE_VOICES } from "./profiles";
 import type { ProsodySource } from "./source-config";
 
 const OPENROUTER_SPEECH_URL = "https://openrouter.ai/api/v1/audio/speech";
@@ -23,23 +23,11 @@ export function wavFromPcm(pcm: Buffer, sampleRate: number) {
   return Buffer.concat([header, pcm]);
 }
 
-/** Neighboring utterances the TTS hears for intonation but does not read (nor bill). */
-export type ProsodySourceContext = { previous?: string; next?: string };
-
-function elevenLabsContext(context: ProsodySourceContext | undefined) {
-  const options = {
-    ...(context?.previous ? { previous_text: context.previous } : {}),
-    ...(context?.next ? { next_text: context.next } : {}),
-  };
-  return Object.keys(options).length > 0 ? { provider: { options: { elevenlabs: options } } } : {};
-}
-
 /** Reads `text` with the reference TTS of `source` (its tag first) and returns a WAV. */
 export async function synthesizeProsodySource(
   serverEnv: ServerEnv,
   text: string,
   source: ProsodySource,
-  context?: ProsodySourceContext,
 ) {
   const apiKey = serverEnv.OPENROUTER_API_KEY?.trim();
   if (!apiKey) {
@@ -53,9 +41,8 @@ export async function synthesizeProsodySource(
     JSON.stringify({
       model: source.model,
       input: source.tag ? `${source.tag} ${text}` : text,
-      voice: source.voice,
+      voice: PROSODY_SOURCE_VOICES[source.voice],
       response_format: "pcm",
-      ...elevenLabsContext(context),
     }),
   );
   if (!response.ok) {

@@ -4,10 +4,10 @@ import type { ProsodySource } from "../source-config";
 
 const source: ProsodySource = {
   id: "test-source",
-  model: "elevenlabs/eleven-v4",
-  voice: "bella",
+  model: "fish-audio/drama-3",
+  voice: "hina",
   tag: "",
-  sampleRate: 24_000,
+  sampleRate: 44_100,
 };
 
 describe("synthesizeProsodySource", () => {
@@ -15,7 +15,7 @@ describe("synthesizeProsodySource", () => {
     vi.unstubAllGlobals();
   });
 
-  it("asks ElevenLabs v4 for PCM and wraps it in a 24 kHz mono WAV", async () => {
+  it("asks Drama 3 for PCM with the voice's Fish id and wraps it in a 44.1 kHz mono WAV", async () => {
     const pcm = Buffer.from([1, 0, 2, 0]);
     const fetchMock = vi.fn(async () => new Response(pcm));
     vi.stubGlobal("fetch", fetchMock);
@@ -25,54 +25,31 @@ describe("synthesizeProsodySource", () => {
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe("https://openrouter.ai/api/v1/audio/speech");
     expect(JSON.parse(String(init.body))).toEqual({
-      model: "elevenlabs/eleven-v4",
+      model: "fish-audio/drama-3",
       input: "犬が走る",
-      voice: "bella",
+      voice: "bf5634e34ee5489991fe687ad0d202c5",
       response_format: "pcm",
     });
     expect(wav.toString("ascii", 0, 4)).toBe("RIFF");
     expect(wav.readUInt16LE(22)).toBe(1);
-    expect(wav.readUInt32LE(24)).toBe(24_000);
+    expect(wav.readUInt32LE(24)).toBe(44_100);
     expect(wav.readUInt32LE(40)).toBe(pcm.length);
     expect(wav.subarray(44)).toEqual(pcm);
   });
 
-  it("puts the audio tag before the text", async () => {
+  it("puts the direction before the text", async () => {
     const fetchMock = vi.fn(async () => new Response(Buffer.from([1, 0])));
     vi.stubGlobal("fetch", fetchMock);
 
     await synthesizeProsodySource({ OPENROUTER_API_KEY: "secret" }, "犬が走る", {
       ...source,
-      tag: "[in a monotone]",
+      tag: "[annoyed, irritated]",
     });
 
     const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
-    expect(JSON.parse(String(init.body)).input).toBe("[in a monotone] 犬が走る");
-  });
-
-  it("sends the neighboring utterances as ElevenLabs context", async () => {
-    const fetchMock = vi.fn(async () => new Response(Buffer.from([1, 0])));
-    vi.stubGlobal("fetch", fetchMock);
-    const bodyOf = (call: number) =>
-      JSON.parse(String((fetchMock.mock.calls[call] as unknown as [string, RequestInit])[1].body));
-
-    await synthesizeProsodySource({ OPENROUTER_API_KEY: "secret" }, "犬が走る", source, {
-      previous: "前の文。",
-      next: "次の文。",
-    });
-    await synthesizeProsodySource({ OPENROUTER_API_KEY: "secret" }, "犬が走る", source, {
-      previous: "前の文。",
-    });
-    await synthesizeProsodySource({ OPENROUTER_API_KEY: "secret" }, "犬が走る", source, {});
-
-    expect(bodyOf(0).provider).toEqual({
-      options: { elevenlabs: { previous_text: "前の文。", next_text: "次の文。" } },
-    });
-    expect(bodyOf(1).provider).toEqual({
-      options: { elevenlabs: { previous_text: "前の文。" } },
-    });
-    expect(bodyOf(2)).not.toHaveProperty("provider");
-    expect(bodyOf(0)).not.toHaveProperty("instructions");
+    const body = JSON.parse(String(init.body));
+    expect(body.input).toBe("[annoyed, irritated] 犬が走る");
+    expect(body).not.toHaveProperty("provider");
   });
 
   it("throws on an HTTP error", async () => {

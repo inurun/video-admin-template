@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { avatarOverrideSchema, avatarSourceSchema, avatarTypeSchema } from "@/_schemas";
+import {
+  avatarOverrideSchema,
+  avatarSourceSchema,
+  avatarTypeSchema,
+  voiceEmotionSchema,
+} from "@/_schemas";
 
 const pageAvatarsSchema = z.partialRecord(avatarTypeSchema, avatarOverrideSchema);
 
@@ -23,11 +28,12 @@ export const avatarExpressionGenerateRequestSchema = z.object({
 
 export const avatarExpressionGenerateResponseSchema = z.object({
   avatars: pageAvatarsSchema,
-  /** Every line of the turns auto looked at; null = no override. Each becomes auto-owned. */
+  /** Every line of the turns auto looked at; null = no override (neutral voice). Each becomes auto-owned. */
   tts: z.array(
     z.object({
       id: z.string().min(1),
       avatar: avatarOverrideSchema.nullable(),
+      voiceEmotion: voiceEmotionSchema.nullable(),
       avatarSource: avatarSourceSchema,
     }),
   ),

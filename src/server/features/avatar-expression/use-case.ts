@@ -2,7 +2,13 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { AvatarOverride } from "@/_schemas";
-import { resolveAvatarSettings, type AvatarType } from "@/_schemas/catalog";
+import {
+  DEFAULT_VOICE_EMOTION,
+  resolveAvatarSettings,
+  VOICE_EMOTIONS,
+  type AvatarType,
+  type VoiceEmotion,
+} from "@/_schemas/catalog";
 import type { ServerEnv } from "@/server/core/env";
 import { requestOpenRouterJson, ZERO_USAGE, type OpenRouterUsage } from "@/server/core/openrouter";
 import {
@@ -51,7 +57,7 @@ export type ExpressionPrediction = {
   usage: OpenRouterUsage;
 };
 
-type Discarded = { at: string; field: ExpressionField; label: string };
+type Discarded = { at: string; field: ExpressionField | "voice"; label: string };
 
 /** Turns of avatars that have eyes / mouth options, ids in playback order. */
 export function buildExpressionTurns<T extends ExpressionTts>(
@@ -76,6 +82,16 @@ function readPicks(turns: readonly ExpressionTurn[], output: ExpressionOutput) {
     return DEFAULT_EXPRESSION;
   };
 
+  const voicesOf = (turn: ExpressionTurn, voices: readonly string[]) =>
+    turn.items.map((_, index): VoiceEmotion => {
+      const voice = voices[index];
+      if (voice !== undefined && (VOICE_EMOTIONS as readonly string[]).includes(voice)) {
+        return voice as VoiceEmotion;
+      }
+      discarded.push({ at: `${turn.id}#${index}`, field: "voice", label: voice ?? "(missing)" });
+      return DEFAULT_VOICE_EMOTION;
+    });
+
   const turnById = new Map(turns.map((turn) => [turn.id, turn]));
   const picks: Required<ExpressionPicks> = { bases: {}, turns: {} };
   for (const entry of output.turns) {
@@ -84,6 +100,7 @@ function readPicks(turns: readonly ExpressionTurn[], output: ExpressionOutput) {
       picks.turns[entry.id] = {
         eyes: keep(entry.id, turn.avatarType, "eyes", entry.eyes),
         mouth: keep(entry.id, turn.avatarType, "mouth", entry.mouth),
+        voices: voicesOf(turn, entry.voices),
       };
     }
   }
@@ -200,6 +217,7 @@ export async function generateAvatarExpressions(
     tts: applied.tts.map((item) => ({
       id: item.id,
       avatar: item.avatar ?? null,
+      voiceEmotion: item.voiceEmotion ?? null,
       avatarSource: { kind: "auto" as const, key: keyByTtsId.get(item.id)! },
     })),
   };

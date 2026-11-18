@@ -1,4 +1,4 @@
-import type { AvatarOverride } from "@/_schemas";
+import type { AvatarOverride, VoiceEmotion } from "@/_schemas";
 import type {
   AvatarExpressionGenerateRequest,
   AvatarExpressionGenerateResponse,
@@ -22,7 +22,10 @@ export function toAvatarExpressionPage(
   };
 }
 
-/** Form writes for a response: tts index → override and its auto source, plus the page defaults. */
+/**
+ * Form writes for a response: tts index → override, voice emotion and their auto source, plus the
+ * page defaults.
+ */
 export function toAvatarExpressionWrites(
   values: MainPageFormValues,
   response: AvatarExpressionGenerateResponse,
@@ -38,6 +41,7 @@ export function toAvatarExpressionWrites(
             {
               index,
               avatar: (item.avatar ?? undefined) as AvatarOverride | undefined,
+              voiceEmotion: (item.voiceEmotion ?? undefined) as VoiceEmotion | undefined,
               avatarSource: item.avatarSource,
             },
           ];

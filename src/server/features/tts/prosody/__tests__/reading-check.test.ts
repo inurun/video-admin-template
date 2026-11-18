@@ -5,7 +5,6 @@ import {
   checkReadings,
   correctionsFromLines,
   kanaLine,
-  respell,
   sameSound,
   wordsOf,
 } from "../reading-check";
@@ -22,15 +21,6 @@ describe("wordsOf", () => {
       { index: 4, surface: "早急", reading: "ソーキュー" },
       { index: 5, surface: "に", reading: "ニ" },
     ]);
-  });
-});
-
-describe("respell", () => {
-  it("spells only the given words in katakana", () => {
-    const text = "出納係が、差額を早急に相殺した";
-    expect(respell(text, wordsOf(kana), new Map([[4, "さっきゅう"]]))).toBe(
-      "出納係が、差額をサッキュウに相殺した",
-    );
   });
 });
 

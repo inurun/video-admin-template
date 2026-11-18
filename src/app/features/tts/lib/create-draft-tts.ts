@@ -2,10 +2,14 @@ import { hasVoiceIdentity, type VoiceOption } from "@/_schemas";
 import type { TtsFormValues } from "@/app/features/tts/model/tts-form-schema";
 import { applyTtsVoiceChange } from "@/app/features/tts/lib/apply-tts-voice-change";
 
-/** A new line starts from the source's avatar and who set it; auto re-reads it for the new text. */
+/**
+ * A new line starts from the source's avatar, voice emotion and who set them; auto re-reads them
+ * for the new text.
+ */
 function sourceAvatar(sourceTts: TtsFormValues | undefined) {
   return {
     ...(sourceTts?.avatar ? { avatar: sourceTts.avatar } : {}),
+    ...(sourceTts?.voiceEmotion ? { voiceEmotion: sourceTts.voiceEmotion } : {}),
     ...(sourceTts?.avatarSource ? { avatarSource: sourceTts.avatarSource } : {}),
   };
 }

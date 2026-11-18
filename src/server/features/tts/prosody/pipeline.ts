@@ -14,14 +14,14 @@ import {
   changedReadings,
   checkReadings,
   normalizeReading,
-  respell,
   sameSound,
   wordsOf,
   type KanaWord,
   type ReadingCheckItem,
   type ReadingCorrection,
 } from "./reading-check";
-import { synthesizeProsodySource, type ProsodySourceContext } from "./source";
+import { phonemeSpell } from "./fish-phonemes";
+import { synthesizeProsodySource } from "./source";
 import type { ProsodySource } from "./source-config";
 
 /** Reference TTS and extract calls in flight at once. */
@@ -32,26 +32,24 @@ export type ProsodyAnalysis = { g2p: G2pItem; prosody?: ProsodyExtract };
 
 /**
  * `g2p` is the saved (possibly edited) kana; without it the kana comes from the analyzer.
- * `source` is the character's reference TTS; `context` the neighboring utterances it hears.
+ * `source` is the character's reference TTS.
  */
 export type ProsodyTarget = {
   readText: string;
   g2p?: G2pItem;
   source: ProsodySource;
-  context?: ProsodySourceContext;
 };
 
 /**
  * An analyzer kana whose reference audio still has to pass the reading check. `dictionary` holds
- * the readings of the words taken from the user dictionary: the reference TTS gets them in
- * katakana. The check cannot change the `fixed` ones; a contextual word's reading was only
+ * the readings of the words taken from the user dictionary: the reference TTS gets their phrases
+ * as Fish phonemes. The check cannot change the `fixed` ones; a contextual word's reading was only
  * chosen by the analyzer, so the check may correct it like any other word.
  */
 type Unchecked = {
   id: string;
   analyzed: G2pItem;
   source: ProsodySource;
-  context?: ProsodySourceContext;
   words: KanaWord[];
   dictionary: Map<number, string>;
   fixed: Set<number>;
@@ -82,9 +80,9 @@ const dictionaryReadings = (words: KanaWord[], dictionaryWords: DictionaryWord[]
   return new Map(words.filter((w) => wanted.has(w.index)).map((w) => [w.index, w.reading]));
 };
 
-/** The text the reference TTS reads: the dictionary words (and `extra`) in katakana. */
+/** The text the reference TTS reads: the dictionary words (and `extra`) as Fish phonemes. */
 const referenceText = (item: Omit<Unchecked, "wav">, extra = new Map<number, string>()) =>
-  respell(item.analyzed.text, item.words, new Map([...item.dictionary, ...extra]));
+  phonemeSpell(item.analyzed.text, item.analyzed.kana, new Map([...item.dictionary, ...extra]));
 
 /** The fixed dictionary words, by word index. */
 const fixedWords = (dictionaryWords: DictionaryWord[]) =>
@@ -117,16 +115,12 @@ async function synthesizeSources(
     id: string;
     text: string;
     source: ProsodySource;
-    context?: ProsodySourceContext;
   }[],
 ) {
   const wavs = new Map<string, Buffer>();
   await runPool(items, PROSODY_CONCURRENCY, async (item) => {
     try {
-      wavs.set(
-        item.id,
-        await synthesizeProsodySource(serverEnv, item.text, item.source, item.context),
-      );
+      wavs.set(item.id, await synthesizeProsodySource(serverEnv, item.text, item.source));
     } catch (error) {
       warn(item.text, `reference reading failed: ${errorMessage(error)}`);
     }
@@ -170,7 +164,7 @@ const toCheckItem = (item: Unchecked): ReadingCheckItem => ({
 
 /**
  * Checks every reference recording in chunks. A recording that misread a word is made again
- * with that word in katakana, and those are checked once more (again in chunks).
+ * with that word's phrase as Fish phonemes, and those are checked once more (again in chunks).
  */
 async function checkReferences(serverEnv: ServerEnv, items: readonly Unchecked[]) {
   const checkOwn = async (checking: readonly Unchecked[]) => {
@@ -208,7 +202,6 @@ async function checkReferences(serverEnv: ServerEnv, items: readonly Unchecked[]
       id: item.id,
       text,
       source: item.source,
-      context: item.context,
     })),
   );
   const second = await checkOwn(
@@ -276,14 +269,13 @@ async function settleChecked(
 
 /**
  * An edited or already settled kana: words read differently from the analyzer, and the
- * analyzer's dictionary words, are spelled in katakana; no check.
+ * analyzer's dictionary words, are read from their phrases as Fish phonemes; no check.
  */
 async function fromSavedKana(
   serverEnv: ServerEnv,
   analyzed: AnalyzedItem,
   g2p: G2pItem,
   source: ProsodySource,
-  context: ProsodySourceContext | undefined,
 ): Promise<ProsodyAnalysis> {
   const cached = await readCachedProsody(g2p, source);
   if (cached) {
@@ -303,9 +295,8 @@ async function fromSavedKana(
   try {
     wav = await synthesizeProsodySource(
       serverEnv,
-      respell(g2p.text, words, changed),
+      phonemeSpell(g2p.text, g2p.kana, changed),
       source,
-      context,
     );
   } catch (error) {
     warn(g2p.text, `reference reading failed: ${errorMessage(error)}`);
@@ -347,10 +338,10 @@ export async function analyzeProsody(
   const results = new Map<string, ProsodyAnalysis>();
   const toCheck: Omit<Unchecked, "wav">[] = [];
   await runPool(items, PROSODY_CONCURRENCY, async ({ id, target, base }) => {
-    const { source, context } = target;
+    const { source } = target;
     const settled = fresh ? undefined : (target.g2p ?? (await readSettledG2p(base.g2p, source)));
     if (settled) {
-      results.set(id, await fromSavedKana(serverEnv, base, settled, source, context));
+      results.set(id, await fromSavedKana(serverEnv, base, settled, source));
       return;
     }
     const words = wordsOf(base.g2p.kana);
@@ -358,7 +349,6 @@ export async function analyzeProsody(
       id,
       analyzed: base.g2p,
       source,
-      context,
       words,
       dictionary: dictionaryReadings(words, base.dictionaryWords),
       fixed: fixedWords(base.dictionaryWords),

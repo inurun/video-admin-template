@@ -37,8 +37,8 @@ export const speechConfig = {
  * character (keyed by voice id), `defaultTag` for the rest.
  */
 export const speechVoiceConfig = {
-  voice: "bella",
-  defaultTag: "[in a monotone]",
+  voice: "hina",
+  defaultTag: "",
   tags: {
     // "voicevox::113::": "[tired]",
   },

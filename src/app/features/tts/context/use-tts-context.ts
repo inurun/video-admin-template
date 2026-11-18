@@ -75,6 +75,7 @@ function useTtsCommands() {
             ...(item.provider !== "coeiroink" && item.voiceName
               ? { voiceName: item.voiceName, voiceVersion: item.voiceVersion }
               : {}),
+            ...(item.voiceEmotion ? { voiceEmotion: item.voiceEmotion } : {}),
             ...getAdjacentTtsContext(form.getValues("tts"), ttsId),
           },
         });

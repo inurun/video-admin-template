@@ -129,8 +129,6 @@ async function resolvePreviewG2p(
 export async function generateTtsG2p(serverEnv: ServerEnv, input: unknown) {
   const { pageId, item } = ttsG2pGenerateRequestSchema.parse(input);
   if (item.provider !== "coeiroink" && getSpeechPipeline(item.provider).pipeline === "prosody") {
-    const previous = item.previous ? getEffectiveReadText(item.previous) : "";
-    const next = item.next ? getEffectiveReadText(item.next) : "";
     const [result] = await analyzeProsody(
       serverEnv,
       [
@@ -140,10 +138,8 @@ export async function generateTtsG2p(serverEnv: ServerEnv, input: unknown) {
             provider: item.provider,
             voiceName: item.voiceName,
             voiceVersion: item.voiceVersion,
+            voiceEmotion: item.voiceEmotion,
           }),
-          ...(previous || next
-            ? { context: { ...(previous ? { previous } : {}), ...(next ? { next } : {}) } }
-            : {}),
         },
       ],
       { fresh: true },
