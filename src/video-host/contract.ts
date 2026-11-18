@@ -61,6 +61,9 @@ export type SoundCue = { clip: string; src: string; volume: number };
  *   `pitchSmoothing` (pitch engines only, 0 to 1, default 0) mixes each mora's reference pitch
  *   with its neighbors' before mapping (1 = half its own, half the neighbors'); the range stays
  *   the engine's, only jitter is evened out.
+ *   `pitchRangeWeight` (pitch engines only, 0 to 1, default 1) is how much of the reference's
+ *   pitch range survives: 0 maps it onto the engine's own range, 1 keeps it, so the emotion
+ *   the reference TTS read with carries over. 1 is the recommended value.
  *   `pitchLimit` (pitch engines only, above 0, omitted = none) soft-limits each mora's reference
  *   pitch to that many standard deviations from the utterance mean, both up and down, so one
  *   spike or dip does not flatten the rest of the utterance. 1.5 to 2 is a good start.
@@ -74,6 +77,7 @@ export type VideoSpeechConfig = {
         pitchWeight?: number;
         timingWeight?: number;
         pitchSmoothing?: number;
+        pitchRangeWeight?: number;
         pitchLimit?: number;
       }
     | { pipeline: "llm-g2p" };

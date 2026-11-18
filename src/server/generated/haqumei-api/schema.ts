@@ -157,7 +157,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["extract_prosody"];
+        post: operations["prosody_extract"];
         delete?: never;
         options?: never;
         head?: never;
@@ -190,6 +190,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["synthesis_voicevox"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/synthesis/voicevox/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["synthesis_voicevox_stream"];
         delete?: never;
         options?: never;
         head?: never;
@@ -445,48 +461,85 @@ export interface components {
             type: string;
         };
         ProsodyAudio: {
+            /** @description 16-bit PCM の WAV（チャンネル数とサンプリング周波数は問わない）を base64 にしたもの。 */
             wav_base64: string;
         };
+        /** @description `POST /v1/prosody/extract` の request。契約は `docs/prosody-reference.md`。 */
         ProsodyExtractRequest: {
-            schema_version: string;
-            item: components["schemas"]["G2pItem"];
             audio: components["schemas"]["ProsodyAudio"];
+            item: components["schemas"]["G2pItem"];
+            /**
+             * @description `"3"` のみ。
+             * @example 3
+             */
+            schema_version: string;
         };
         ProsodyExtractResponse: {
-            schema_version: string;
+            /**
+             * @description アライナのモデルと前処理の版。変わったら呼び出し側のキャッシュを作り直す。
+             * @example mms-fa-3
+             */
             aligner_version: string;
-            /** Format: double */
-            score: number;
+            /** @description kana のモーラ順に1つずつ。 */
             moras: components["schemas"]["ProsodyMora"][];
             pauses: components["schemas"]["ProsodyPause"][];
+            schema_version: string;
+            /**
+             * Format: double
+             * @description アライメントの全トークンの事後確率の平均（0〜1）。読み違いの判定には使えない。
+             */
+            score: number;
         };
+        /** @description One mora of the reference recording, in seconds from the start of the audio. */
         ProsodyMora: {
             /** Format: double */
-            start: number;
-            /** Format: double */
-            vowel_start: number;
-            /** Format: double */
             end: number;
-            /** Format: double */
+            /**
+             * Format: double
+             * @description Median natural log of F0 (Hz) over voiced frames in `vowel_start..end`. `null` when fewer
+             *     than two frames are voiced.
+             */
             log_f0: number | null;
+            /** Format: double */
+            start: number;
+            /**
+             * Format: double
+             * @description Same as `start` for a mora without a consonant (vowel, `ン`, `ッ`, `ー`).
+             */
+            vowel_start: number;
         };
+        /** @description Silence after a `、` `？` `！` phrase (not after the last phrase). */
         ProsodyPause: {
-            /** Format: int32 */
+            /** @description 0-based index of the last mora of the phrase. */
             after_mora: number;
             /** Format: double */
             sec: number;
         };
+        /** @description `prosody` on a synthesis request. */
+        ProsodyReference: {
+            moras: components["schemas"]["ProsodyMora"][];
+            pauses?: components["schemas"]["ProsodyPause"][];
+            /**
+             * Format: double
+             * @description How much of the reference pitch range survives: 0 maps the reference contour onto the
+             *     engine's own range (z-normalized), 1 keeps the reference range in log F0. VoiSona ignores it.
+             * @default 0
+             */
+            pitch_range_weight: number;
+            /**
+             * Format: double
+             * @description 0 keeps the engine pitch, 1 follows the reference. VoiSona ignores it.
+             */
+            pitch_weight: number;
+            /**
+             * Format: double
+             * @description 0 keeps the engine durations, 1 follows the reference rhythm.
+             */
+            timing_weight: number;
+        };
         SourceSpan: {
             end_utf16: number;
             start_utf16: number;
-        };
-        SynthesisProsody: {
-            moras: components["schemas"]["ProsodyMora"][];
-            pauses: components["schemas"]["ProsodyPause"][];
-            /** Format: double */
-            pitch_weight: number;
-            /** Format: double */
-            timing_weight: number;
         };
         ValidateRequest: {
             items: components["schemas"]["G2pItem"][];
@@ -507,13 +560,29 @@ export interface components {
             schema_version: string;
             version: string;
         };
+        /** @description `/v1/synthesis/voicevox` の request に VOICEVOX `/streaming_synthesis` の `segment_length` を足したもの。 */
+        VoicevoxStreamingSynthesisRequest: {
+            item: components["schemas"]["G2pItem"];
+            /** @description 参照音声の韻律（`POST /v1/prosody/extract` の結果と重み）。省略すると今までどおり合成する。 */
+            prosody?: components["schemas"]["ProsodyReference"];
+            schema_version: string;
+            /**
+             * Format: double
+             * @description 一度に合成する音声の秒数。省略時は VOICEVOX の既定値（0.26.0 では 0.3）。
+             */
+            segment_length?: number;
+            /** Format: int32 */
+            speaker: number;
+            synthesis_settings?: components["schemas"]["VoicevoxSynthesisSettings"];
+        };
         VoicevoxSynthesisRequest: {
             item: components["schemas"]["G2pItem"];
+            /** @description 参照音声の韻律（`POST /v1/prosody/extract` の結果と重み）。省略すると今までどおり合成する。 */
+            prosody?: components["schemas"]["ProsodyReference"];
             schema_version: string;
             /** Format: int32 */
             speaker: number;
             synthesis_settings?: components["schemas"]["VoicevoxSynthesisSettings"];
-            prosody?: components["schemas"]["SynthesisProsody"];
         };
         VoicevoxSynthesisSettings: {
             /** Format: double */
@@ -553,11 +622,12 @@ export interface components {
         };
         VoisonaSynthesisRequest: {
             item: components["schemas"]["G2pItem"];
+            /** @description 参照音声の韻律（`POST /v1/prosody/extract` の結果と重み）。省略すると今までどおり合成する。 */
+            prosody?: components["schemas"]["ProsodyReference"];
             schema_version: string;
             synthesis_settings?: components["schemas"]["VoisonaSynthesisSettings"];
             voice_name: string;
             voice_version?: string;
-            prosody?: components["schemas"]["SynthesisProsody"];
         };
         VoisonaSynthesisSettings: {
             /** Format: double */
@@ -1113,7 +1183,7 @@ export interface operations {
             };
         };
     };
-    extract_prosody: {
+    prosody_extract: {
         parameters: {
             query?: never;
             header?: never;
@@ -1143,6 +1213,14 @@ export interface operations {
                 };
             };
             413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            415: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1278,6 +1356,78 @@ export interface operations {
         };
         responses: {
             /** @description WAV audio */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "audio/wav": components["schemas"]["WavFile"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    synthesis_voicevox_stream: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoicevoxStreamingSynthesisRequest"];
+            };
+        };
+        responses: {
+            /** @description WAV audio, sent as VOICEVOX generates it. A failure after the body has started closes the connection early. */
             200: {
                 headers: {
                     [name: string]: unknown;

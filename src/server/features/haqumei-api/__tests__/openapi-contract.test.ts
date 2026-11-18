@@ -50,11 +50,11 @@ describe("haqumei-api prosody contract snapshot", () => {
 
   it("includes the extract path and prosody on VOICEVOX and VoiSona synthesis", () => {
     expect(openapi.paths["/v1/prosody/extract"]?.post).toBeDefined();
-    expect(schemas.VoicevoxSynthesisRequest?.properties?.prosody).toEqual({
-      $ref: "#/components/schemas/SynthesisProsody",
+    expect(schemas.VoicevoxSynthesisRequest?.properties?.prosody).toMatchObject({
+      $ref: "#/components/schemas/ProsodyReference",
     });
-    expect(schemas.VoisonaSynthesisRequest?.properties?.prosody).toEqual({
-      $ref: "#/components/schemas/SynthesisProsody",
+    expect(schemas.VoisonaSynthesisRequest?.properties?.prosody).toMatchObject({
+      $ref: "#/components/schemas/ProsodyReference",
     });
     expect(schemas.CoeiroinkSynthesisRequest?.properties).not.toHaveProperty("prosody");
   });

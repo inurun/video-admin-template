@@ -28,8 +28,20 @@ describe("resolveSpeechPipelines", () => {
         providers,
       ),
     ).toEqual({
-      voicevox: { pipeline: "prosody", pitchWeight: 0.8, timingWeight: 0.8, pitchSmoothing: 0 },
-      voisona: { pipeline: "prosody", pitchWeight: 0, timingWeight: 0.3, pitchSmoothing: 0 },
+      voicevox: {
+        pipeline: "prosody",
+        pitchWeight: 0.8,
+        timingWeight: 0.8,
+        pitchSmoothing: 0,
+        pitchRangeWeight: 1,
+      },
+      voisona: {
+        pipeline: "prosody",
+        pitchWeight: 0,
+        timingWeight: 0.3,
+        pitchSmoothing: 0,
+        pitchRangeWeight: 0,
+      },
       coeiroink: { pipeline: "llm-g2p" },
       voicepeak: { pipeline: "none" },
     });
@@ -73,6 +85,15 @@ describe("resolveSpeechPipelines", () => {
     expect(() =>
       resolveSpeechPipelines({ voicevox: { pipeline: "prosody", pitchSmoothing: 2 } }, providers),
     ).toThrow("pitchSmoothing");
+    expect(() =>
+      resolveSpeechPipelines({ voisona: { pipeline: "prosody", pitchRangeWeight: 1 } }, providers),
+    ).toThrow("does not take pitch");
+    expect(() =>
+      resolveSpeechPipelines(
+        { voicevox: { pipeline: "prosody", pitchRangeWeight: 1.5 } },
+        providers,
+      ),
+    ).toThrow("pitchRangeWeight");
   });
 
   it("takes the template's pitch limit on pitch engines only", () => {
@@ -104,12 +125,14 @@ describe("template speech config", () => {
       pitchWeight: 0.8,
       timingWeight: 0.8,
       pitchSmoothing: 0,
+      pitchRangeWeight: 1,
     });
     expect(getSpeechPipeline("voisona")).toEqual({
       pipeline: "prosody",
       pitchWeight: 0,
       timingWeight: 0.8,
       pitchSmoothing: 0,
+      pitchRangeWeight: 0,
     });
     expect(getSpeechPipeline("coeiroink")).toEqual({ pipeline: "llm-g2p" });
     expect(getSpeechPipeline("voicepeak")).toEqual({ pipeline: "none" });
@@ -121,6 +144,7 @@ describe("template speech config", () => {
       pauses: [],
       pitch_weight: 0.8,
       timing_weight: 0.8,
+      pitch_range_weight: 1,
     });
     expect(toSynthesisProsody("coeiroink", extract)).toBeUndefined();
     expect(toSynthesisProsody("voicevox", undefined)).toBeUndefined();

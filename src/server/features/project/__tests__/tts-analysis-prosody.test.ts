@@ -92,6 +92,7 @@ const synthesisProsody = {
   pauses: [],
   pitch_weight: 0.8,
   timing_weight: 0.4,
+  pitch_range_weight: 1,
 };
 
 function tts(id: string, provider: "voicevox" | "voisona", text: string, g2p?: unknown) {

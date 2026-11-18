@@ -13,6 +13,8 @@ import type {
 export const DEFAULT_PROSODY_PITCH_WEIGHT = 0.8;
 export const DEFAULT_PROSODY_TIMING_WEIGHT = 0.8;
 export const DEFAULT_PROSODY_PITCH_SMOOTHING = 0;
+/** Recommended: keeps the reference's pitch range, and with it the emotion it was read with. */
+export const DEFAULT_PROSODY_PITCH_RANGE_WEIGHT = 1;
 
 /** What an engine actually runs: the template's choice checked against what the engine takes. */
 export type ResolvedSpeechPipeline =
@@ -23,6 +25,7 @@ export type ResolvedSpeechPipeline =
       pitchWeight: number;
       timingWeight: number;
       pitchSmoothing: number;
+      pitchRangeWeight: number;
       /** Omitted: the reference pitch is not limited. */
       pitchLimit?: number;
     };
@@ -56,6 +59,7 @@ function resolveOne(
   if (
     (choice.pitchWeight !== undefined ||
       choice.pitchSmoothing !== undefined ||
+      choice.pitchRangeWeight !== undefined ||
       choice.pitchLimit !== undefined) &&
     !pitch
   ) {
@@ -76,6 +80,11 @@ function resolveOne(
     "pitchSmoothing",
     pitch ? (choice.pitchSmoothing ?? DEFAULT_PROSODY_PITCH_SMOOTHING) : 0,
   );
+  const pitchRangeWeight = checkWeight(
+    provider,
+    "pitchRangeWeight",
+    pitch ? (choice.pitchRangeWeight ?? DEFAULT_PROSODY_PITCH_RANGE_WEIGHT) : 0,
+  );
   const { pitchLimit } = choice;
   if (pitchLimit !== undefined && !(pitchLimit > 0 && Number.isFinite(pitchLimit))) {
     throw new Error(`speechConfig.${provider}.pitchLimit must be above 0: ${pitchLimit}`);
@@ -85,6 +94,7 @@ function resolveOne(
     pitchWeight,
     timingWeight,
     pitchSmoothing,
+    pitchRangeWeight,
     ...(pitchLimit === undefined ? {} : { pitchLimit }),
   };
 }
@@ -125,5 +135,6 @@ export function toSynthesisProsody(
     pauses: extract.pauses,
     pitch_weight: speech.pitchWeight,
     timing_weight: speech.timingWeight,
+    pitch_range_weight: speech.pitchRangeWeight,
   };
 }

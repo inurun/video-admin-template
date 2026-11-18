@@ -617,8 +617,8 @@
     },
     "/v1/prosody/extract": {
       "post": {
-        "tags": [],
-        "operationId": "extract_prosody",
+        "tags": ["crate::prosody"],
+        "operationId": "prosody_extract",
         "requestBody": {
           "content": {
             "application/json": {
@@ -641,54 +641,64 @@
             }
           },
           "400": {
+            "description": "",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
-            },
-            "description": ""
+            }
           },
           "413": {
+            "description": "",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
-            },
-            "description": ""
+            }
+          },
+          "415": {
+            "description": "",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           },
           "422": {
+            "description": "",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
-            },
-            "description": ""
+            }
           },
           "500": {
+            "description": "",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
-            },
-            "description": ""
+            }
           },
           "503": {
+            "description": "",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
-            },
-            "description": ""
+            }
           }
         }
       }
@@ -818,6 +828,94 @@
         "responses": {
           "200": {
             "description": "WAV audio",
+            "content": {
+              "audio/wav": {
+                "schema": {
+                  "$ref": "#/components/schemas/WavFile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/synthesis/voicevox/stream": {
+      "post": {
+        "tags": ["crate::synthesis"],
+        "operationId": "synthesis_voicevox_stream",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoicevoxStreamingSynthesisRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "WAV audio, sent as VOICEVOX generates it. A failure after the body has started closes the connection early.",
             "content": {
               "audio/wav": {
                 "schema": {
@@ -1655,23 +1753,27 @@
         "required": ["wav_base64"],
         "properties": {
           "wav_base64": {
-            "type": "string"
+            "type": "string",
+            "description": "16-bit PCM の WAV（チャンネル数とサンプリング周波数は問わない）を base64 にしたもの。"
           }
         },
         "additionalProperties": false
       },
       "ProsodyExtractRequest": {
         "type": "object",
+        "description": "`POST /v1/prosody/extract` の request。契約は `docs/prosody-reference.md`。",
         "required": ["schema_version", "item", "audio"],
         "properties": {
-          "schema_version": {
-            "type": "string"
+          "audio": {
+            "$ref": "#/components/schemas/ProsodyAudio"
           },
           "item": {
             "$ref": "#/components/schemas/G2pItem"
           },
-          "audio": {
-            "$ref": "#/components/schemas/ProsodyAudio"
+          "schema_version": {
+            "type": "string",
+            "description": "`\"3\"` のみ。",
+            "example": "3"
           }
         },
         "additionalProperties": false
@@ -1680,16 +1782,82 @@
         "type": "object",
         "required": ["schema_version", "aligner_version", "score", "moras", "pauses"],
         "properties": {
-          "schema_version": {
-            "type": "string"
-          },
           "aligner_version": {
+            "type": "string",
+            "description": "アライナのモデルと前処理の版。変わったら呼び出し側のキャッシュを作り直す。",
+            "example": "mms-fa-3"
+          },
+          "moras": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProsodyMora"
+            },
+            "description": "kana のモーラ順に1つずつ。"
+          },
+          "pauses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProsodyPause"
+            }
+          },
+          "schema_version": {
             "type": "string"
           },
           "score": {
             "type": "number",
+            "format": "double",
+            "description": "アライメントの全トークンの事後確率の平均（0〜1）。読み違いの判定には使えない。"
+          }
+        }
+      },
+      "ProsodyMora": {
+        "type": "object",
+        "description": "One mora of the reference recording, in seconds from the start of the audio.",
+        "required": ["start", "vowel_start", "end", "log_f0"],
+        "properties": {
+          "end": {
+            "type": "number",
             "format": "double"
           },
+          "log_f0": {
+            "type": ["number", "null"],
+            "format": "double",
+            "description": "Median natural log of F0 (Hz) over voiced frames in `vowel_start..end`. `null` when fewer\nthan two frames are voiced."
+          },
+          "start": {
+            "type": "number",
+            "format": "double"
+          },
+          "vowel_start": {
+            "type": "number",
+            "format": "double",
+            "description": "Same as `start` for a mora without a consonant (vowel, `ン`, `ッ`, `ー`)."
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProsodyPause": {
+        "type": "object",
+        "description": "Silence after a `、` `？` `！` phrase (not after the last phrase).",
+        "required": ["after_mora", "sec"],
+        "properties": {
+          "after_mora": {
+            "type": "integer",
+            "description": "0-based index of the last mora of the phrase.",
+            "minimum": 0
+          },
+          "sec": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProsodyReference": {
+        "type": "object",
+        "description": "`prosody` on a synthesis request.",
+        "required": ["moras", "pitch_weight", "timing_weight"],
+        "properties": {
           "moras": {
             "type": "array",
             "items": {
@@ -1701,44 +1869,28 @@
             "items": {
               "$ref": "#/components/schemas/ProsodyPause"
             }
-          }
-        }
-      },
-      "ProsodyMora": {
-        "type": "object",
-        "required": ["start", "vowel_start", "end", "log_f0"],
-        "properties": {
-          "start": {
-            "type": "number",
-            "format": "double"
           },
-          "vowel_start": {
+          "pitch_range_weight": {
             "type": "number",
-            "format": "double"
-          },
-          "end": {
-            "type": "number",
-            "format": "double"
-          },
-          "log_f0": {
-            "type": ["number", "null"],
-            "format": "double"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ProsodyPause": {
-        "type": "object",
-        "required": ["after_mora", "sec"],
-        "properties": {
-          "after_mora": {
-            "type": "integer",
-            "format": "int32",
+            "format": "double",
+            "description": "How much of the reference pitch range survives: 0 maps the reference contour onto the\nengine's own range (z-normalized), 1 keeps the reference range in log F0. VoiSona ignores it.",
+            "default": 0,
+            "maximum": 1,
             "minimum": 0
           },
-          "sec": {
+          "pitch_weight": {
             "type": "number",
-            "format": "double"
+            "format": "double",
+            "description": "0 keeps the engine pitch, 1 follows the reference. VoiSona ignores it.",
+            "maximum": 1,
+            "minimum": 0
+          },
+          "timing_weight": {
+            "type": "number",
+            "format": "double",
+            "description": "0 keeps the engine durations, 1 follows the reference rhythm.",
+            "maximum": 1,
+            "minimum": 0
           }
         },
         "additionalProperties": false
@@ -1754,33 +1906,6 @@
           "start_utf16": {
             "type": "integer",
             "minimum": 0
-          }
-        },
-        "additionalProperties": false
-      },
-      "SynthesisProsody": {
-        "type": "object",
-        "required": ["moras", "pauses", "pitch_weight", "timing_weight"],
-        "properties": {
-          "moras": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProsodyMora"
-            }
-          },
-          "pauses": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProsodyPause"
-            }
-          },
-          "pitch_weight": {
-            "type": "number",
-            "format": "double"
-          },
-          "timing_weight": {
-            "type": "number",
-            "format": "double"
           }
         },
         "additionalProperties": false
@@ -1839,12 +1964,47 @@
           }
         }
       },
+      "VoicevoxStreamingSynthesisRequest": {
+        "type": "object",
+        "description": "`/v1/synthesis/voicevox` の request に VOICEVOX `/streaming_synthesis` の `segment_length` を足したもの。",
+        "required": ["schema_version", "item", "speaker"],
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/G2pItem"
+          },
+          "prosody": {
+            "$ref": "#/components/schemas/ProsodyReference",
+            "description": "参照音声の韻律（`POST /v1/prosody/extract` の結果と重み）。省略すると今までどおり合成する。"
+          },
+          "schema_version": {
+            "type": "string"
+          },
+          "segment_length": {
+            "type": "number",
+            "format": "double",
+            "description": "一度に合成する音声の秒数。省略時は VOICEVOX の既定値（0.26.0 では 0.3）。",
+            "exclusiveMinimum": 0
+          },
+          "speaker": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "synthesis_settings": {
+            "$ref": "#/components/schemas/VoicevoxSynthesisSettings"
+          }
+        },
+        "additionalProperties": false
+      },
       "VoicevoxSynthesisRequest": {
         "type": "object",
         "required": ["schema_version", "item", "speaker"],
         "properties": {
           "item": {
             "$ref": "#/components/schemas/G2pItem"
+          },
+          "prosody": {
+            "$ref": "#/components/schemas/ProsodyReference",
+            "description": "参照音声の韻律（`POST /v1/prosody/extract` の結果と重み）。省略すると今までどおり合成する。"
           },
           "schema_version": {
             "type": "string"
@@ -1855,9 +2015,6 @@
           },
           "synthesis_settings": {
             "$ref": "#/components/schemas/VoicevoxSynthesisSettings"
-          },
-          "prosody": {
-            "$ref": "#/components/schemas/SynthesisProsody"
           }
         },
         "additionalProperties": false
@@ -1961,6 +2118,10 @@
           "item": {
             "$ref": "#/components/schemas/G2pItem"
           },
+          "prosody": {
+            "$ref": "#/components/schemas/ProsodyReference",
+            "description": "参照音声の韻律（`POST /v1/prosody/extract` の結果と重み）。省略すると今までどおり合成する。"
+          },
           "schema_version": {
             "type": "string"
           },
@@ -1972,9 +2133,6 @@
           },
           "voice_version": {
             "type": "string"
-          },
-          "prosody": {
-            "$ref": "#/components/schemas/SynthesisProsody"
           }
         },
         "additionalProperties": false

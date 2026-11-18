@@ -35,6 +35,7 @@ const prosody = {
   ],
   pauses: [],
   pitch_weight: 1,
+  pitch_range_weight: 1,
   timing_weight: 0.5,
 };
 const base = { serverEnv: {}, projectPath: "project", g2p, voiceName: "3" };

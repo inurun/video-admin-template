@@ -22,7 +22,13 @@ vi.mock("@/server/features/haqumei-api/synthesis", () => ({
 
 import { synthesizeTts } from "../use-case";
 
-const prosody = { moras: [], pauses: [], pitch_weight: 1, timing_weight: 0.5 };
+const prosody = {
+  moras: [],
+  pauses: [],
+  pitch_weight: 1,
+  timing_weight: 0.5,
+  pitch_range_weight: 1,
+};
 const result = { audioSrc: "/tts/project/a.wav", outputPath: "/tmp/a.wav", durationSec: 1 };
 
 describe("synthesizeTts preview", () => {

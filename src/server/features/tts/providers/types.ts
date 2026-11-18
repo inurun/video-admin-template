@@ -6,7 +6,7 @@ import type { PlannedWav } from "@/server/features/tts/wav-cache";
 import type { components } from "@/server/generated/haqumei-api/schema";
 
 /** Reference prosody with the weights to mix it in, as haqumei synthesis takes it. */
-export type SynthesisProsody = components["schemas"]["SynthesisProsody"];
+export type SynthesisProsody = components["schemas"]["ProsodyReference"];
 
 export type TtsProvider = SaveTtsItem["provider"];
 export type TtsInputForProvider<TProvider extends TtsProvider> = Extract<
