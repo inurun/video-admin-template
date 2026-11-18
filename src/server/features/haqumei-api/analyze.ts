@@ -9,10 +9,24 @@ export type DictionaryWord = { index: number; kind: DictionaryEntry["kind"] };
 
 export type AnalyzedItem = { g2p: G2pItem; dictionaryWords: DictionaryWord[] };
 
+/**
+ * haqumei-api analyzes one request at a time and answers `busy` to another, so requests from here
+ * (each a batch of texts) wait in one line, whichever job sent them.
+ */
+let analyzeQueue: Promise<unknown> = Promise.resolve();
+
+function inAnalyzeQueue<T>(task: () => Promise<T>): Promise<T> {
+  const run = analyzeQueue.then(task, task);
+  analyzeQueue = run.catch(() => undefined);
+  return run;
+}
+
 async function requestAnalyze(serverEnv: ServerEnv, texts: string[]): Promise<AnalyzedItem[]> {
-  const response = await getHaqumeiApiClient(serverEnv).POST("/v1/analyze", {
-    body: { schema_version: HAQUMEI_SCHEMA_VERSION, texts },
-  });
+  const response = await inAnalyzeQueue(() =>
+    getHaqumeiApiClient(serverEnv).POST("/v1/analyze", {
+      body: { schema_version: HAQUMEI_SCHEMA_VERSION, texts },
+    }),
+  );
   const data = unwrapHaqumeiData(response);
   if (data.schema_version !== HAQUMEI_SCHEMA_VERSION) {
     throw new Error(`haqumei-api analyze returned schema_version ${data.schema_version}`);

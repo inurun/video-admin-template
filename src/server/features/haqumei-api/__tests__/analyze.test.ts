@@ -131,3 +131,56 @@ describe("analyzeTexts", () => {
     ]);
   });
 });
+
+describe("analyze queue", () => {
+  it("sends one analyze request at a time, whoever asks", async () => {
+    let inFlight = 0;
+    let most = 0;
+    const releases: (() => void)[] = [];
+    getHaqumeiApiClientMock.mockReturnValue({
+      POST: async (_path: string, { body }: { body: { texts: string[] } }) => {
+        inFlight += 1;
+        most = Math.max(most, inFlight);
+        await new Promise<void>((resolve) => releases.push(resolve));
+        inFlight -= 1;
+        return {
+          response: new Response(null, { status: 200 }),
+          data: {
+            schema_version: "3",
+            items: body.texts.map((text) => ({ ...createG2pItem(text, `${text}:ア'`) })),
+          },
+        };
+      },
+    });
+
+    const first = analyzeTexts({}, ["一"]);
+    const second = analyzeTexts({}, ["二"]);
+    for (let i = 0; i < 2; i += 1) {
+      await vi.waitFor(() => expect(releases.length).toBe(i + 1));
+      releases[i]!();
+    }
+
+    await expect(first).resolves.toHaveLength(1);
+    await expect(second).resolves.toHaveLength(1);
+    expect(most).toBe(1);
+  });
+
+  it("goes on with the next request after one fails", async () => {
+    getHaqumeiApiClientMock
+      .mockReturnValueOnce({
+        POST: async () => ({
+          response: new Response(null, { status: 503 }),
+          error: { title: "Busy", status: 503, code: "busy", detail: "busy", errors: [] },
+        }),
+      })
+      .mockReturnValueOnce({
+        POST: async () => ({
+          response: new Response(null, { status: 200 }),
+          data: { schema_version: "3", items: [createG2pItem("二", "二:ニ'")] },
+        }),
+      });
+
+    await expect(analyzeTexts({}, ["一"])).rejects.toThrow();
+    await expect(analyzeTexts({}, ["二"])).resolves.toHaveLength(1);
+  });
+});
