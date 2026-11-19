@@ -14,7 +14,11 @@ import type { ServerEnv } from "@/server/core/env";
 import { AUDIO_PADDING_SECONDS } from "@/constants";
 import { enqueueProjectMutation } from "./project-mutation-queue";
 import { startSynthesisBatch, type SynthesisJob } from "./tts-synthesis-jobs";
-import { buildG2pContext, type G2pTarget } from "@/server/features/tts/g2p-context";
+import {
+  buildG2pContext,
+  type G2pPageContext,
+  type G2pTarget,
+} from "@/server/features/tts/g2p-context";
 import { generateG2pWithCache } from "@/server/features/tts/llm-g2p";
 import { resolveTtsSynthesisSettings } from "@/server/features/tts/synthesis-settings";
 import {
@@ -27,6 +31,7 @@ import type { SpeechPipeline } from "@/video-host/contract";
 import { getEffectiveReadText, getUsableG2p } from "@/server/features/tts/providers/comparison";
 import { getSpeechPipeline, toSynthesisProsody } from "@/server/features/tts/speech-pipeline";
 import { analyzeProsody, type ProsodyTarget } from "@/server/features/tts/prosody/pipeline";
+import type { ProsodySourceContext } from "@/server/features/tts/prosody/sources/types";
 import { prosodySourceFor } from "@/server/features/tts/prosody/source-config";
 
 const inFlightJobs = new Map<string, Promise<void>>();
@@ -176,28 +181,10 @@ async function applyAnalysisResults(
   startSynthesisBatch(projectPath, jobs);
 }
 
-/** The prosody targets once `after` is done, read again: the voice emotions may have changed. */
-async function prosodyTargetsAfter(
-  projectPath: string,
-  requested: AnalysisJobTarget[],
-  after: Promise<void> | undefined,
-  project: SavedProject,
-) {
-  const isProsody = (target: AnalyzeTarget) =>
-    getSpeechPipeline(target.item.provider).pipeline === "prosody";
-  if (!after) {
-    return { project, targets: collectAnalyzeTargets(project, requested).filter(isProsody) };
-  }
-  await after;
-  const fresh = await readSavedProject(projectPath);
-  return { project: fresh, targets: collectAnalyzeTargets(fresh, requested).filter(isProsody) };
-}
-
 async function runAnalysisBatch(
   serverEnv: ServerEnv,
   projectPath: string,
   requested: AnalysisJobTarget[],
-  after: Promise<void> | undefined,
 ) {
   const project = await readSavedProject(projectPath);
   const targets = collectAnalyzeTargets(project, requested);
@@ -207,14 +194,10 @@ async function runAnalysisBatch(
 
   const withPipeline = (pipeline: SpeechPipeline) =>
     targets.filter((target) => getSpeechPipeline(target.item.provider).pipeline === pipeline);
-  const prosody = async () => {
-    const waited = await prosodyTargetsAfter(projectPath, requested, after, project);
-    return runProsody(serverEnv, projectPath, waited.project, waited.targets);
-  };
   // One pipeline failing leaves its items analyzing; the other still goes on to synthesis.
   const settled = await Promise.allSettled([
     runLlmG2p(serverEnv, project, withPipeline("llm-g2p")),
-    withPipeline("prosody").length > 0 ? prosody() : Promise.resolve(new Map()),
+    runProsody(serverEnv, projectPath, project, withPipeline("prosody")),
   ]);
   const results = new Map<string, AnalysisResult>();
   for (const outcome of settled) {
@@ -247,8 +230,37 @@ async function runLlmG2p(
   return new Map([...generated].map(([ttsId, result]) => [ttsId, { g2p: result.g2p }]));
 }
 
+/** Utterances the reference TTS hears on each side of a target, within its page (comment group). */
+const PROSODY_CONTEXT_UTTERANCES = 2;
+
+export function prosodyContexts(pages: readonly G2pPageContext[]) {
+  const contexts = new Map<string, ProsodySourceContext>();
+  for (const { utterances } of pages) {
+    utterances.forEach((utterance, index) => {
+      if (!utterance.target) {
+        return;
+      }
+      const join = (from: number, to: number) =>
+        utterances
+          .slice(Math.max(from, 0), to)
+          .map((u) => u.text)
+          .join("");
+      const previous = join(index - PROSODY_CONTEXT_UTTERANCES, index);
+      const next = join(index + 1, index + 1 + PROSODY_CONTEXT_UTTERANCES);
+      if (previous || next) {
+        contexts.set(utterance.id, {
+          ...(previous ? { previous } : {}),
+          ...(next ? { next } : {}),
+        });
+      }
+    });
+  }
+  return contexts;
+}
+
 /**
- * Same read text, saved kana and reference TTS run once.
+ * Same read text, saved kana and reference TTS run once, with the context of the first one:
+ * the context is not part of any cache key.
  */
 async function runProsody(
   serverEnv: ServerEnv,
@@ -259,6 +271,7 @@ async function runProsody(
   if (targets.length === 0) {
     return new Map();
   }
+  const contexts = prosodyContexts(buildG2pContext(project.pages, targets));
   const prosodyTargets = new Map<string, ProsodyTarget>();
   const keyByTtsId = new Map<string, string>();
   for (const { item } of targets) {
@@ -268,7 +281,13 @@ async function runProsody(
     const key = stableStringify({ readText, kana: g2p?.kana ?? null, source });
     keyByTtsId.set(item.id, key);
     if (!prosodyTargets.has(key)) {
-      prosodyTargets.set(key, { readText, source, ...(g2p ? { g2p } : {}) });
+      const context = contexts.get(item.id);
+      prosodyTargets.set(key, {
+        readText,
+        source,
+        ...(g2p ? { g2p } : {}),
+        ...(context ? { context } : {}),
+      });
     }
   }
   const keys = [...prosodyTargets.keys()];
@@ -277,15 +296,10 @@ async function runProsody(
   return new Map([...keyByTtsId].map(([ttsId, key]) => [ttsId, byKey.get(key)!] as const));
 }
 
-/**
- * `after`: the prosody pipeline waits for it (the Auto Expression jobs of the same save, which
- * set the voice emotions its reference reads with).
- */
 export function startAnalysisBatch(
   serverEnv: ServerEnv,
   projectPath: string,
   jobs: AnalysisJobTarget[],
-  after?: Promise<void>,
 ) {
   const pending = jobs.filter((job) => !hasInFlightAnalysisJob(projectPath, job.analysisKey));
   if (pending.length === 0) {
@@ -294,7 +308,7 @@ export function startAnalysisBatch(
 
   const keys = pending.map((job) => jobKey(projectPath, job.analysisKey));
   const task = Promise.resolve()
-    .then(() => runAnalysisBatch(serverEnv, projectPath, pending, after))
+    .then(() => runAnalysisBatch(serverEnv, projectPath, pending))
     .catch((error: unknown) => {
       console.error("[tts-analysis]", error);
     })

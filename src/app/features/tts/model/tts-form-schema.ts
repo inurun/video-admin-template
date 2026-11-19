@@ -4,7 +4,6 @@ import {
   avatarOverrideSchema,
   avatarSourceSchema,
   coeiroinkSynthesisSettingsSchema,
-  voiceEmotionSchema,
   voicepeakSynthesisSettingsSchema,
   voicevoxSynthesisSettingsSchema,
   voisonaSynthesisSettingsSchema,
@@ -24,7 +23,6 @@ const ttsFormBaseSchema = {
   speech: ttsFormSpeechSchema.optional(),
   avatar: avatarOverrideSchema.optional(),
   avatarSource: avatarSourceSchema.optional(),
-  voiceEmotion: voiceEmotionSchema.optional(),
 };
 
 const namedTtsFormIdentity = {

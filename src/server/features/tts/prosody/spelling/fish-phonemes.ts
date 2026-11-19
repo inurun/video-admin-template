@@ -1,5 +1,5 @@
 import { pitchesForAccent, splitKanaMoras } from "@/_schemas";
-import { applyReadings } from "./reading-check";
+import { applyReadings } from "../reading-check";
 
 /**
  * Fish Audio phoneme tags for the reference TTS: OpenJTalk romaji with a pitch digit after each

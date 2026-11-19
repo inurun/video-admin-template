@@ -50,7 +50,6 @@ export function createDraftComparisonInput<TProvider extends TtsProvider>(
     readText,
     ...(g2p ? { g2p } : {}),
     synthesisSettings: normalizeSynthesisSettings(raw.synthesisSettings),
-    ...(raw.voiceEmotion ? { voiceEmotion: raw.voiceEmotion } : {}),
   };
 
   if (raw.provider === "coeiroink") {
@@ -81,7 +80,6 @@ export function createPreviousComparisonInput<TProvider extends TtsProvider>(
     readText: normalizeOptionalString(raw.readText),
     ...(g2p ? { g2p } : {}),
     synthesisSettings: normalizeSynthesisSettings(raw.synthesisSettings),
-    ...(raw.voiceEmotion ? { voiceEmotion: raw.voiceEmotion } : {}),
   };
 
   if (raw.provider === "coeiroink") {

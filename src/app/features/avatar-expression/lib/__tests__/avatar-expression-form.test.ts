@@ -44,36 +44,16 @@ describe("avatar expression form", () => {
       toAvatarExpressionWrites(values, {
         avatars: {},
         tts: [
-          {
-            id: "b",
-            avatar: { eyes: "closed" },
-            voiceEmotion: "joy",
-            avatarSource: { kind: "auto", key: "k1" },
-          },
-          { id: "a", avatar: null, voiceEmotion: null, avatarSource: { kind: "auto", key: "k2" } },
-          {
-            id: "gone",
-            avatar: null,
-            voiceEmotion: null,
-            avatarSource: { kind: "auto", key: "k3" },
-          },
+          { id: "b", avatar: { eyes: "closed" }, avatarSource: { kind: "auto", key: "k1" } },
+          { id: "a", avatar: null, avatarSource: { kind: "auto", key: "k2" } },
+          { id: "gone", avatar: null, avatarSource: { kind: "auto", key: "k3" } },
         ],
       }),
     ).toEqual({
       avatars: undefined,
       tts: [
-        {
-          index: 1,
-          avatar: { eyes: "closed" },
-          voiceEmotion: "joy",
-          avatarSource: { kind: "auto", key: "k1" },
-        },
-        {
-          index: 0,
-          avatar: undefined,
-          voiceEmotion: undefined,
-          avatarSource: { kind: "auto", key: "k2" },
-        },
+        { index: 1, avatar: { eyes: "closed" }, avatarSource: { kind: "auto", key: "k1" } },
+        { index: 0, avatar: undefined, avatarSource: { kind: "auto", key: "k2" } },
       ],
     });
   });

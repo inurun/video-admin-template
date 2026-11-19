@@ -163,30 +163,6 @@ describe("page form values", () => {
     expect(merged.tts[1]).toBe(current.tts[1]);
   });
 
-  it("takes the voice emotion auto set, and drops one auto cleared", () => {
-    const auto = { kind: "auto" as const, key: "k" };
-    const current = toPageFormValues(
-      createSavedMainPage({
-        tts: [
-          createSavedTts({ id: "a", avatarSource: auto }),
-          createSavedTts({ id: "b", voiceEmotion: "joy", avatarSource: auto }),
-        ],
-      }),
-    );
-    const saved = toPageFormValues(
-      createSavedMainPage({
-        tts: [
-          createSavedTts({ id: "a", voiceEmotion: "annoyed", avatarSource: auto }),
-          createSavedTts({ id: "b", avatarSource: auto }),
-        ],
-      }),
-    );
-
-    const merged = mergeSavedSpeechIntoPageForm(current, saved);
-    expect(merged.tts[0]?.voiceEmotion).toBe("annoyed");
-    expect(merged.tts[1]).not.toHaveProperty("voiceEmotion");
-  });
-
   it("applies polled expressions only to lines unchanged since the last save", () => {
     const key = "k";
     const previous = createSavedMainPage({

@@ -1,9 +1,4 @@
-import {
-  DEFAULT_VOICE_EMOTION,
-  resolveAvatarSettings,
-  type AvatarType,
-  type VoiceEmotion,
-} from "@/_schemas/catalog";
+import { resolveAvatarSettings, type AvatarType } from "@/_schemas/catalog";
 import type { SavedPage, SavedSequenceItem } from "@/_schemas";
 import { listSavedProjects, readSavedProjectFile } from "@/server/_shared/storage";
 import {
@@ -28,8 +23,6 @@ export type TurnRecord = {
   lines: string[];
   eyes: string;
   mouth: string;
-  /** One per line. */
-  voices: VoiceEmotion[];
 };
 
 export type BaseRecord = {
@@ -91,7 +84,6 @@ function collectPage(page: MainPage, history: ExpressionHistory) {
       lines: turn.items.map((item) => lineText(item.text)),
       eyes: labels.eyes,
       mouth: labels.mouth,
-      voices: turn.items.map((item) => item.voiceEmotion ?? DEFAULT_VOICE_EMOTION),
     });
   });
 
@@ -152,18 +144,12 @@ function takePerKey<T>(records: readonly T[], keysOf: (record: T) => string[], p
   return [...picked];
 }
 
-/**
- * Up to `perLabel` newest examples for every avatar × field × label and every voice emotion,
- * default included.
- */
+/** Up to `perLabel` newest examples for every avatar × field × label, default included. */
 export function selectExamples(history: ExpressionHistory, perLabel: number): ExpressionHistory {
   return {
     turns: takePerKey(
       history.turns,
-      (record) => [
-        ...TURN_FIELDS.map((field) => `${record.avatar}:${field}:${record[field]}`),
-        ...record.voices.map((voice) => `voice:${voice}`),
-      ],
+      (record) => TURN_FIELDS.map((field) => `${record.avatar}:${field}:${record[field]}`),
       perLabel,
     ),
     bases: takePerKey(history.bases, (record) => [`${record.avatar}:${record.base}`], perLabel),

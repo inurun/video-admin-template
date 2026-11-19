@@ -45,22 +45,17 @@ afterEach(() => {
 });
 
 describe("generateAvatarExpressions", () => {
-  it("asks per turn and writes the pick back to each line, with a voice emotion per line", async () => {
+  it("asks per turn and writes the pick back to each line", async () => {
     const fetchMock = vi.fn(async () =>
-      respond({
-        bases: [],
-        turns: [
-          { id: "t1", eyes: "shaded-opened", mouth: "default", voices: ["annoyed", "neutral"] },
-        ],
-      }),
+      respond({ bases: [], turns: [{ id: "t1", eyes: "shaded-opened", mouth: "default" }] }),
     );
     vi.stubGlobal("fetch", fetchMock);
 
     const result = await generateAvatarExpressions(env, { projectPath: "2026-10-26", page });
 
     expect(result.tts.map(({ avatarSource: _source, ...item }) => item)).toEqual([
-      { id: "a", avatar: { eyes: "shaded-opened" }, voiceEmotion: "annoyed" },
-      { id: "b", avatar: { eyes: "shaded-opened" }, voiceEmotion: null },
+      { id: "a", avatar: { eyes: "shaded-opened" } },
+      { id: "b", avatar: { eyes: "shaded-opened" } },
     ]);
     expect(result.tts.map((item) => item.avatarSource.kind)).toEqual(["auto", "auto"]);
     expect(result.tts[0]!.avatarSource).toEqual(result.tts[1]!.avatarSource);
@@ -75,40 +70,18 @@ describe("generateAvatarExpressions", () => {
     expect(
       body.response_format.json_schema.schema.properties.turns.items.properties.id.enum,
     ).toEqual(["t1"]);
-    expect(
-      body.response_format.json_schema.schema.properties.turns.items.properties.voices.items.enum,
-    ).toContain("annoyed");
-    expect(body.messages[0].content).toContain("annoyed=苛立ち・怒り");
     expect(writeFileMock).toHaveBeenCalledOnce();
   });
 
   it("falls back to default for an option the character does not have", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        respond({ bases: [], turns: [{ id: "t1", eyes: "jitome", mouth: "x", voices: [] }] }),
-      ),
+      vi.fn(async () => respond({ bases: [], turns: [{ id: "t1", eyes: "jitome", mouth: "x" }] })),
     );
 
     const result = await generateAvatarExpressions(env, { projectPath: "2026-10-26", page });
 
     expect(result.tts.map((item) => item.avatar)).toEqual([null, null]);
-  });
-
-  it("reads a missing or unknown voice emotion as neutral", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () =>
-        respond({
-          bases: [],
-          turns: [{ id: "t1", eyes: "default", mouth: "default", voices: ["furious"] }],
-        }),
-      ),
-    );
-
-    const result = await generateAvatarExpressions(env, { projectPath: "2026-10-26", page });
-
-    expect(result.tts.map((item) => item.voiceEmotion)).toEqual([null, null]);
   });
 
   it("skips the LLM when the page has no lines", async () => {

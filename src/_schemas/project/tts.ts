@@ -4,7 +4,6 @@ import {
   avatarOverrideSchema,
   avatarSourceSchema,
   coeiroinkSynthesisSettingsSchema,
-  voiceEmotionSchema,
   voicepeakSynthesisSettingsSchema,
   voicevoxSynthesisSettingsSchema,
   voisonaSynthesisSettingsSchema,
@@ -24,7 +23,6 @@ const ttsBaseSchema = z.object({
   speech: ttsSpeechSchema.optional(),
   avatar: avatarOverrideSchema.optional(),
   avatarSource: avatarSourceSchema.optional(),
-  voiceEmotion: voiceEmotionSchema.optional(),
 });
 
 const namedTtsIdentity = {

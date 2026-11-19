@@ -1,7 +1,5 @@
 import type { ServerEnv } from "@/server/core/env";
-import { OpenRouterError, postOpenRouter } from "@/server/core/openrouter";
-import { PROSODY_SOURCE, PROSODY_SOURCE_VOICES } from "./profiles";
-import type { ProsodySource } from "./source-config";
+import { OpenRouterError, postOpenRouter, type OpenRouterProfile } from "@/server/core/openrouter";
 
 const OPENROUTER_SPEECH_URL = "https://openrouter.ai/api/v1/audio/speech";
 
@@ -23,11 +21,11 @@ export function wavFromPcm(pcm: Buffer, sampleRate: number) {
   return Buffer.concat([header, pcm]);
 }
 
-/** Reads `text` with the reference TTS of `source` (its tag first) and returns a WAV. */
-export async function synthesizeProsodySource(
+/** OpenRouter `/audio/speech` with `response_format: "pcm"`, returned as a WAV. */
+export async function openRouterSpeech(
   serverEnv: ServerEnv,
-  text: string,
-  source: ProsodySource,
+  profile: Pick<OpenRouterProfile, "timeoutMs" | "retryLimit"> & { sampleRate: number },
+  body: Record<string, unknown>,
 ) {
   const apiKey = serverEnv.OPENROUTER_API_KEY?.trim();
   if (!apiKey) {
@@ -37,20 +35,15 @@ export async function synthesizeProsodySource(
   const response = await postOpenRouter(
     OPENROUTER_SPEECH_URL,
     apiKey,
-    PROSODY_SOURCE,
-    JSON.stringify({
-      model: source.model,
-      input: source.tag ? `${source.tag} ${text}` : text,
-      voice: PROSODY_SOURCE_VOICES[source.voice],
-      response_format: "pcm",
-    }),
+    profile,
+    JSON.stringify({ ...body, response_format: "pcm" }),
   );
   if (!response.ok) {
-    const body = await response.text();
+    const text = await response.text();
     throw new OpenRouterError(
-      `OpenRouter speech failed: HTTP ${response.status}${body ? ` ${body}` : ""}`,
+      `OpenRouter speech failed: HTTP ${response.status}${text ? ` ${text}` : ""}`,
       response.status,
-      body,
+      text,
     );
   }
 
@@ -58,5 +51,8 @@ export async function synthesizeProsodySource(
   if (pcm.length === 0) {
     throw new OpenRouterError("OpenRouter speech returned no audio", response.status);
   }
-  return wavFromPcm(pcm, source.sampleRate);
+  return wavFromPcm(pcm, profile.sampleRate);
 }
+
+/** The text with its tag first. */
+export const taggedText = (text: string, tag: string) => (tag ? `${tag} ${text}` : text);

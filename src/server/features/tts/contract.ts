@@ -1,7 +1,6 @@
 import { z } from "zod";
 import {
   g2pItemSchema,
-  voiceEmotionSchema,
   voiceOptionSchema,
   voiceProviderSchema,
   coeiroinkSynthesisSettingsSchema,
@@ -39,7 +38,6 @@ export const ttsG2pGenerateRequestSchema = z.object({
     provider: voiceProviderSchema,
     voiceName: z.string().optional(),
     voiceVersion: z.string().optional(),
-    voiceEmotion: voiceEmotionSchema.optional(),
     previous: ttsG2pNeighborSchema.optional(),
     next: ttsG2pNeighborSchema.optional(),
   }),
@@ -63,7 +61,6 @@ export const ttsSynthesizeRequestSchema = z.discriminatedUnion("provider", [
     voiceName: z.string().min(1),
     voiceVersion: z.string().optional(),
     synthesisSettings: voisonaSynthesisSettingsSchema.nullish(),
-    voiceEmotion: voiceEmotionSchema.optional(),
   }),
   z.object({
     provider: z.literal("voicevox"),
@@ -73,7 +70,6 @@ export const ttsSynthesizeRequestSchema = z.discriminatedUnion("provider", [
     voiceName: z.string().min(1),
     voiceVersion: z.string().optional(),
     synthesisSettings: voicevoxSynthesisSettingsSchema.nullish(),
-    voiceEmotion: voiceEmotionSchema.optional(),
   }),
   z.object({
     provider: z.literal("voicepeak"),

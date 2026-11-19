@@ -27,7 +27,6 @@ export function toTtsFormValues(item: SavedTts): TtsFormValues {
     ...(item.synthesisSettings ? { synthesisSettings: item.synthesisSettings } : {}),
     ...(item.avatar ? { avatar: item.avatar } : {}),
     ...(item.avatarSource ? { avatarSource: item.avatarSource } : {}),
-    ...(item.voiceEmotion ? { voiceEmotion: item.voiceEmotion } : {}),
     speech: item.speech.g2p ? { g2p: item.speech.g2p } : {},
   } as TtsFormValues;
 }
@@ -88,27 +87,25 @@ export function toPageFormValues(page: SavedPage): PageFormValues {
   };
 }
 
-type AvatarFields = Pick<TtsFormValues, "avatar" | "avatarSource" | "voiceEmotion">;
+type AvatarFields = Pick<TtsFormValues, "avatar" | "avatarSource">;
 
 function avatarFieldsEqual(left: AvatarFields | undefined, right: AvatarFields | undefined) {
   return (
     avatarOverridesEqual(left?.avatar, right?.avatar) &&
-    left?.voiceEmotion === right?.voiceEmotion &&
     JSON.stringify(left?.avatarSource ?? null) === JSON.stringify(right?.avatarSource ?? null)
   );
 }
 
 function withSavedAvatar(item: TtsFormValues, saved: AvatarFields): TtsFormValues {
-  const { avatar: _avatar, avatarSource: _source, voiceEmotion: _voiceEmotion, ...rest } = item;
+  const { avatar: _avatar, avatarSource: _source, ...rest } = item;
   return {
     ...rest,
     ...(saved.avatar ? { avatar: saved.avatar } : {}),
-    ...(saved.voiceEmotion ? { voiceEmotion: saved.voiceEmotion } : {}),
     ...(saved.avatarSource ? { avatarSource: saved.avatarSource } : {}),
   } as TtsFormValues;
 }
 
-/** Server-owned tts fields: the g2p it generated and the expressions (voice emotions too) auto set. */
+/** Server-owned tts fields: the g2p it generated and the expressions auto set. */
 export function mergeSavedSpeechIntoPageForm(
   current: PageFormValues,
   savedFormPage: PageFormValues,

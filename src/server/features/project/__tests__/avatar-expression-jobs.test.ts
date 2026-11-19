@@ -1,22 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SavedProject, SavedTts } from "@/_schemas";
-import { createG2pItem } from "@/_schemas/__tests__/g2p-fixture";
 import { expressionTurnKey } from "@/server/features/avatar-expression/expression";
 
-const { predictMock, readSavedProjectMock, writeSavedProjectMock, startAnalysisBatchMock } =
-  vi.hoisted(() => ({
-    predictMock: vi.fn(),
-    readSavedProjectMock: vi.fn(),
-    writeSavedProjectMock: vi.fn(),
-    startAnalysisBatchMock: vi.fn(),
-  }));
+const { predictMock, readSavedProjectMock, writeSavedProjectMock } = vi.hoisted(() => ({
+  predictMock: vi.fn(),
+  readSavedProjectMock: vi.fn(),
+  writeSavedProjectMock: vi.fn(),
+}));
 
 vi.mock("@/server/_shared/storage", () => ({
   readSavedProject: readSavedProjectMock,
   readSavedProjectDocument: vi.fn(async () => ({ timeline: undefined })),
   writeSavedProject: writeSavedProjectMock,
 }));
-vi.mock("../tts-analysis-jobs", () => ({ startAnalysisBatch: startAnalysisBatchMock }));
 vi.mock("@/server/features/avatar-expression/use-case", async (importOriginal) => {
   const original =
     await importOriginal<typeof import("@/server/features/avatar-expression/use-case")>();
@@ -157,66 +153,5 @@ describe("avatar expression jobs", () => {
     await flushExpressionJobsForTests();
 
     expect(savedLines()?.[0]?.avatarSource).toEqual({ kind: "failed", key });
-  });
-
-  it("writes each line's voice emotion, leaving neutral unset", async () => {
-    const key = expressionTurnKey("demo", ["一", "二"]);
-    readSavedProjectMock.mockResolvedValue(
-      project([
-        tts("a", "一", { avatarSource: { kind: "pending", key } }),
-        tts("b", "二", { voiceEmotion: "joy", avatarSource: { kind: "pending", key } }),
-      ]),
-    );
-    predictMock.mockImplementation(async (_env, input) => ({
-      turns: buildExpressionTurns(input.tts),
-      picks: {
-        bases: {},
-        turns: { t1: { eyes: "default", mouth: "default", voices: ["annoyed", "neutral"] } },
-      },
-      usage: {},
-    }));
-
-    startExpressionJobs(env, "p", [{ pageId: "page", keys: [key] }]);
-    await flushExpressionJobsForTests();
-
-    expect(savedLines()?.map((line) => line.voiceEmotion)).toEqual(["annoyed", undefined]);
-  });
-
-  it("analyzes a made prosody line again when its voice emotion changed", async () => {
-    const key = expressionTurnKey("demo", ["一", "二"]);
-    const ready = { status: "ready", src: "/tts/p/x.wav", durationSec: 1 } as const;
-    readSavedProjectMock.mockResolvedValue(
-      project([
-        tts("a", "一", {
-          speech: { g2p: createG2pItem("一", "一:イ'チ") },
-          audio: ready,
-          avatarSource: { kind: "pending", key },
-        }),
-        tts("b", "二", {
-          speech: { g2p: createG2pItem("二", "二:ニ'") },
-          audio: ready,
-          avatarSource: { kind: "pending", key },
-        }),
-      ]),
-    );
-    predictMock.mockImplementation(async (_env, input) => ({
-      turns: buildExpressionTurns(input.tts),
-      picks: {
-        bases: {},
-        turns: { t1: { eyes: "default", mouth: "default", voices: ["joy", "neutral"] } },
-      },
-      usage: {},
-    }));
-
-    const done = startExpressionJobs(env, "p", [{ pageId: "page", keys: [key] }]);
-    await done;
-
-    const [a, b] = savedLines()!;
-    expect(a!.audio).toEqual({ status: "analyzing", analysisKey: expect.any(String) });
-    expect(b!.audio).toEqual(ready);
-    const { analysisKey } = a!.audio as { analysisKey: string };
-    expect(startAnalysisBatchMock).toHaveBeenCalledWith(env, "p", [
-      { pageId: "page", ttsId: "a", analysisKey },
-    ]);
   });
 });

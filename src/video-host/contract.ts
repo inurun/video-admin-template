@@ -85,18 +85,20 @@ export type VideoSpeechConfig = {
 
 export type SpeechPipeline = NonNullable<VideoSpeechConfig[SavedTts["provider"]]>["pipeline"];
 
-/** Reference TTS voices (Fish Audio Drama 3, Fish Official) the prosody pipeline may read with. */
-export type ProsodySourceVoice = "hina" | "shiori";
+/** Reference TTSes the prosody pipeline can read with (adapters in `server/features/tts/prosody/sources`). */
+export type ProsodySourceId = "eleven-v4-turbo" | "drama-3";
 
 /**
- * Reference TTS of the prosody pipeline. One `voice` reads every character; each character
- * may set its own Drama 3 direction, written in brackets and put before the text
- * (e.g. `[tired]`, `[whispering, sleepy]`). `tags` is keyed by voice id
+ * Reference TTS of the prosody pipeline. `source` picks the model and `voice` is that model's
+ * own voice id (ElevenLabs voice id, Fish Audio voice id). One voice reads every character; each
+ * character may set its own audio tag, written in brackets and put before the text
+ * (e.g. `[tired]`, `[in a monotone]`). `tags` is keyed by voice id
  * (`provider::voiceName::voiceVersion`, e.g. `voicevox::113::`); a character left out reads
- * with `defaultTag`, and `""` reads without a tag.
+ * with `defaultTag`, and `""` reads without a tag. Tags are billed as text.
  */
 export type VideoSpeechVoiceConfig = {
-  voice: ProsodySourceVoice;
+  source: ProsodySourceId;
+  voice: string;
   defaultTag: string;
   tags: { [voiceId: string]: string };
 };

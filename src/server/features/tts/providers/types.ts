@@ -1,4 +1,4 @@
-import type { SavedTts, G2pItem, VoiceEmotion } from "@/_schemas";
+import type { SavedTts, G2pItem } from "@/_schemas";
 import type { SaveTtsItem } from "@/server/features/project/contract";
 import type { ServerEnv } from "@/server/core/env";
 import type { SynthesizeResponse } from "@/server/features/tts/contract";
@@ -24,8 +24,6 @@ type ComparisonBase<TProvider extends TtsProvider> = {
   readText: string;
   g2p?: G2pItem;
   synthesisSettings?: NonNullable<TtsInputForProvider<TProvider>["synthesisSettings"]>;
-  /** The prosody reference reads with it, so a change makes the audio again. */
-  voiceEmotion?: VoiceEmotion;
 };
 
 export type TtsComparisonInput<TProvider extends TtsProvider = TtsProvider> = Extract<

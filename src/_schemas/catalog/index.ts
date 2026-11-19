@@ -25,10 +25,3 @@ export {
   DEFAULT_VOICE_PRESETS,
   KASANE_TETO_NARRATOR,
 } from "./voices";
-export {
-  DEFAULT_VOICE_EMOTION,
-  VOICE_EMOTIONS,
-  voiceEmotionDirection,
-  voiceEmotions,
-  type VoiceEmotion,
-} from "./voice-emotions";

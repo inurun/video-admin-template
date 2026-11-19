@@ -1,5 +1,5 @@
 import { copyVoiceIdentity, hasVoiceIdentity, toVoiceIdentity } from "@/_schemas";
-import type { G2pItem, VoiceEmotion } from "@/_schemas";
+import type { G2pItem } from "@/_schemas";
 import type { TtsFormValues } from "@/app/features/tts/model/tts-form-schema";
 
 export type PreviewSynthesisPayload = {
@@ -13,8 +13,6 @@ export type PreviewSynthesisPayload = {
   styleId?: number;
   modelVersion?: string;
   synthesisSettings?: NonNullable<TtsFormValues["synthesisSettings"]>;
-  /** The prosody reference reads with it. */
-  voiceEmotion?: VoiceEmotion;
 };
 
 function getTextForSynthesis(item: TtsFormValues) {
@@ -48,7 +46,6 @@ export function getPreviewPayload(
       voiceName,
       ...(voiceVersion ? { voiceVersion } : {}),
       ...(item.synthesisSettings ? { synthesisSettings: item.synthesisSettings } : {}),
-      ...(item.voiceEmotion ? { voiceEmotion: item.voiceEmotion } : {}),
     };
   }
 

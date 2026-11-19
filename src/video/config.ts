@@ -33,11 +33,13 @@ export const speechConfig = {
 } satisfies VideoSpeechConfig;
 
 /**
- * Data only: the prosody pipeline's reference TTS. One voice for everyone; audio tags per
- * character (keyed by voice id), `defaultTag` for the rest.
+ * Data only: the prosody pipeline's reference TTS (`source`) and its voice. One voice for
+ * everyone; audio tags per character (keyed by voice id), `defaultTag` for the rest.
+ * Drama 3 instead: `{ source: "drama-3", voice: "bf5634e34ee5489991fe687ad0d202c5" }` (Hina).
  */
 export const speechVoiceConfig = {
-  voice: "hina",
+  source: "eleven-v4-turbo",
+  voice: "mDxkcO3nsRCNeB4si9qg",
   defaultTag: "",
   tags: {
     // "voicevox::113::": "[tired]",

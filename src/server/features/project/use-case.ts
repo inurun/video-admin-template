@@ -379,7 +379,6 @@ function createTtsFields(
     ...(item.synthesisSettings ? { synthesisSettings: item.synthesisSettings } : {}),
     ...(item.avatar ? { avatar: item.avatar } : {}),
     ...(item.avatarSource ? { avatarSource: item.avatarSource } : {}),
-    ...(item.voiceEmotion ? { voiceEmotion: item.voiceEmotion } : {}),
     speech: nextInput.g2p ? { g2p: nextInput.g2p } : {},
   };
 }
@@ -597,7 +596,6 @@ async function buildSavedTts(
       text: plan.item.text,
       effectiveReadText: plan.nextInput.readText,
       ...(kana ? { kana } : {}),
-      ...(plan.nextInput.voiceEmotion ? { voiceEmotion: plan.nextInput.voiceEmotion } : {}),
     });
     return {
       tts: createAnalyzingSavedTts(
@@ -766,7 +764,6 @@ function toSaveTtsItemFromSaved(item: SavedTts): SaveTtsItem {
     ...(item.synthesisSettings ? { synthesisSettings: item.synthesisSettings } : {}),
     ...(item.avatar ? { avatar: item.avatar } : {}),
     ...(item.avatarSource ? { avatarSource: item.avatarSource } : {}),
-    ...(item.voiceEmotion ? { voiceEmotion: item.voiceEmotion } : {}),
     speech: item.speech.g2p ? { g2p: item.speech.g2p } : {},
   } as SaveTtsItem;
 }
@@ -1004,15 +1001,9 @@ async function saveProjectChangesLocked(
     previousDocument.timeline,
   );
   void recordG2pCache(savedG2pRecords(plannedPages.flatMap((planned) => planned.tts)));
-  // Expressions first: the prosody analysis waits for the voice emotions they set.
-  const expressionsDone = startExpressionJobs(serverEnv, projectPath, expressionJobs);
-  startAnalysisBatch(
-    serverEnv,
-    projectPath,
-    analysisJobs,
-    expressionJobs.length > 0 ? expressionsDone : undefined,
-  );
+  startAnalysisBatch(serverEnv, projectPath, analysisJobs);
   startSynthesisBatch(projectPath, jobs);
+  startExpressionJobs(serverEnv, projectPath, expressionJobs);
   return { project, timeline, updatedItemIds };
 }
 

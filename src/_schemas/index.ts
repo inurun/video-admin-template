@@ -29,18 +29,12 @@ export {
   resolveAvatarSettings,
   voiceNameAvatarMap,
   WEATHER_LOCATIONS,
-  DEFAULT_VOICE_EMOTION,
-  VOICE_EMOTIONS,
-  voiceEmotionDirection,
-  voiceEmotions,
-  type VoiceEmotion,
 } from "./catalog";
 export {
   avatarOptions,
   avatarOverrideSchema,
   avatarSourceSchema,
   avatarTypeSchema,
-  voiceEmotionSchema,
   mainPageMetaSchema,
   bgmTrackSchema,
   commentGroupSchema,

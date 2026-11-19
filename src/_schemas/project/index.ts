@@ -20,7 +20,6 @@ export {
   avatarOverrideSchema,
   avatarSourceSchema,
   avatarTypeSchema,
-  voiceEmotionSchema,
   mainPageMetaSchema,
   bgmTrackSchema,
   endcardAdvertiserSchema,

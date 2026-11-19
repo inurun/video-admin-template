@@ -13,8 +13,6 @@ export function createTtsAnalysisKey(input: {
   effectiveReadText: string;
   /** The saved kana, when only its prosody is being made. */
   kana?: string;
-  /** The prosody reference reads with it. */
-  voiceEmotion?: string;
 }) {
   return crypto
     .createHash("md5")
@@ -28,7 +26,6 @@ export function createTtsAnalysisKey(input: {
         text: input.text,
         effectiveReadText: input.effectiveReadText,
         ...(input.kana ? { kana: input.kana } : {}),
-        ...(input.voiceEmotion ? { voiceEmotion: input.voiceEmotion } : {}),
         profileId: LLM_G2P_PROFILE.id,
       }),
     )

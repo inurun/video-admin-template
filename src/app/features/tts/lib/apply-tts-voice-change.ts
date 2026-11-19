@@ -15,7 +15,6 @@ export function applyTtsVoiceChange(item: TtsFormValues, voice: VoiceOption): Tt
     },
     ...(item.avatar ? { avatar: item.avatar } : {}),
     ...(item.avatarSource ? { avatarSource: item.avatarSource } : {}),
-    ...(item.voiceEmotion ? { voiceEmotion: item.voiceEmotion } : {}),
   };
 
   if (voice.provider === "coeiroink") {
