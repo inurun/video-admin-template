@@ -1785,7 +1785,7 @@
           "aligner_version": {
             "type": "string",
             "description": "アライナのモデルと前処理の版。変わったら呼び出し側のキャッシュを作り直す。",
-            "example": "mms-fa-3"
+            "example": "mms-fa-4"
           },
           "moras": {
             "type": "array",
@@ -1838,7 +1838,7 @@
       },
       "ProsodyPause": {
         "type": "object",
-        "description": "Silence after a `、` `？` `！` phrase (not after the last phrase).",
+        "description": "Silence after a phrase (not after the last phrase): always after a `、` `？` `！` phrase, and\nafter a `/` phrase when the reference pauses there for at least `MIN_PHRASE_PAUSE_SEC`.",
         "required": ["after_mora", "sec"],
         "properties": {
           "after_mora": {

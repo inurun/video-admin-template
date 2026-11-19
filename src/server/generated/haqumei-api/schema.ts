@@ -477,7 +477,7 @@ export interface components {
         ProsodyExtractResponse: {
             /**
              * @description アライナのモデルと前処理の版。変わったら呼び出し側のキャッシュを作り直す。
-             * @example mms-fa-3
+             * @example mms-fa-4
              */
             aligner_version: string;
             /** @description kana のモーラ順に1つずつ。 */
@@ -508,7 +508,10 @@ export interface components {
              */
             vowel_start: number;
         };
-        /** @description Silence after a `、` `？` `！` phrase (not after the last phrase). */
+        /**
+         * @description Silence after a phrase (not after the last phrase): always after a `、` `？` `！` phrase, and
+         *     after a `/` phrase when the reference pauses there for at least `MIN_PHRASE_PAUSE_SEC`.
+         */
         ProsodyPause: {
             /** @description 0-based index of the last mora of the phrase. */
             after_mora: number;
