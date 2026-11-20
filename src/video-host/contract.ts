@@ -95,12 +95,15 @@ export type ProsodySourceId = "eleven-v4-turbo" | "drama-3";
  * (e.g. `[tired]`, `[in a monotone]`). `tags` is keyed by voice id
  * (`provider::voiceName::voiceVersion`, e.g. `voicevox::113::`); a character left out reads
  * with `defaultTag`, and `""` reads without a tag. Tags are billed as text.
+ * `contextUtterances`: utterances on each side of a line (same page / comment group) sent as
+ * context to a source that takes it; 0 sends none.
  */
 export type VideoSpeechVoiceConfig = {
   source: ProsodySourceId;
   voice: string;
   defaultTag: string;
   tags: { [voiceId: string]: string };
+  contextUtterances: number;
 };
 
 export type VideoDefinition = VideoAudioConfig & {

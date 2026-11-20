@@ -33,6 +33,7 @@ import { getSpeechPipeline, toSynthesisProsody } from "@/server/features/tts/spe
 import { analyzeProsody, type ProsodyTarget } from "@/server/features/tts/prosody/pipeline";
 import type { ProsodySourceContext } from "@/server/features/tts/prosody/sources/types";
 import { prosodySourceFor } from "@/server/features/tts/prosody/source-config";
+import { speechVoiceConfig } from "@/video/config";
 
 const inFlightJobs = new Map<string, Promise<void>>();
 const pendingBatches = new Set<Promise<void>>();
@@ -231,8 +232,6 @@ async function runLlmG2p(
 }
 
 /** Utterances the reference TTS hears on each side of a target, within its page (comment group). */
-const PROSODY_CONTEXT_UTTERANCES = 2;
-
 export function prosodyContexts(pages: readonly G2pPageContext[]) {
   const contexts = new Map<string, ProsodySourceContext>();
   for (const { utterances } of pages) {
@@ -245,8 +244,8 @@ export function prosodyContexts(pages: readonly G2pPageContext[]) {
           .slice(Math.max(from, 0), to)
           .map((u) => u.text)
           .join("");
-      const previous = join(index - PROSODY_CONTEXT_UTTERANCES, index);
-      const next = join(index + 1, index + 1 + PROSODY_CONTEXT_UTTERANCES);
+      const previous = join(index - speechVoiceConfig.contextUtterances, index);
+      const next = join(index + 1, index + 1 + speechVoiceConfig.contextUtterances);
       if (previous || next) {
         contexts.set(utterance.id, {
           ...(previous ? { previous } : {}),

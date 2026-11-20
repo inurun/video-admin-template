@@ -23,6 +23,10 @@ vi.mock("@/video/config", async () => ({
     voicevox: { pipeline: "prosody", timingWeight: 0.4 },
     voisona: { pipeline: "llm-g2p" },
   },
+  speechVoiceConfig: {
+    ...(await vi.importActual<typeof import("@/video/config")>("@/video/config")).speechVoiceConfig,
+    contextUtterances: 2,
+  },
 }));
 
 vi.mock("node:fs/promises", () => ({
