@@ -1,19 +1,30 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createG2pItem } from "@/_schemas/__tests__/g2p-fixture";
 
-const { generateG2pMock, analyzeProsodyMock } = vi.hoisted(() => ({
+const { generateG2pMock, analyzeProsodyMock, contextConfig } = vi.hoisted(() => ({
   generateG2pMock: vi.fn(),
   analyzeProsodyMock: vi.fn(),
+  contextConfig: { contextUtterances: 2 },
 }));
 
 vi.mock("../llm-g2p", () => ({ generateG2p: generateG2pMock }));
 vi.mock("../prosody/pipeline", () => ({ analyzeProsody: analyzeProsodyMock }));
+vi.mock("@/video/config", async () => {
+  const actual = await vi.importActual<typeof import("@/video/config")>("@/video/config");
+  return {
+    ...actual,
+    get speechVoiceConfig() {
+      return { ...actual.speechVoiceConfig, ...contextConfig };
+    },
+  };
+});
 
 import { generateTtsG2p } from "../use-case";
 
 describe("generateTtsG2p", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    contextConfig.contextUtterances = 2;
   });
 
   it("sends one sentence with its read text and neighbors in single mode", async () => {
@@ -92,6 +103,32 @@ describe("generateTtsG2p", () => {
       { fresh: true },
     );
     expect(generateG2pMock).not.toHaveBeenCalled();
+  });
+
+  it("sends the reference TTS no neighbors when the config gives no context", async () => {
+    contextConfig.contextUtterances = 0;
+    const g2p = createG2pItem("にんき", "にんき:ニンキ'");
+    analyzeProsodyMock.mockResolvedValueOnce([{ g2p, prosody: { moras: [], pauses: [] } }]);
+
+    await generateTtsG2p(
+      {},
+      {
+        projectPath: "project",
+        pageId: "page-1",
+        item: {
+          id: "tts-1",
+          text: "人気",
+          readText: "にんき",
+          provider: "voicevox",
+          voiceName: "3",
+          previous: { text: "前" },
+        },
+      },
+    );
+
+    expect(analyzeProsodyMock.mock.calls[0]?.[1]).toEqual([
+      { readText: "にんき", source: expect.objectContaining({ voice: expect.any(String) }) },
+    ]);
   });
 
   it("reports analyze when the new reference did not pass", async () => {

@@ -24,6 +24,7 @@ function useTtsCommands() {
   const { projectPath } = useProjectRoute();
   const { options } = useSettings();
   const voicePresets = useEditorSession((state) => state.project.voicePresets);
+  const upsertPage = useEditorSession((state) => state.upsertPage);
   const { trigger: generateG2p } = useG2pGenerateMutation();
   const pageId = useSelectedPageId();
   const canRunTts = options.length > 0 && !saving;
@@ -90,6 +91,9 @@ function useTtsCommands() {
               : entry,
           );
         form.setValue("tts", tts, { shouldDirty: true });
+        // A fresh prosody can come back with the saved kana; the form sync skips a page equal to
+        // the last saved one, so mark it here for the save to re-synthesize with the new prosody.
+        upsertPage(pageId, { ...form.getValues() });
         if (result.source === "analyze") {
           toast.warning("LLM failed, used analyze");
         } else {
@@ -99,7 +103,7 @@ function useTtsCommands() {
         setAnalyzing(ttsId, false);
       }
     },
-    [canRunTts, form, generateG2p, getTts, pageId, projectPath, setAnalyzing],
+    [canRunTts, form, generateG2p, getTts, pageId, projectPath, setAnalyzing, upsertPage],
   );
 
   const preview = useCallback(

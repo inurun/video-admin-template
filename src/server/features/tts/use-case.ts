@@ -28,6 +28,7 @@ import { TtsCacheClearConflictError } from "@/server/features/tts/errors";
 
 import { buildSingleG2pContext } from "./g2p-context";
 import { generateG2p, generateG2pWithCache } from "./llm-g2p";
+import { speechVoiceConfig } from "@/video/config";
 
 async function loadProviderVoices<T>(label: string, baseUrl: string, task: Promise<T>): Promise<T> {
   try {
@@ -129,8 +130,10 @@ async function resolvePreviewG2p(
 export async function generateTtsG2p(serverEnv: ServerEnv, input: unknown) {
   const { pageId, item } = ttsG2pGenerateRequestSchema.parse(input);
   if (item.provider !== "coeiroink" && getSpeechPipeline(item.provider).pipeline === "prosody") {
-    const previous = item.previous ? getEffectiveReadText(item.previous) : "";
-    const next = item.next ? getEffectiveReadText(item.next) : "";
+    // The neighbors the client sent, unless the config sends the reference TTS no context.
+    const withContext = speechVoiceConfig.contextUtterances > 0;
+    const previous = withContext && item.previous ? getEffectiveReadText(item.previous) : "";
+    const next = withContext && item.next ? getEffectiveReadText(item.next) : "";
     const [result] = await analyzeProsody(
       serverEnv,
       [
