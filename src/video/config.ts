@@ -41,7 +41,8 @@ export const speechVoiceConfig = {
   source: "eleven-v4-turbo",
   voice: "mDxkcO3nsRCNeB4si9qg",
   defaultTag: "",
-  contextUtterances: 0,
+  // or { kind: "neighbors", utterances: 2 } / { kind: "block" }
+  context: { kind: "none" },
   tags: {
     // "voicevox::113::": "[tired]",
   },

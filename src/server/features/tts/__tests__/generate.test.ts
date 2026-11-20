@@ -1,14 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createG2pItem } from "@/_schemas/__tests__/g2p-fixture";
+import { createSavedTts } from "@/app/features/editor/store/__tests__/fixtures";
+import type { ProsodyContextConfig } from "@/video-host/contract";
 
-const { generateG2pMock, analyzeProsodyMock, contextConfig } = vi.hoisted(() => ({
-  generateG2pMock: vi.fn(),
-  analyzeProsodyMock: vi.fn(),
-  contextConfig: { contextUtterances: 2 },
-}));
+const { generateG2pMock, analyzeProsodyMock, readSavedProjectMock, contextConfig } = vi.hoisted(
+  () => ({
+    generateG2pMock: vi.fn(),
+    analyzeProsodyMock: vi.fn(),
+    readSavedProjectMock: vi.fn(),
+    contextConfig: {
+      context: { kind: "neighbors", utterances: 2 } as ProsodyContextConfig,
+    },
+  }),
+);
 
 vi.mock("../llm-g2p", () => ({ generateG2p: generateG2pMock }));
 vi.mock("../prosody/pipeline", () => ({ analyzeProsody: analyzeProsodyMock }));
+vi.mock("@/server/_shared/storage", async () => ({
+  ...(await vi.importActual<typeof import("@/server/_shared/storage")>("@/server/_shared/storage")),
+  readSavedProject: readSavedProjectMock,
+}));
 vi.mock("@/video/config", async () => {
   const actual = await vi.importActual<typeof import("@/video/config")>("@/video/config");
   return {
@@ -24,7 +35,28 @@ import { generateTtsG2p } from "../use-case";
 describe("generateTtsG2p", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    contextConfig.contextUtterances = 2;
+    contextConfig.context = { kind: "neighbors", utterances: 2 };
+    // The saved page: 前 (VOICEVOX 3) before the line being made again.
+    readSavedProjectMock.mockResolvedValue({
+      pages: [
+        {
+          id: "page-1",
+          type: "main",
+          tts: [
+            {
+              ...createSavedTts({ id: "tts-0", text: "前", readText: "前" }),
+              provider: "voicevox",
+              voiceName: "3",
+            },
+            {
+              ...createSavedTts({ id: "tts-1", text: "人気", readText: "人気" }),
+              provider: "voicevox",
+              voiceName: "3",
+            },
+          ],
+        },
+      ],
+    });
   });
 
   it("sends one sentence with its read text and neighbors in single mode", async () => {
@@ -106,7 +138,7 @@ describe("generateTtsG2p", () => {
   });
 
   it("sends the reference TTS no neighbors when the config gives no context", async () => {
-    contextConfig.contextUtterances = 0;
+    contextConfig.context = { kind: "none" };
     const g2p = createG2pItem("にんき", "にんき:ニンキ'");
     analyzeProsodyMock.mockResolvedValueOnce([{ g2p, prosody: { moras: [], pauses: [] } }]);
 

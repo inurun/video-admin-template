@@ -14,11 +14,7 @@ import type { ServerEnv } from "@/server/core/env";
 import { AUDIO_PADDING_SECONDS } from "@/constants";
 import { enqueueProjectMutation } from "./project-mutation-queue";
 import { startSynthesisBatch, type SynthesisJob } from "./tts-synthesis-jobs";
-import {
-  buildG2pContext,
-  type G2pPageContext,
-  type G2pTarget,
-} from "@/server/features/tts/g2p-context";
+import { buildG2pContext, type G2pTarget } from "@/server/features/tts/g2p-context";
 import { generateG2pWithCache } from "@/server/features/tts/llm-g2p";
 import { resolveTtsSynthesisSettings } from "@/server/features/tts/synthesis-settings";
 import {
@@ -31,7 +27,7 @@ import type { SpeechPipeline } from "@/video-host/contract";
 import { getEffectiveReadText, getUsableG2p } from "@/server/features/tts/providers/comparison";
 import { getSpeechPipeline, toSynthesisProsody } from "@/server/features/tts/speech-pipeline";
 import { analyzeProsody, type ProsodyTarget } from "@/server/features/tts/prosody/pipeline";
-import type { ProsodySourceContext } from "@/server/features/tts/prosody/sources/types";
+import { prosodyContexts } from "@/server/features/tts/prosody/context";
 import { prosodySourceFor } from "@/server/features/tts/prosody/source-config";
 import { speechVoiceConfig } from "@/video/config";
 
@@ -231,32 +227,6 @@ async function runLlmG2p(
   return new Map([...generated].map(([ttsId, result]) => [ttsId, { g2p: result.g2p }]));
 }
 
-/** Utterances the reference TTS hears on each side of a target, within its page (comment group). */
-export function prosodyContexts(pages: readonly G2pPageContext[]) {
-  const contexts = new Map<string, ProsodySourceContext>();
-  for (const { utterances } of pages) {
-    utterances.forEach((utterance, index) => {
-      if (!utterance.target) {
-        return;
-      }
-      const join = (from: number, to: number) =>
-        utterances
-          .slice(Math.max(from, 0), to)
-          .map((u) => u.text)
-          .join("");
-      const previous = join(index - speechVoiceConfig.contextUtterances, index);
-      const next = join(index + 1, index + 1 + speechVoiceConfig.contextUtterances);
-      if (previous || next) {
-        contexts.set(utterance.id, {
-          ...(previous ? { previous } : {}),
-          ...(next ? { next } : {}),
-        });
-      }
-    });
-  }
-  return contexts;
-}
-
 /**
  * Same read text, saved kana and reference TTS run once, with the context of the first one:
  * the context is not part of any cache key.
@@ -270,7 +240,11 @@ async function runProsody(
   if (targets.length === 0) {
     return new Map();
   }
-  const contexts = prosodyContexts(buildG2pContext(project.pages, targets));
+  const contexts = prosodyContexts(
+    project.pages,
+    new Set(targets.map(({ item }) => item.id)),
+    speechVoiceConfig.context,
+  );
   const prosodyTargets = new Map<string, ProsodyTarget>();
   const keyByTtsId = new Map<string, string>();
   for (const { item } of targets) {

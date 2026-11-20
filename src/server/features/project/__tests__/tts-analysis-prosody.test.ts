@@ -3,8 +3,6 @@ import { EMPTY_TIMELINE, type SavedProject, type SavedTimeline } from "@/_schema
 import { createG2pItem } from "@/_schemas/__tests__/g2p-fixture";
 import type { SaveSequenceItem } from "@/server/features/project/contract";
 import { toTimeline } from "../to-timeline";
-import { buildG2pContext } from "@/server/features/tts/g2p-context";
-import { createSavedTts } from "@/app/features/editor/store/__tests__/fixtures";
 
 const mocks = vi.hoisted(() => ({
   readSavedProject: vi.fn(),
@@ -25,7 +23,7 @@ vi.mock("@/video/config", async () => ({
   },
   speechVoiceConfig: {
     ...(await vi.importActual<typeof import("@/video/config")>("@/video/config")).speechVoiceConfig,
-    contextUtterances: 2,
+    context: { kind: "neighbors", utterances: 2 },
   },
 }));
 
@@ -258,11 +256,11 @@ describe("tts analysis by speech pipeline", () => {
 
     const targets = mocks.analyzeProsody.mock.calls[0]?.[1] as { context?: unknown }[];
     expect(targets.map((target) => target.context)).toEqual([
-      { next: "二。三。" },
-      { previous: "一。", next: "三。四。" },
-      { previous: "一。二。", next: "四。五。" },
-      { previous: "二。三。", next: "五。" },
-      { previous: "三。四。" },
+      { next: "二。 三。" },
+      { previous: "一。", next: "三。 四。" },
+      { previous: "一。 二。", next: "四。 五。" },
+      { previous: "二。 三。", next: "五。" },
+      { previous: "三。 四。" },
     ]);
   });
 
@@ -278,7 +276,7 @@ describe("tts analysis by speech pipeline", () => {
     await flushJobs();
 
     expect(mocks.analyzeProsody.mock.calls[0]?.[1]).toEqual([
-      expect.objectContaining({ readText: "犬", context: { next: "猫犬" } }),
+      expect.objectContaining({ readText: "犬", context: { next: "猫 犬" } }),
       expect.objectContaining({ readText: "猫", context: { previous: "犬", next: "犬" } }),
     ]);
   });
@@ -349,57 +347,5 @@ describe("tts analysis by speech pipeline", () => {
     mocks.findSynthesisProsody.mockResolvedValue(synthesisProsody);
     const remade = await save([item]);
     expect(savedTts(remade.project)[0]?.audio.status).toBe("pending");
-  });
-});
-
-describe("prosody contexts", () => {
-  it("takes the neighbors from the target's comment group in playback order", async () => {
-    const { prosodyContexts } = await import("../tts-analysis-jobs");
-    const comment = (no: number, body: string) => ({
-      id: `sm1:thread:main:${no}`,
-      threadId: "thread",
-      fork: "main" as const,
-      no,
-      body,
-      vposMs: no,
-      postedAt: "2026-09-16T00:00:00.000Z",
-      hidden: false,
-    });
-    const page = {
-      id: "page-comments",
-      title: "Comments",
-      type: "comments" as const,
-      meta: {
-        tags: [],
-        niconico: { videoId: "sm1", fetchedAt: "2026-09-16T00:00:00.000Z" },
-        presentation: "single" as const,
-      },
-      comments: [comment(1, "うぽつ"), comment(2, "質問")],
-      commentGroups: [
-        { id: "g1", commentIds: ["sm1:thread:main:1"], displayText: null, ttsIds: ["r1", "t1"] },
-        { id: "g2", commentIds: ["sm1:thread:main:2"], displayText: null, ttsIds: ["r2"] },
-      ],
-      commentScenes: [
-        { id: "s1", groupIds: ["g1"] },
-        { id: "s2", groupIds: ["g2"] },
-      ],
-      padBeforeSec: 0,
-      padAfterSec: 0,
-      richText: null,
-      tts: [
-        createSavedTts({ id: "t1", text: "ありがとう", readText: "ありがとう" }),
-        createSavedTts({ id: "r2", text: "質問", readText: "質問" }),
-        createSavedTts({ id: "r1", text: "うぽつ", readText: "うぽつ" }),
-      ],
-    };
-
-    const contexts = prosodyContexts(
-      buildG2pContext(
-        [page],
-        ["t1", "r2"].map((ttsId) => ({ pageId: "page-comments", ttsId })),
-      ),
-    );
-
-    expect(Object.fromEntries(contexts)).toEqual({ t1: { previous: "うぽつ" } });
   });
 });

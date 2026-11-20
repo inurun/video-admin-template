@@ -22,6 +22,7 @@ import type { TtsProvider } from "./providers/types";
 import { findSynthesisProsody } from "./prosody/cache";
 import { analyzeProsody } from "./prosody/pipeline";
 import { prosodySourceFor } from "./prosody/source-config";
+import { prosodyContextOfEdited, toProsodyContextLine } from "./prosody/context";
 import { getSpeechPipeline } from "./speech-pipeline";
 import { enqueueProjectMutation } from "@/server/features/project/project-mutation-queue";
 import { TtsCacheClearConflictError } from "@/server/features/tts/errors";
@@ -128,12 +129,14 @@ async function resolvePreviewG2p(
  * kana and the cached reference are not used); the others ask the LLM again.
  */
 export async function generateTtsG2p(serverEnv: ServerEnv, input: unknown) {
-  const { pageId, item } = ttsG2pGenerateRequestSchema.parse(input);
+  const { projectPath, pageId, item } = ttsG2pGenerateRequestSchema.parse(input);
   if (item.provider !== "coeiroink" && getSpeechPipeline(item.provider).pipeline === "prosody") {
-    // The neighbors the client sent, unless the config sends the reference TTS no context.
-    const withContext = speechVoiceConfig.contextUtterances > 0;
-    const previous = withContext && item.previous ? getEffectiveReadText(item.previous) : "";
-    const next = withContext && item.next ? getEffectiveReadText(item.next) : "";
+    // The saved page around the edited line, as a save would hear it.
+    const context = prosodyContextOfEdited(
+      (await readSavedProject(projectPath)).pages,
+      toProsodyContextLine(item),
+      speechVoiceConfig.context,
+    );
     const [result] = await analyzeProsody(
       serverEnv,
       [
@@ -144,9 +147,7 @@ export async function generateTtsG2p(serverEnv: ServerEnv, input: unknown) {
             voiceName: item.voiceName,
             voiceVersion: item.voiceVersion,
           }),
-          ...(previous || next
-            ? { context: { ...(previous ? { previous } : {}), ...(next ? { next } : {}) } }
-            : {}),
+          ...(context ? { context } : {}),
         },
       ],
       { fresh: true },

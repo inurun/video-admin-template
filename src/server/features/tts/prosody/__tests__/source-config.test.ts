@@ -8,7 +8,7 @@ vi.mock("@/video/config", async () => ({
     voice: "bella",
     defaultTag: "[in a monotone]",
     tags: { "voicevox::113::": "[tired]", "voicevox::14::": "" },
-    contextUtterances: 0,
+    context: { kind: "none" },
   },
 }));
 vi.mock("@/server/_shared/storage", () => ({ PROSODY_CACHE_DIR: "/cache/prosody" }));
@@ -29,7 +29,7 @@ describe("prosodySourceFor", () => {
     });
     const drama = prosodySourceFor(
       { provider: "voicevox", voiceName: "3" },
-      { source: "drama-3", voice: "fish-id", defaultTag: "", tags: {}, contextUtterances: 0 },
+      { source: "drama-3", voice: "fish-id", defaultTag: "", tags: {}, context: { kind: "none" } },
     );
     expect(drama).toEqual({ source: "drama-3", version: "drama3-v1", voice: "fish-id", tag: "" });
   });
@@ -49,7 +49,7 @@ describe("prosodySourceFor", () => {
       voice: "bella",
       defaultTag: "[in a monotone]",
       tags: {},
-      contextUtterances: 0,
+      context: { kind: "none" },
     });
     expect(prosodyExtractPath(g2p, drama)).not.toBe(
       prosodyExtractPath(g2p, prosodySourceFor(speaker)),

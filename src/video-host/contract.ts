@@ -95,15 +95,24 @@ export type ProsodySourceId = "eleven-v4-turbo" | "drama-3";
  * (e.g. `[tired]`, `[in a monotone]`). `tags` is keyed by voice id
  * (`provider::voiceName::voiceVersion`, e.g. `voicevox::113::`); a character left out reads
  * with `defaultTag`, and `""` reads without a tag. Tags are billed as text.
- * `contextUtterances`: utterances on each side of a line (same page / comment group) sent as
- * context to a source that takes it; 0 sends none.
+ * `context`: what a source that takes context hears around a line (see `ProsodyContextConfig`).
  */
+/**
+ * The lines around a target the reference TTS hears, within its page (comment group), joined by
+ * spaces. `neighbors`: up to `utterances` lines on each side. `block`: the run of lines by the
+ * same voice the target is in (another voice in between starts a new block).
+ */
+export type ProsodyContextConfig =
+  | { kind: "none" }
+  | { kind: "neighbors"; utterances: number }
+  | { kind: "block" };
+
 export type VideoSpeechVoiceConfig = {
   source: ProsodySourceId;
   voice: string;
   defaultTag: string;
   tags: { [voiceId: string]: string };
-  contextUtterances: number;
+  context: ProsodyContextConfig;
 };
 
 export type VideoDefinition = VideoAudioConfig & {
