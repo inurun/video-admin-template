@@ -302,6 +302,11 @@ async function ensureNiconicoChrome() {
       "--no-first-run",
       "--no-default-browser-check",
       "--noerrdialogs",
+      // The window usually sits behind other apps. Hidden pages get their timers throttled to
+      // once a minute, so Garage never polls upload status and stays at "アップロード中…".
+      "--disable-backgrounding-occluded-windows",
+      "--disable-background-timer-throttling",
+      "--disable-renderer-backgrounding",
       NICONICO_UPLOAD_URL,
     ],
     { detached: true, stdio: "ignore" },
